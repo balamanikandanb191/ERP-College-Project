@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: #FFFFFF;
+  --color-sidebar: #DBEAFE;
+  --color-navbar: #DBEAFE;
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-light: #60A5FA;
+  --color-text-main: #1E293B;
+  --color-text-muted: #64748B;
+  --color-border-color: #E2E8F0;
+  
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text-main font-sans antialiased selection:bg-primary/20 selection:text-primary;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-border-color shadow-soft transition-all duration-300 hover:shadow-card;
+  }
+  
+  .input-field {
+    @apply block w-full rounded-xl border border-border-color bg-white px-4 py-2.5 text-sm text-text-main transition-colors focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 placeholder:text-text-muted;
+  }
+  
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-70 disabled:cursor-not-allowed;
+  }
+  
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-soft;
+  }
+}
