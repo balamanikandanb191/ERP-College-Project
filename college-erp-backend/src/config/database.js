@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: 'postgres',
+    dialect: process.env.DB_DIALECT || 'mysql',
     logging: false, // Set to console.log to see SQL queries
   }
 );

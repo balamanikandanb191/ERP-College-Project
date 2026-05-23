@@ -2,10 +2,12 @@ import React from 'react';
 import { Bell, Search, Menu, LogOut, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import NotificationDrawer from './communication/NotificationDrawer';
 
 const TopNavbar = ({ onMenuClick }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -13,7 +15,7 @@ const TopNavbar = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="h-16 bg-navbar border-b border-border-color/60 fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-6 transition-all duration-300 max-md:left-0 shadow-sm">
+    <header className="h-16 bg-navbar border-b border-border-color/60 fixed top-0 right-0 left-[280px] z-10 flex items-center justify-between px-6 transition-all duration-300 max-md:left-0 shadow-sm">
       <div className="flex items-center gap-4">
         <button 
           onClick={onMenuClick}
@@ -35,7 +37,10 @@ const TopNavbar = ({ onMenuClick }) => {
       </div>
 
       <div className="flex items-center gap-5">
-        <button className="relative p-2 text-text-muted hover:text-primary transition-colors hover:bg-white/50 rounded-full">
+        <button 
+          onClick={() => setShowNotifications(true)}
+          className="relative p-2 text-text-muted hover:text-primary transition-colors hover:bg-white/50 rounded-full"
+        >
           <Bell size={20} />
           <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-danger rounded-full border-2 border-navbar animate-pulse"></span>
         </button>
@@ -61,6 +66,11 @@ const TopNavbar = ({ onMenuClick }) => {
           </button>
         </div>
       </div>
+
+      <NotificationDrawer 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
     </header>
   );
 };

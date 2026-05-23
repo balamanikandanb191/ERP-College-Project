@@ -26,7 +26,7 @@ const MainLayout = () => {
       <TopNavbar onMenuClick={toggleSidebar} />
       
       {/* Main Content Area */}
-      <main className="pt-16 md:pl-64 min-h-screen transition-all duration-300 relative">
+      <main className="pt-16 md:pl-[280px] min-h-screen transition-all duration-300 relative">
         <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
           <Outlet />
         </div>

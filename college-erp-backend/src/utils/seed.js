@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
-const { User, Role, Staff } = require('../models');
+const { User, Role, Staff, SystemSetting } = require('../models');
 
 async function seedDatabase() {
     // 1. Seed Roles
-    const roles = ['Admin', 'Staff', 'Student'];
+    const roles = ['Super Admin', 'Admin', 'Staff', 'Teacher', 'Student', 'Parent'];
     for (const roleName of roles) {
         await Role.findOrCreate({
             where: { name: roleName }
@@ -33,19 +33,37 @@ async function seedDatabase() {
         // Create Admin Profile
         await Staff.create({
             user_id: newAdmin.id,
-            first_name: 'Super',
-            last_name: 'Admin',
-            employee_id: 'EMP-ADMIN-001',
+            fullName: 'Super Admin',
+            staffId: 'EMP-ADMIN-001',
             department: 'Administration',
             designation: 'System Administrator',
-            date_of_joining: new Date(),
-            contact_number: '1234567890'
+            joiningDate: new Date(),
+            phone: '1234567890'
         });
 
         console.log('Default admin user created successfully.');
     } else {
         console.log('Admin user already exists.');
     }
+
+    // 3. Seed Default System Settings
+    const defaultSettings = [
+        { group: 'institution', key: 'college_name', value: 'EduERP Engineering College', type: 'string' },
+        { group: 'institution', key: 'short_name', value: 'EEC', type: 'string' },
+        { group: 'institution', key: 'institution_code', value: 'EEC001', type: 'string' },
+        { group: 'institution', key: 'academic_year', value: '2023-2024', type: 'string' },
+        { group: 'branding', key: 'theme_color', value: '#2563eb', type: 'string' },
+        { group: 'admission', key: 'auto_reg_number', value: 'true', type: 'boolean' },
+        { group: 'attendance', key: 'min_attendance', value: '75', type: 'number' }
+    ];
+
+    for (const setting of defaultSettings) {
+        await SystemSetting.findOrCreate({
+            where: { key: setting.key },
+            defaults: setting
+        });
+    }
+    console.log('System settings seeded successfully.');
 }
 
 module.exports = { seedDatabase };

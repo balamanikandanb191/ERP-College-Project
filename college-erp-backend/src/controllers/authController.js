@@ -4,6 +4,7 @@ const { User, Role, Student, Staff } = require('../models');
 
 exports.login = async (req, res) => {
   try {
+    console.error('Login Payload:', req.body);
     const { email, password } = req.body;
 
     // Find user
