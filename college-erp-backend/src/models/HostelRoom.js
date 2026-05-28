@@ -41,8 +41,8 @@ const HostelRoom = sequelize.define('HostelRoom', {
     allowNull: false,
   },
   amenities: {
-    type: DataTypes.JSONB, // e.g. ['AC', 'Attached Bath', 'Balcony']
-    defaultValue: [],
+    type: DataTypes.JSON, // e.g. ['AC', 'Attached Bath', 'Balcony']
+    allowNull: true,
   },
   assignedWardenId: {
     type: DataTypes.INTEGER,

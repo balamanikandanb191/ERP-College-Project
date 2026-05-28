@@ -99,3 +99,34 @@ exports.logout = (req, res) => {
   res.json({ message: 'Logout successful' });
 };
 
+exports.getRoles = async (req, res) => {
+  try {
+    const roles = await Role.findAll({ order: [['id', 'ASC']] });
+    res.json(roles);
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.createRole = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Role name is required' });
+    }
+    const roleName = name.trim();
+
+    const existingRole = await Role.findOne({ where: { name: roleName } });
+    if (existingRole) {
+      return res.status(400).json({ message: 'Role already exists' });
+    }
+
+    const newRole = await Role.create({ name: roleName });
+    res.status(201).json(newRole);
+  } catch (error) {
+    console.error('Error creating role:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

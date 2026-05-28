@@ -11,14 +11,35 @@
   --color-text-main: #1E293B;
   --color-text-muted: #64748B;
   --color-border-color: #E2E8F0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
+
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
   --color-info: #3B82F6;
 
   --font-sans: "Inter", system-ui, sans-serif;
-  
+
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
 }
@@ -35,15 +56,15 @@
   .card {
     @apply bg-white rounded-2xl border border-border-color shadow-soft transition-all duration-300 hover:shadow-card;
   }
-  
+
   .input-field {
     @apply block w-full rounded-xl border border-border-color bg-white px-4 py-2.5 text-sm text-text-main transition-colors focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 placeholder:text-text-muted;
   }
-  
+
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-70 disabled:cursor-not-allowed;
   }
-  
+
   .glass {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-soft;
   }
@@ -66,4 +87,71 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.18);
+}
+
+/* Premium Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes float-delayed {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 6s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
 }

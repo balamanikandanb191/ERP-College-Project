@@ -70,8 +70,37 @@ app.get(/.*/, (req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Sync DB and Start Server
-sequelize.sync({ alter: true }) // Alter will sync the schema
-    .then(async () => {
+const cleanAndSync = async () => {
+    try {
+        await sequelize.transaction(async (t) => {
+            await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
+            const tables = [
+                'announcement_reads', 'AnnouncementReads', 'announcements', 'Announcements',
+                'events', 'Events', 'holidays', 'Holidays', 'notifications', 'Notifications',
+                'academic_events', 'AcademicEvents', 'placement_records', 'PlacementRecords',
+                'placement_drives', 'PlacementDrives', 'companies', 'Companies',
+                'placement_fees', 'PlacementFees', 'internships', 'Internships',
+                'student_documents', 'StudentDocuments', 'staff_documents', 'StaffDocuments',
+                'timetables', 'Timetables', 'timetable_settings', 'TimetableSettings',
+                'fee_payment_history', 'FeePaymentHistory', 'fee_payment_histories', 'FeePaymentHistories', 'student_fees', 'StudentFees',
+                'fee_structures', 'FeeStructures', 'hostel_complaints', 'HostelComplaints',
+                'hostel_expenses', 'HostelExpenses', 'hostel_financial_reports', 'HostelFinancialReports',
+                'hostel_students', 'HostelStudents', 'hostel_rooms', 'HostelRooms',
+                'hostel_wardens', 'HostelWardens', 'maintenance_records', 'MaintenanceRecords',
+                'buses', 'Buses', 'drivers', 'Drivers', 'transport_routes', 'TransportRoutes',
+                'borrow_records', 'BorrowRecords', 'books', 'Books',
+                'staff_attendance', 'StaffAttendance', 'StaffAttendances',
+                'student_attendance', 'StudentAttendance', 'StudentAttendances',
+                'staff', 'Staffs', 'students', 'Students', 'users', 'Users', 'roles', 'Roles',
+                'system_settings', 'SystemSettings'
+            ];
+            for (const table of tables) {
+                await sequelize.query(`DROP TABLE IF EXISTS \`${table}\``, { transaction: t });
+            }
+            await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction: t });
+        });
+
+        await sequelize.sync({ alter: true });
         console.log('Database synced successfully');
         try {
             await seedDatabase();
@@ -83,7 +112,10 @@ sequelize.sync({ alter: true }) // Alter will sync the schema
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
-    })
-    .catch((error) => {
+    } catch (error) {
         console.error('Failed to sync database:', error);
-    });
+    }
+};
+
+cleanAndSync();
+// Trigger nodemon reload to seed default fee structures

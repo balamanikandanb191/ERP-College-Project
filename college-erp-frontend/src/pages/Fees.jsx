@@ -68,7 +68,7 @@ const Fees = () => {
   }, [activeTab]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-12">
+    <div className="p-4 sm:p-6 lg:p-8 w-full pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3 tracking-tight">

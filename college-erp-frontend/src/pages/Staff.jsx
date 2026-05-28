@@ -82,7 +82,7 @@ const Staff = () => {
     }
   };
 
-  const handleSave = async (staffData, photoFile) => {
+  const handleSave = async (staffData, photoFile, documentFiles) => {
     try {
       let savedStaff;
       if (selectedStaff) {
@@ -108,6 +108,19 @@ const Staff = () => {
         setStaffList(prev => prev.map(s => s.id === savedStaff.id ? updatedStaff : s));
       }
 
+      if (documentFiles && Object.keys(documentFiles).length > 0 && savedStaff?.id) {
+        const uploadPromises = Object.entries(documentFiles).map(async ([docType, file]) => {
+          const docFormData = new FormData();
+          docFormData.append('document', file);
+          docFormData.append('documentType', docType);
+          return api.post(`/uploads/document/staff/${savedStaff.id}`, docFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        });
+        await Promise.all(uploadPromises);
+        toast.success('All onboarding documents uploaded successfully');
+      }
+
       setIsModalOpen(false);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save staff data');
@@ -128,7 +141,7 @@ const Staff = () => {
 
   if (apiError && !loading && safeStaffList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col items-center justify-center h-96 w-full pb-10">
         <AlertCircle size={48} className="text-red-500 mb-4" />
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Failed to load data</h2>
         <p className="text-slate-500 mb-6">{apiError}</p>
@@ -139,6 +152,18 @@ const Staff = () => {
           Try Again
         </button>
       </div>
+    );
+  }
+
+  if (isModalOpen) {
+    return (
+      <StaffModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        staff={selectedStaff}
+        onSave={handleSave}
+        onSuccess={fetchStaff}
+      />
     );
   }
 
@@ -156,7 +181,7 @@ const Staff = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -263,15 +288,7 @@ const Staff = () => {
         )}
       </div>
 
-      {isModalOpen && (
-        <StaffModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          staff={selectedStaff}
-          onSave={handleSave}
-          onSuccess={fetchStaff}
-        />
-      )}
+
 
       <ProfileDrawer 
         isOpen={isDrawerOpen} 

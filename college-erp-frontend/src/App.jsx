@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/AdminDashboard';
 import Students from './pages/Students';
 import Staff from './pages/Staff';
@@ -79,7 +80,7 @@ const RootRedirect = () => {
     case 'Student':
       return <Navigate to="/student" replace />;
     case 'Parent':
-      return <Navigate to="/parent" replace />;
+      return <Navigate to="/student" replace />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }
@@ -91,13 +92,16 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#1E293B', color: '#fff', borderRadius: '12px' } }} />
       <Router>
         <Routes>
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Public Routes */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
           </Route>
 
-          {/* Root Redirect */}
-          <Route path="/" element={<RootRedirect />} />
+          {/* Dashboard Redirects */}
+          <Route path="/dashboard" element={<RootRedirect />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Admin Routes */}
@@ -188,7 +192,7 @@ function App() {
           </Route>
 
           {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['Student', 'Admin', 'Super Admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['Student', 'Admin', 'Super Admin', 'Parent']} />}>
             <Route path="/student" element={<MainLayout />}>
               <Route index element={<StudentDashboard />} />
               <Route path="attendance" element={<div>My Attendance</div>} />

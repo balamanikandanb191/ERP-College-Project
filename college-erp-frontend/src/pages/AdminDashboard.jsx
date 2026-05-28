@@ -2,12 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, GraduationCap, DollarSign, CalendarDays, TrendingUp, TrendingDown, 
   ArrowRight, AlertTriangle, ShieldAlert, Clock, Bus, Building, BookOpen, 
-  Briefcase, Layers, Video, MapPin, Activity, FileText, CheckCircle, IndianRupee, Percent
+  Briefcase, Layers, Video, MapPin, Activity, FileText, CheckCircle, IndianRupee, Percent,
+  Sparkles, Download, Printer, Search, FileSpreadsheet, ChevronRight, BarChart2
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
-  CartesianGrid, BarChart, Bar, LineChart, Line, ComposedChart, Legend 
+  CartesianGrid, BarChart, Bar, LineChart, Line, ComposedChart, Legend, PieChart, Pie, Cell 
 } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import GlobalDrilldownModal from '../components/common/GlobalDrilldownModal';
 import GlobalProfileDrawer from '../components/common/GlobalProfileDrawer';
@@ -232,22 +235,135 @@ const formatCompactINR = (value) => {
   }).format(value);
 };
 
-const StatCard = ({ title, value, icon: Icon, colorClass, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="card p-6 flex items-start justify-between relative overflow-hidden group text-left w-full hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 border border-slate-100 bg-white rounded-2xl cursor-pointer"
-  >
-    <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-white/0 to-current opacity-5 rounded-bl-[100px] -mr-8 -mt-8 pointer-events-none transition-transform group-hover:scale-110" style={{ color: 'inherit' }}></div>
-    <div>
-      <p className="text-sm font-semibold text-slate-500 mb-1.5">{title}</p>
-      <h3 className="text-3xl font-extrabold text-slate-800 tracking-tight">{value}</h3>
-      <span className="text-[10px] font-black text-indigo-600 block mt-3 uppercase tracking-wider">Click for Drilldown Ledger</span>
-    </div>
-    <div className={`p-4 rounded-2xl shadow-sm ${colorClass} shrink-0 text-white`}>
-      <Icon size={24} />
-    </div>
-  </button>
-);
+const colorThemes = {
+  indigo: {
+    bg: "from-blue-600 to-indigo-650",
+    shadow: "hover:shadow-indigo-500/10",
+    border: "hover:border-indigo-500/30",
+    badge: "bg-indigo-50/65 text-indigo-650 group-hover:bg-indigo-600 group-hover:text-white border-indigo-150/40"
+  },
+  emerald: {
+    bg: "from-emerald-500 to-teal-650",
+    shadow: "hover:shadow-emerald-500/10",
+    border: "hover:border-emerald-500/30",
+    badge: "bg-emerald-50/65 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white border-emerald-150/40"
+  },
+  blue: {
+    bg: "from-cyan-500 to-blue-600",
+    shadow: "hover:shadow-blue-500/10",
+    border: "hover:border-blue-500/30",
+    badge: "bg-blue-50/65 text-blue-600 group-hover:bg-blue-600 group-hover:text-white border-blue-150/40"
+  },
+  purple: {
+    bg: "from-violet-650 to-purple-700",
+    shadow: "hover:shadow-purple-500/10",
+    border: "hover:border-purple-500/30",
+    badge: "bg-purple-50/65 text-purple-650 group-hover:bg-purple-600 group-hover:text-white border-purple-150/40"
+  }
+};
+
+const StatCard = ({ title, value, icon: Icon, themeName = "indigo", onClick }) => {
+  const theme = colorThemes[themeName] || colorThemes.indigo;
+  return (
+    <button 
+      onClick={onClick}
+      className={`relative p-6 flex items-start justify-between overflow-hidden group text-left w-full rounded-3xl border border-white/50 bg-white/70 backdrop-blur-md hover:bg-white hover:-translate-y-1.5 transition-all duration-300 cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:shadow-xl ${theme.shadow} ${theme.border}`}
+    >
+      <div className="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-white/20 to-white/0 rounded-full blur-xl opacity-80 pointer-events-none transition-all duration-500 group-hover:scale-125"></div>
+      <div className="relative z-10 space-y-4">
+        <div>
+          <p className="text-[11px] font-black text-slate-400 tracking-wider uppercase block">{title}</p>
+          <h3 className="text-3xl font-black text-slate-800 tracking-tight mt-1 group-hover:scale-[1.02] transition-transform origin-left">{value}</h3>
+        </div>
+        <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all duration-300 ${theme.badge}`}>
+          Drilldown Ledger <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+        </span>
+      </div>
+      <div className={`p-4 rounded-2xl shadow-lg bg-gradient-to-br ${theme.bg} shrink-0 text-white relative z-10 transition-transform duration-500 group-hover:rotate-12`}>
+        <Icon size={24} />
+      </div>
+    </button>
+  );
+};
+
+const AuditButton = ({ label, count, suffix = "", onClick, color = "blue", subtext = "Audit Ledger", className = "" }) => {
+  const colorMap = {
+    blue: {
+      border: "hover:border-blue-300/60 hover:shadow-blue-500/5",
+      label: "group-hover:text-blue-600",
+      badge: "bg-blue-50 text-blue-600 border border-blue-100",
+      arrow: "text-blue-500"
+    },
+    rose: {
+      border: "hover:border-rose-300/60 hover:shadow-rose-500/5",
+      label: "group-hover:text-rose-600",
+      badge: "bg-rose-50 text-rose-600 border border-rose-100",
+      arrow: "text-rose-500"
+    },
+    emerald: {
+      border: "hover:border-emerald-300/60 hover:shadow-emerald-500/5",
+      label: "group-hover:text-emerald-600",
+      badge: "bg-emerald-50 text-emerald-600 border border-emerald-100",
+      arrow: "text-emerald-550"
+    },
+    amber: {
+      border: "hover:border-amber-300/60 hover:shadow-amber-500/5",
+      label: "group-hover:text-amber-600",
+      badge: "bg-amber-50 text-amber-600 border border-amber-100",
+      arrow: "text-amber-500"
+    },
+    violet: {
+      border: "hover:border-violet-300/60 hover:shadow-violet-500/5",
+      label: "group-hover:text-violet-650",
+      badge: "bg-violet-50 text-violet-600 border border-violet-100",
+      arrow: "text-violet-500"
+    },
+    indigo: {
+      border: "hover:border-indigo-300/60 hover:shadow-indigo-500/5",
+      label: "group-hover:text-indigo-600",
+      badge: "bg-indigo-50 text-indigo-600 border border-indigo-100",
+      arrow: "text-indigo-500"
+    },
+    slate: {
+      border: "hover:border-slate-300/60 hover:shadow-slate-500/5",
+      label: "group-hover:text-slate-800",
+      badge: "bg-slate-50 text-slate-655 border border-slate-200",
+      arrow: "text-slate-500"
+    }
+  };
+
+  const current = colorMap[color] || colorMap.blue;
+
+  return (
+    <button 
+      onClick={onClick} 
+      className={`p-4 bg-slate-50/40 hover:bg-white rounded-2xl border border-slate-200/50 text-left cursor-pointer transition-all duration-300 hover:shadow-lg group flex flex-col justify-between ${current.border} ${className}`}
+    >
+      <div>
+        <span className={`text-[10px] font-black text-slate-400 uppercase tracking-widest block transition-colors ${current.label}`}>
+          {label}
+        </span>
+        <div className="flex items-baseline gap-1.5 mt-2">
+          <span className="text-2xl font-black text-slate-800 tracking-tight">
+            {typeof count === 'number' ? count.toLocaleString() : count}
+          </span>
+          {suffix && (
+            <span className="text-xs font-bold text-slate-500">
+              {suffix}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center justify-between w-full mt-4 pt-2 border-t border-slate-100/50">
+        <span className="text-[9.5px] font-bold text-slate-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+          {subtext} <ChevronRight size={10} className={current.arrow} />
+        </span>
+        <span className={`w-1.5 h-1.5 rounded-full ${color === 'rose' || color === 'amber' ? 'animate-pulse bg-rose-500' : 'bg-emerald-500'}`}></span>
+      </div>
+    </button>
+  );
+};
+
 
 const AdminDashboard = () => {
   // Live states
@@ -280,6 +396,11 @@ const AdminDashboard = () => {
   const [isGlobalDrawerOpen, setIsGlobalDrawerOpen] = useState(false);
   const [globalDrawerType, setGlobalDrawerType] = useState('student');
   const [globalDrawerData, setGlobalDrawerData] = useState(null);
+
+  // New tabbed controls states
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'analytics', 'reports'
+  const [selectedReportType, setSelectedReportType] = useState('defaulters');
+  const [reportSearchQuery, setReportSearchQuery] = useState('');
 
   // Load and sync all data in Promise.allSettled
   useEffect(() => {
@@ -356,6 +477,31 @@ const AdminDashboard = () => {
     loadAllData();
   }, []);
 
+  // Sync active navigation tab with section scroll position
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    };
+
+    const handleIntersection = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveTab(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, observerOptions);
+    ['overview', 'analytics', 'reports'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   // Safe helper to calculate student outstanding balance specifically matching FeesManagement
   const getStudentFeeDetails = (student) => {
     const struct = (admissionYearFeeStructures ?? []).find(s => 
@@ -405,6 +551,45 @@ const AdminDashboard = () => {
 
   const staffOnLeaveList = useMemo(() => {
     return (staff ?? []).filter(s => s && s.status === 'On Leave');
+  }, [staff]);
+
+  // Today's student daily attendance status computed dynamically
+  const todayStudentAttendance = useMemo(() => {
+    const total = students.length;
+    // Map status today based on attendance percentage as heuristic
+    const presentList = (students ?? []).filter(s => s && s.attendancePercentage >= 80);
+    const lateList = (students ?? []).filter(s => s && s.attendancePercentage >= 75 && s.attendancePercentage < 80);
+    const absentList = (students ?? []).filter(s => s && s.attendancePercentage < 75);
+    
+    return {
+      total,
+      present: presentList,
+      late: lateList,
+      absent: absentList,
+      presentCount: presentList.length,
+      lateCount: lateList.length,
+      absentCount: absentList.length,
+      rate: total > 0 ? Math.round((presentList.length / total) * 100) : 0
+    };
+  }, [students]);
+
+  // Today's staff daily attendance status computed dynamically
+  const todayStaffAttendance = useMemo(() => {
+    const total = staff.length;
+    const presentList = (staff ?? []).filter(s => s && s.status === 'Active');
+    const leaveList = (staff ?? []).filter(s => s && s.status === 'On Leave');
+    const absentList = (staff ?? []).filter(s => s && s.status !== 'Active' && s.status !== 'On Leave');
+    
+    return {
+      total,
+      present: presentList,
+      leave: leaveList,
+      absent: absentList,
+      presentCount: presentList.length,
+      leaveCount: leaveList.length,
+      absentCount: absentList.length,
+      rate: total > 0 ? Math.round((presentList.length / total) * 100) : 0
+    };
   }, [staff]);
 
   // Exams computed values
@@ -466,6 +651,89 @@ const AdminDashboard = () => {
     let search = [];
 
     switch (type) {
+      case 'present_students_today':
+        drillList = todayStudentAttendance.present;
+        cols = [
+          { header: 'Register No', accessor: 'registerNumber', render: (row) => <span className="font-extrabold text-indigo-650">{row.registerNumber || row.reg}</span> },
+          { header: 'Student Name', accessor: 'fullName', render: (row) => <span className="font-bold text-slate-800">{row.fullName || row.name}</span> },
+          { header: 'Department', accessor: 'department' },
+          { header: 'Year / Sem', render: (row) => <span>{row.year} Year • Sem {row.semester}</span> },
+          { header: 'Attendance %', accessor: 'attendancePercentage', render: (row) => <span>{row.attendancePercentage}%</span> },
+          { header: 'Daily Status', render: () => (
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-50 text-emerald-650 border border-emerald-100">
+              Present Today
+            </span>
+          )}
+        ];
+        search = ['registerNumber', 'fullName', 'name', 'department'];
+        break;
+
+      case 'absent_students_today':
+        drillList = todayStudentAttendance.absent;
+        cols = [
+          { header: 'Register No', accessor: 'registerNumber', render: (row) => <span className="font-extrabold text-rose-600">{row.registerNumber || row.reg}</span> },
+          { header: 'Student Name', accessor: 'fullName', render: (row) => <span className="font-bold text-slate-800">{row.fullName || row.name}</span> },
+          { header: 'Department', accessor: 'department' },
+          { header: 'Year / Sem', render: (row) => <span>{row.year} Year • Sem {row.semester}</span> },
+          { header: 'Attendance %', accessor: 'attendancePercentage', render: (row) => <span>{row.attendancePercentage}%</span> },
+          { header: 'Daily Status', render: () => (
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-rose-50 text-rose-600 border border-rose-100">
+              Absent Today
+            </span>
+          )}
+        ];
+        search = ['registerNumber', 'fullName', 'name', 'department'];
+        break;
+
+      case 'late_students_today':
+        drillList = todayStudentAttendance.late;
+        cols = [
+          { header: 'Register No', accessor: 'registerNumber', render: (row) => <span className="font-extrabold text-amber-600">{row.registerNumber || row.reg}</span> },
+          { header: 'Student Name', accessor: 'fullName', render: (row) => <span className="font-bold text-slate-800">{row.fullName || row.name}</span> },
+          { header: 'Department', accessor: 'department' },
+          { header: 'Year / Sem', render: (row) => <span>{row.year} Year • Sem {row.semester}</span> },
+          { header: 'Attendance %', accessor: 'attendancePercentage', render: (row) => <span>{row.attendancePercentage}%</span> },
+          { header: 'Daily Status', render: () => (
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100">
+              Late Today
+            </span>
+          )}
+        ];
+        search = ['registerNumber', 'fullName', 'name', 'department'];
+        break;
+
+      case 'present_staff_today':
+        drillList = todayStaffAttendance.present;
+        cols = [
+          { header: 'Staff ID', accessor: 'staffId', render: (row) => <span className="font-extrabold text-indigo-650">{row.staffId || row.employeeId}</span> },
+          { header: 'Faculty Name', accessor: 'fullName', render: (row) => <span className="font-bold text-slate-800">{row.fullName}</span> },
+          { header: 'Department', accessor: 'department' },
+          { header: 'Designation', accessor: 'designation' },
+          { header: 'Daily Status', render: () => (
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-50 text-emerald-650 border border-emerald-100">
+              Active / Present
+            </span>
+          )}
+        ];
+        search = ['staffId', 'fullName', 'department', 'designation'];
+        break;
+
+      case 'on_leave_staff_today':
+        drillList = todayStaffAttendance.leave;
+        cols = [
+          { header: 'Staff ID', accessor: 'staffId', render: (row) => <span className="font-extrabold text-rose-600">{row.staffId || row.employeeId}</span> },
+          { header: 'Faculty Name', accessor: 'fullName', render: (row) => <span className="font-bold text-slate-800">{row.fullName}</span> },
+          { header: 'Department', accessor: 'department' },
+          { header: 'Designation', accessor: 'designation' },
+          { header: 'Daily Status', render: () => (
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-rose-50 text-rose-600 border border-rose-100">
+              On Leave Today
+            </span>
+          )}
+        ];
+        search = ['staffId', 'fullName', 'department', 'designation'];
+        break;
+
       case 'total_students':
         drillList = students ?? [];
         cols = [
@@ -889,8 +1157,87 @@ const AdminDashboard = () => {
     setIsGlobalModalOpen(true);
   };
 
+  const deptAnalytics = useMemo(() => {
+    const depts = {};
+    (students ?? []).forEach(s => {
+      const d = s.department || s.dept || 'Other';
+      if (!depts[d]) {
+        depts[d] = { name: d, studentsCount: 0, cgpaSum: 0, cgpaCount: 0, placedCount: 0 };
+      }
+      depts[d].studentsCount += 1;
+      if (s.cgpa) {
+        depts[d].cgpaSum += Number(s.cgpa);
+        depts[d].cgpaCount += 1;
+      }
+      if (s.status === 'placed') {
+        depts[d].placedCount += 1;
+      }
+    });
+
+    (staff ?? []).forEach(st => {
+      const d = st.department || 'Other';
+      if (depts[d]) {
+        if (!depts[d].facultyCount) depts[d].facultyCount = 0;
+        depts[d].facultyCount += 1;
+      }
+    });
+
+    return Object.values(depts).map(d => ({
+      ...d,
+      averageCGPA: d.cgpaCount > 0 ? Number((d.cgpaSum / d.cgpaCount).toFixed(2)) : 0,
+      facultyCount: d.facultyCount || 1,
+      placementRate: d.studentsCount > 0 ? Number(((d.placedCount / d.studentsCount) * 100).toFixed(1)) : 0
+    }));
+  }, [students, staff]);
+
+  const feePieData = useMemo(() => {
+    const collected = 365000;
+    const pending = pendingFeesList.reduce((sum, f) => sum + (f.balance || 0), 0);
+    return [
+      { name: 'Collected Fees', value: collected, color: '#10B981' },
+      { name: 'Pending Outstanding', value: pending, color: '#F43F5E' }
+    ];
+  }, [pendingFeesList]);
+
+  const deptPieColors = ['#4F46E5', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#EC4899'];
+  const deptPieData = useMemo(() => {
+    return deptAnalytics.map((dept, index) => ({
+      name: dept.name,
+      value: dept.studentsCount,
+      color: deptPieColors[index % deptPieColors.length]
+    }));
+  }, [deptAnalytics]);
+
+  const filteredReportData = useMemo(() => {
+    let rawData = [];
+    switch (selectedReportType) {
+      case 'defaulters':
+        rawData = pendingFeesList;
+        break;
+      case 'attendance':
+        rawData = lowAttendanceList;
+        break;
+      case 'malpractice':
+        rawData = malpracticeList;
+        break;
+      case 'leaves':
+        rawData = leaveRequests;
+        break;
+      default:
+        rawData = [];
+    }
+
+    if (!reportSearchQuery.trim()) return rawData;
+    const query = reportSearchQuery.toLowerCase();
+    return rawData.filter(row => {
+      return Object.values(row).some(val => 
+        String(val).toLowerCase().includes(query)
+      );
+    });
+  }, [selectedReportType, pendingFeesList, lowAttendanceList, malpracticeList, leaveRequests, reportSearchQuery]);
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12 Outfit-Font bg-slate-50/30 p-2 sm:p-6 rounded-3xl">
+    <div className="space-y-8 w-full pb-12 Outfit-Font bg-slate-50/30 p-2 sm:p-6 rounded-3xl">
       
       {/* Dynamic Drilldown Modal Overlay */}
       <GlobalDrilldownModal 
@@ -923,257 +1270,1020 @@ const AdminDashboard = () => {
         profileData={globalDrawerData}
       />
 
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Activity className="text-indigo-600" size={32} />
-            Enterprise Control Center
-          </h1>
-          <p className="text-slate-500 mt-1 font-semibold text-sm">Synchronized dynamic metrics audit ledgers from all administrative modules.</p>
-        </div>
-      </div>
 
-      {/* Main General Overview KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Total Enrolled Students" 
-          value={students.length} 
-          icon={GraduationCap} 
-          colorClass="bg-indigo-600"
-          onClick={() => handleKPIClick('total_students', 'Total Enrolled Students')}
-        />
-        <StatCard 
-          title="Active Faculty & Staff" 
-          value={staff.length} 
-          icon={Users} 
-          colorClass="bg-emerald-600"
-          onClick={() => handleKPIClick('total_staff', 'Active Faculty & Staff')}
-        />
-        <StatCard 
-          title="Fee Revenue Collected" 
-          value={formatINR(totalCollectedRevenue)} 
-          icon={DollarSign} 
-          colorClass="bg-blue-600"
-          onClick={() => handleKPIClick('revenue_collected', 'Fee Revenue Collected')}
-        />
-        <StatCard 
-          title="Academic Events Scheduled" 
-          value={SEED_EVENTS.length} 
-          icon={CalendarDays} 
-          colorClass="bg-violet-600"
-          onClick={() => handleKPIClick('total_events', 'Academic Events Scheduled')}
-        />
-      </div>
-
-      {/* Grid of Administrative Areas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="space-y-16 mt-6">
         
-        {/* FINANCE COMPONENT */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
-              <DollarSign size={20} />
+        {/* SECTION 1: SYSTEM OVERVIEW & QUICK AUDITS */}
+        <section id="overview" className="scroll-mt-28 space-y-8">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/50">
+            <div className="flex items-center gap-2.5">
+              <Activity className="text-blue-655" size={20} />
+              <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">System Overview & Quick Audits</h2>
             </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Fee Structure & Financial Audits</h4>
+            <span className="text-[10px] font-bold text-slate-400">Section 1 of 3</span>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('pending_fees', 'Students with Pending Fees')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pending Fees</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{pendingFeesList.length} Students</span>
-            </button>
-            <button onClick={() => handleKPIClick('fee_defaulters', 'Defaulters Overdue Dues')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Fee Defaulters</span>
-              <span className="text-xl font-extrabold text-rose-600 mt-1 block">{feeDefaultersList.length} Students</span>
-            </button>
-            <button onClick={() => handleKPIClick('scholarships', 'Scholarship Grants Registry')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Scholarships Awarded</span>
-              <span className="text-xl font-extrabold text-emerald-600 mt-1 block">{scholarshipRegistry.length} Awards</span>
-            </button>
-            <button onClick={() => handleKPIClick('fines_pending', 'Unpaid Penalties & Fines')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pending Penalty Fines</span>
-              <span className="text-xl font-extrabold text-amber-600 mt-1 block">{finesPendingList.length} Dues</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ACADEMICS & EXAMINATIONS */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-              <BookOpen size={20} />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Academics & Examination Control</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('active_exams', 'Scheduled Active Exams')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Active Exams</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{exams.length} Slots</span>
-            </button>
-            <button onClick={() => handleKPIClick('appearing_students', 'Appeared Student Logs')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Students Appearing</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{allAppearingStudents.length} Students</span>
-            </button>
-            <button onClick={() => handleKPIClick('malpractice_cases', 'Logged Malpractice Infractions')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Malpractice Cases</span>
-              <span className="text-xl font-extrabold text-rose-600 mt-1 block">{malpracticeList.length} Logged</span>
-            </button>
-            <button onClick={() => handleKPIClick('exams_calendar', 'Academic Calendar Exam Cycles')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Exam Calendar Dates</span>
-              <span className="text-xl font-extrabold text-violet-600 mt-1 block">{SEED_EVENTS.filter(e => e.type === 'Exam').length} Events</span>
-            </button>
-          </div>
-        </div>
-
-        {/* CAMPUS INFRASTRUCTURE & MAPPINGS */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-              <Building size={20} />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Campus Infrastructure & Allocations</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('classes_today', 'Timetabled Classrooms')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Classrooms Active</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{activeAllocations.length} Occupied</span>
-            </button>
-            <button onClick={() => handleKPIClick('vacant_classrooms', 'Vacant Classroom Mappings')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Vacant Rooms</span>
-              <span className="text-xl font-extrabold text-emerald-600 mt-1 block">{vacantClassrooms.length} Halls Available</span>
-            </button>
-            <button onClick={() => handleKPIClick('hostel_residents', 'Hostel Housing Bed Allocations')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Hostel Residents</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{students.filter((_, idx) => idx % 2 === 0).length} Checked-In</span>
-            </button>
-            <button onClick={() => handleKPIClick('transport_routes', 'Active Fleet Routes Mapped')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Transport Routes</span>
-              <span className="text-xl font-extrabold text-blue-600 mt-1 block">3 Active Routes</span>
-            </button>
-          </div>
-        </div>
-
-        {/* LIBRARY & CAMPUS SERVICES */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-violet-50 text-violet-600 rounded-xl">
-              <BookOpen size={20} />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Library Ledger & Campus Services</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('library_inventory', 'Library Catalog Ledger')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Book Inventory</span>
-              <span className="text-xl font-extrabold text-slate-800 mt-1 block">{totalBooksInventoryCount} Books</span>
-            </button>
-            <button onClick={() => handleKPIClick('borrowed_books', 'Active Issued Books')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Borrowed Books</span>
-              <span className="text-xl font-extrabold text-indigo-600 mt-1 block">{borrowRecordsActive.length} Issued</span>
-            </button>
-            <button onClick={() => handleKPIClick('overdue_books', 'Library Overdue Book Warnings')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Overdue Books</span>
-              <span className="text-xl font-extrabold text-rose-600 mt-1 block">{borrowRecordsOverdue.length} Overdue</span>
-            </button>
-            <button onClick={() => handleKPIClick('placed_students', 'Placed Student Drives')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Placed Students</span>
-              <span className="text-xl font-extrabold text-emerald-600 mt-1 block">{placementStudents.length} Offers</span>
-            </button>
-          </div>
-        </div>
-
-        {/* STAFF DUTY ROSTERS & LEAVE REQUESTS */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-              <Users size={20} />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Faculty Duty Rosters & Leaves</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('pending_leaves', 'Pending Leave Applications')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pending Leave Requests</span>
-              <span className="text-xl font-extrabold text-indigo-600 mt-1 block">{leaveRequests.filter(l => l.status === 'Pending').length} Pending</span>
-            </button>
-            <button onClick={() => handleKPIClick('approved_leaves', 'Approved Leave Log')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Approved Leaves</span>
-              <span className="text-xl font-extrabold text-emerald-600 mt-1 block">{leaveRequests.filter(l => l.status === 'Approved').length} Approved</span>
-            </button>
-            <button onClick={() => handleKPIClick('salary_pending', 'Faculty Salary Authorizations')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Salary Pending</span>
-              <span className="text-xl font-extrabold text-amber-600 mt-1 block">{salaryPendingList.length} Staff</span>
-            </button>
-            <button onClick={() => handleKPIClick('staff_on_leave', 'Staff On Leave Today')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Staff On Leave</span>
-              <span className="text-xl font-extrabold text-rose-600 mt-1 block">{staffOnLeaveList.length} Leave Today</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ATTENDANCE & ENROLLMENT COMPLIANCE */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-              <GraduationCap size={20} />
-            </div>
-            <h4 className="font-black text-slate-800 uppercase tracking-wide text-xs">Attendance & Compliance Checks</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleKPIClick('low_attendance', 'Students with Low Attendance')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Low Attendance Alerts</span>
-              <span className="text-xl font-extrabold text-rose-600 mt-1 block">{lowAttendanceList.length} Students (&lt;75%)</span>
-            </button>
-            <button onClick={() => handleKPIClick('pending_admissions', 'Students Awaiting Verification')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pending Admissions</span>
-              <span className="text-xl font-extrabold text-amber-600 mt-1 block">{pendingAdmissionsList.length} Verification</span>
-            </button>
-            <button onClick={() => handleKPIClick('staff_workload', 'Faculty Weekly Workload Rating')} className="p-4 bg-slate-50 rounded-2xl hover:bg-slate-100/70 border border-slate-200/40 text-left cursor-pointer transition-colors col-span-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Faculty Workload Profiles</span>
-              <span className="text-xl font-extrabold text-indigo-600 mt-1 block">{staff.length} Active Workloads Mapped</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Historical YoY Growth Charts */}
-      <div className="card p-6 bg-white border border-slate-100 rounded-3xl">
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 gap-4">
-          <div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight">Year-over-Year Admissions & Revenue</h3>
-            <p className="text-slate-400 text-xs font-semibold mt-1">Institutional admissions and collections compared with previous terms</p>
-          </div>
-        </div>
-
-        <div className="h-96 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={[
-              { month: 'Jan', lastYearAdmissions: 120, thisYearAdmissions: 145, lastYearRevenue: 1200000, thisYearRevenue: 1450000 },
-              { month: 'Feb', lastYearAdmissions: 98, thisYearAdmissions: 110, lastYearRevenue: 980000, thisYearRevenue: 1100000 },
-              { month: 'Mar', lastYearAdmissions: 150, thisYearAdmissions: 190, lastYearRevenue: 1500000, thisYearRevenue: 1900000 },
-              { month: 'Apr', lastYearAdmissions: 210, thisYearAdmissions: 260, lastYearRevenue: 2100000, thisYearRevenue: 2600000 },
-              { month: 'May', lastYearAdmissions: 300, thisYearAdmissions: 350, lastYearRevenue: 3000000, thisYearRevenue: 3500000 }
-            ]} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 11, fontWeight: 700}} dy={10} />
-              <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 11, fontWeight: 700}} />
-              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tickFormatter={(value) => formatCompactINR(value)} tick={{fill: '#10B981', fontSize: 11, fontWeight: 700}} dx={10} />
-              <Tooltip 
-                cursor={{fill: '#F8FAFC'}}
-                contentStyle={{borderRadius: '16px', border: '1px solid #E2E8F0', padding: '12px'}}
-                formatter={(value, name) => {
-                   if(name.includes('Revenue')) return [formatINR(value), name];
-                   return [value, name];
-                }}
+            {/* Main General Overview KPIs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard 
+                title="Total Enrolled Students" 
+                value={students.length} 
+                icon={GraduationCap} 
+                themeName="indigo"
+                onClick={() => handleKPIClick('total_students', 'Total Enrolled Students')}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="circle" />
-              <Bar yAxisId="left" dataKey="lastYearAdmissions" name="2025 Admissions" fill="#DBEAFE" radius={[6, 6, 0, 0]} barSize={20} />
-              <Bar yAxisId="left" dataKey="thisYearAdmissions" name="2026 Admissions" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={20} />
-              <Line yAxisId="right" type="monotone" dataKey="thisYearRevenue" name="2026 Revenue Collections" stroke="#10B981" strokeWidth={3} dot={{r: 5, fill: '#fff', strokeWidth: 2}} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+              <StatCard 
+                title="Active Faculty & Staff" 
+                value={staff.length} 
+                icon={Users} 
+                themeName="emerald"
+                onClick={() => handleKPIClick('total_staff', 'Active Faculty & Staff')}
+              />
+              <StatCard 
+                title="Fee Revenue Collected" 
+                value={formatINR(totalCollectedRevenue)} 
+                icon={DollarSign} 
+                themeName="blue"
+                onClick={() => handleKPIClick('revenue_collected', 'Fee Revenue Collected')}
+              />
+              <StatCard 
+                title="Academic Events Scheduled" 
+                value={SEED_EVENTS.length} 
+                icon={CalendarDays} 
+                themeName="purple"
+                onClick={() => handleKPIClick('total_events', 'Academic Events Scheduled')}
+              />
+            </div>
 
+            {/* Today's Attendance & Campus Vitals */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {/* STUDENT DAILY ATTENDANCE CARD */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-6 hover:bg-white hover:shadow-md transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100/30">
+                      <GraduationCap size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px] leading-tight">Student Attendance Tracker</h4>
+                      <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Today's Live Campus Logs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-650 border border-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Live Feed
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-8 py-2">
+                  {/* Gauge indicator */}
+                  <div className="relative flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+                    <svg className="w-28 h-28 transform -rotate-90">
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="stroke-slate-100 fill-none"
+                        strokeWidth="9"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="stroke-indigo-600 fill-none transition-all duration-500 ease-out"
+                        strokeWidth="9"
+                        strokeDasharray={2 * Math.PI * 46}
+                        strokeDashoffset={(2 * Math.PI * 46) - (todayStudentAttendance.rate / 100) * (2 * Math.PI * 46)}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center">
+                      <span className="text-2xl font-black text-slate-800 tracking-tight">{todayStudentAttendance.rate}%</span>
+                      <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">Present</span>
+                    </div>
+                  </div>
+
+                  {/* Details stats */}
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      <button 
+                        onClick={() => handleKPIClick('present_students_today', 'Present Students Today')}
+                        className="flex flex-col items-start p-3 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/50 hover:border-emerald-200 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wide">Present</span>
+                        <span className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">
+                          {todayStudentAttendance.presentCount}
+                          <span className="text-[10px] font-semibold text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </button>
+
+                      <button 
+                        onClick={() => handleKPIClick('absent_students_today', 'Absent Students Today')}
+                        className="flex flex-col items-start p-3 bg-rose-50/50 hover:bg-rose-50 border border-rose-100/50 hover:border-rose-200 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-[10px] font-black uppercase text-rose-600 tracking-wide">Absent</span>
+                        <span className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">
+                          {todayStudentAttendance.absentCount}
+                          <span className="text-[10px] font-semibold text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </button>
+
+                      <button 
+                        onClick={() => handleKPIClick('late_students_today', 'Late Students Today')}
+                        className="flex flex-col items-start p-3 bg-amber-50/50 hover:bg-amber-50 border border-amber-100/50 hover:border-amber-200 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-[10px] font-black uppercase text-amber-600 tracking-wide">Late</span>
+                        <span className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">
+                          {todayStudentAttendance.lateCount}
+                          <span className="text-[10px] font-semibold text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Progress Bar Segments */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1">
+                        <span>Daily Breakdown</span>
+                        <span>Total: {todayStudentAttendance.total} Students</span>
+                      </div>
+                      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                        <div 
+                          className="bg-emerald-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStudentAttendance.total > 0 ? (todayStudentAttendance.presentCount / todayStudentAttendance.total) * 100 : 0}%` }}
+                          title={`Present: ${todayStudentAttendance.presentCount}`}
+                        />
+                        <div 
+                          className="bg-amber-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStudentAttendance.total > 0 ? (todayStudentAttendance.lateCount / todayStudentAttendance.total) * 100 : 0}%` }}
+                          title={`Late: ${todayStudentAttendance.lateCount}`}
+                        />
+                        <div 
+                          className="bg-rose-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStudentAttendance.total > 0 ? (todayStudentAttendance.absentCount / todayStudentAttendance.total) * 100 : 0}%` }}
+                          title={`Absent: ${todayStudentAttendance.absentCount}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STAFF DAILY ATTENDANCE CARD */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-6 hover:bg-white hover:shadow-md transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100/30">
+                      <Users size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px] leading-tight">Faculty & Staff Attendance</h4>
+                      <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Today's Duty Logs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-650 border border-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      On Duty
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-8 py-2">
+                  {/* Gauge indicator */}
+                  <div className="relative flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+                    <svg className="w-28 h-28 transform -rotate-90">
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="stroke-slate-100 fill-none"
+                        strokeWidth="9"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="stroke-emerald-600 fill-none transition-all duration-500 ease-out"
+                        strokeWidth="9"
+                        strokeDasharray={2 * Math.PI * 46}
+                        strokeDashoffset={(2 * Math.PI * 46) - (todayStaffAttendance.rate / 100) * (2 * Math.PI * 46)}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center">
+                      <span className="text-2xl font-black text-slate-800 tracking-tight">{todayStaffAttendance.rate}%</span>
+                      <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">Active</span>
+                    </div>
+                  </div>
+
+                  {/* Details stats */}
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      <button 
+                        onClick={() => handleKPIClick('present_staff_today', 'Present Staff Today')}
+                        className="flex flex-col items-start p-3 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/50 hover:border-emerald-200 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wide">Present</span>
+                        <span className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">
+                          {todayStaffAttendance.presentCount}
+                          <span className="text-[10px] font-semibold text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </button>
+
+                      <button 
+                        onClick={() => handleKPIClick('on_leave_staff_today', 'Staff On Leave Today')}
+                        className="flex flex-col items-start p-3 bg-violet-50/50 hover:bg-violet-50 border border-violet-100/50 hover:border-violet-200 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-[10px] font-black uppercase text-violet-600 tracking-wide">On Leave</span>
+                        <span className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">
+                          {todayStaffAttendance.leaveCount}
+                          <span className="text-[10px] font-semibold text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
+                      </button>
+
+                      <div 
+                        className="flex flex-col items-start p-3 bg-rose-50/30 border border-rose-100/30 rounded-2xl transition-all text-left"
+                      >
+                        <span className="text-[10px] font-black uppercase text-rose-500 tracking-wide">Absent</span>
+                        <span className="text-2xl font-black text-slate-450 mt-1">
+                          {todayStaffAttendance.absentCount}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar Segments */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1">
+                        <span>Duty Breakdown</span>
+                        <span>Total: {todayStaffAttendance.total} Faculty</span>
+                      </div>
+                      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                        <div 
+                          className="bg-emerald-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStaffAttendance.total > 0 ? (todayStaffAttendance.presentCount / todayStaffAttendance.total) * 100 : 0}%` }}
+                          title={`Active: ${todayStaffAttendance.presentCount}`}
+                        />
+                        <div 
+                          className="bg-violet-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStaffAttendance.total > 0 ? (todayStaffAttendance.leaveCount / todayStaffAttendance.total) * 100 : 0}%` }}
+                          title={`On Leave: ${todayStaffAttendance.leaveCount}`}
+                        />
+                        <div 
+                          className="bg-rose-500 h-full transition-all duration-500" 
+                          style={{ width: `${todayStaffAttendance.total > 0 ? (todayStaffAttendance.absentCount / todayStaffAttendance.total) * 100 : 0}%` }}
+                          title={`Absent: ${todayStaffAttendance.absentCount}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid of Administrative Areas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* FINANCE COMPONENT */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-50/80 text-blue-655 rounded-2xl border border-blue-100/30">
+                      <DollarSign size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Fee Structure & Financial Audits</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Pending Fees" 
+                    count={pendingFeesList.length} 
+                    suffix="Students" 
+                    onClick={() => handleKPIClick('pending_fees', 'Students with Pending Fees')} 
+                    color="blue"
+                  />
+                  <AuditButton 
+                    label="Fee Defaulters" 
+                    count={feeDefaultersList.length} 
+                    suffix="Students" 
+                    onClick={() => handleKPIClick('fee_defaulters', 'Defaulters Overdue Dues')} 
+                    color="rose"
+                  />
+                  <AuditButton 
+                    label="Scholarships Awarded" 
+                    count={scholarshipRegistry.length} 
+                    suffix="Awards" 
+                    onClick={() => handleKPIClick('scholarships', 'Scholarship Grants Registry')} 
+                    color="emerald"
+                  />
+                  <AuditButton 
+                    label="Pending Penalty Fines" 
+                    count={finesPendingList.length} 
+                    suffix="Dues" 
+                    onClick={() => handleKPIClick('fines_pending', 'Unpaid Penalties & Fines')} 
+                    color="amber"
+                  />
+                </div>
+              </div>
+
+              {/* ACADEMICS & EXAMINATIONS */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50/80 text-indigo-655 rounded-2xl border border-indigo-100/30">
+                      <BookOpen size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Academics & Examination Control</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Active Exams" 
+                    count={exams.length} 
+                    suffix="Slots" 
+                    onClick={() => handleKPIClick('active_exams', 'Scheduled Active Exams')} 
+                    color="blue"
+                  />
+                  <AuditButton 
+                    label="Students Appearing" 
+                    count={allAppearingStudents.length} 
+                    suffix="Students" 
+                    onClick={() => handleKPIClick('appearing_students', 'Appeared Student Logs')} 
+                    color="slate"
+                  />
+                  <AuditButton 
+                    label="Malpractice Cases" 
+                    count={malpracticeList.length} 
+                    suffix="Logged" 
+                    onClick={() => handleKPIClick('malpractice_cases', 'Logged Malpractice Infractions')} 
+                    color="rose"
+                  />
+                  <AuditButton 
+                    label="Exam Calendar Dates" 
+                    count={SEED_EVENTS.filter(e => e.type === 'Exam').length} 
+                    suffix="Events" 
+                    onClick={() => handleKPIClick('exams_calendar', 'Academic Calendar Exam Cycles')} 
+                  />
+                </div>
+              </div>
+
+              {/* CAMPUS INFRASTRUCTURE & MAPPINGS */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-emerald-50/80 text-emerald-600 rounded-2xl border border-emerald-100/30">
+                      <Building size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Campus Infrastructure & Allocations</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Classrooms Active" 
+                    count={activeAllocations.length} 
+                    suffix="Occupied" 
+                    onClick={() => handleKPIClick('classes_today', 'Timetabled Classrooms')} 
+                    color="slate"
+                  />
+                  <AuditButton 
+                    label="Vacant Rooms" 
+                    count={vacantClassrooms.length} 
+                    suffix="Halls Available" 
+                    onClick={() => handleKPIClick('vacant_classrooms', 'Vacant Classroom Mappings')} 
+                    color="emerald"
+                  />
+                  <AuditButton 
+                    label="Hostel Residents" 
+                    count={students.filter((_, idx) => idx % 2 === 0).length} 
+                    suffix="Checked-In" 
+                    onClick={() => handleKPIClick('hostel_residents', 'Hostel Housing Bed Allocations')} 
+                    color="slate"
+                  />
+                  <AuditButton 
+                    label="Transport Routes" 
+                    count={3} 
+                    suffix="Active Routes" 
+                    onClick={() => handleKPIClick('transport_routes', 'Active Fleet Routes Mapped')} 
+                    color="blue"
+                  />
+                </div>
+              </div>
+
+              {/* LIBRARY & CAMPUS SERVICES */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-violet-50/80 text-violet-650 rounded-2xl border border-violet-100/30">
+                      <BookOpen size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Library Ledger & Campus Services</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Total Book Inventory" 
+                    count={totalBooksInventoryCount} 
+                    suffix="Books" 
+                    onClick={() => handleKPIClick('library_inventory', 'Library Catalog Ledger')} 
+                    color="slate"
+                  />
+                  <AuditButton 
+                    label="Borrowed Books" 
+                    count={borrowRecordsActive.length} 
+                    suffix="Issued" 
+                    onClick={() => handleKPIClick('borrowed_books', 'Active Issued Books')} 
+                    color="indigo"
+                  />
+                  <AuditButton 
+                    label="Overdue Books" 
+                    count={borrowRecordsOverdue.length} 
+                    suffix="Overdue" 
+                    onClick={() => handleKPIClick('overdue_books', 'Library Overdue Book Warnings')} 
+                    color="rose"
+                  />
+                  <AuditButton 
+                    label="Placed Students" 
+                    count={placementStudents.length} 
+                    suffix="Offers" 
+                    onClick={() => handleKPIClick('placed_students', 'Placed Student Drives')} 
+                    color="emerald"
+                  />
+                </div>
+              </div>
+
+              {/* STAFF DUTY ROSTERS & LEAVE REQUESTS */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-emerald-50/80 text-emerald-600 rounded-2xl border border-emerald-100/30">
+                      <Users size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Faculty Duty Rosters & Leaves</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Pending Leave Requests" 
+                    count={leaveRequests.filter(l => l.status === 'Pending').length} 
+                    suffix="Pending" 
+                    onClick={() => handleKPIClick('pending_leaves', 'Pending Leave Applications')} 
+                    color="indigo"
+                  />
+                  <AuditButton 
+                    label="Approved Leaves" 
+                    count={leaveRequests.filter(l => l.status === 'Approved').length} 
+                    suffix="Approved" 
+                    onClick={() => handleKPIClick('approved_leaves', 'Approved Leave Log')} 
+                    color="emerald"
+                  />
+                  <AuditButton 
+                    label="Salary Pending" 
+                    count={salaryPendingList.length} 
+                    suffix="Staff" 
+                    onClick={() => handleKPIClick('salary_pending', 'Faculty Salary Authorizations')} 
+                    color="amber"
+                  />
+                  <AuditButton 
+                    label="Staff On Leave" 
+                    count={staffOnLeaveList.length} 
+                    suffix="Leave Today" 
+                    onClick={() => handleKPIClick('staff_on_leave', 'Staff On Leave Today')} 
+                    color="rose"
+                  />
+                </div>
+              </div>
+
+              {/* ATTENDANCE & ENROLLMENT COMPLIANCE */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50/80 text-indigo-655 rounded-2xl border border-indigo-100/30">
+                      <GraduationCap size={18} />
+                    </div>
+                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Attendance & Compliance Checks</h4>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <AuditButton 
+                    label="Low Attendance Alerts" 
+                    count={lowAttendanceList.length} 
+                    suffix="Students (<75%)" 
+                    onClick={() => handleKPIClick('low_attendance', 'Students with Low Attendance')} 
+                    color="rose"
+                  />
+                  <AuditButton 
+                    label="Pending Admissions" 
+                    count={pendingAdmissionsList.length} 
+                    suffix="Verification" 
+                    onClick={() => handleKPIClick('pending_admissions', 'Students Awaiting Verification')} 
+                    color="amber"
+                  />
+                  <AuditButton 
+                    label="Faculty Workload Profiles" 
+                    count={staff.length} 
+                    suffix="Active Workloads Mapped" 
+                    onClick={() => handleKPIClick('staff_workload', 'Faculty Weekly Workload Rating')} 
+                    color="indigo"
+                    className="col-span-2"
+                  />
+                </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 2: INSTITUTIONAL ANALYTICS & TREND INTELLIGENCE */}
+        <section id="analytics" className="scroll-mt-28 space-y-8 pt-8 border-t border-slate-200/50">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/50">
+            <div className="flex items-center gap-2.5">
+              <TrendingUp className="text-indigo-655" size={20} />
+              <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Institutional Analytics & Trends</h2>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">Section 2 of 3</span>
+          </div>
+
+          <div className="space-y-8">
+            
+            {/* ROW 1: YoY Trends & Fee Collection Pie Donut */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Chart 1: Admissions & Revenue (Composed) */}
+              <div className="lg:col-span-2 bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm hover:bg-white transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-base font-black text-slate-800 tracking-tight">Year-over-Year Admissions & Revenue Trends</h3>
+                    <p className="text-slate-450 text-[11px] font-bold mt-0.5">Admissions intake comparison mapped to actual revenue collections</p>
+                  </div>
+                  <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black tracking-wider uppercase">
+                    Annual Audit
+                  </div>
+                </div>
+
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={[
+                      { month: 'Jan', lastYearAdmissions: 120, thisYearAdmissions: 145, lastYearRevenue: 1200000, thisYearRevenue: 1450000 },
+                      { month: 'Feb', lastYearAdmissions: 98, thisYearAdmissions: 110, lastYearRevenue: 980000, thisYearRevenue: 1100000 },
+                      { month: 'Mar', lastYearAdmissions: 150, thisYearAdmissions: 190, lastYearRevenue: 1500000, thisYearRevenue: 1900000 },
+                      { month: 'Apr', lastYearAdmissions: 210, thisYearAdmissions: 260, lastYearRevenue: 2100000, thisYearRevenue: 2600000 },
+                      { month: 'May', lastYearAdmissions: 300, thisYearAdmissions: 350, lastYearRevenue: 3000000, thisYearRevenue: 3500000 }
+                    ]} margin={{ top: 10, right: -5, left: -15, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0.01}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={10} />
+                      <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} />
+                      <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tickFormatter={(value) => formatCompactINR(value)} tick={{fill: '#10B981', fontSize: 10, fontWeight: 700}} dx={10} />
+                      <Tooltip 
+                        cursor={{fill: '#F8FAFC'}}
+                        contentStyle={{borderRadius: '16px', border: '1px solid #E2E8F0', padding: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(255,255,255,0.95)'}}
+                        formatter={(value, name) => {
+                          if(name.includes('Revenue')) return [formatINR(value), name];
+                          return [value, name];
+                        }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 650 }} iconType="circle" />
+                      <Bar yAxisId="left" dataKey="lastYearAdmissions" name="2025 Admissions" fill="#DBEAFE" radius={[4, 4, 0, 0]} barSize={16} />
+                      <Bar yAxisId="left" dataKey="thisYearAdmissions" name="2026 Admissions" fill="#4F46E5" radius={[4, 4, 0, 0]} barSize={16} />
+                      <Line yAxisId="right" type="monotone" dataKey="thisYearRevenue" name="2026 Revenue (INR)" stroke="#10B981" strokeWidth={3} dot={{r: 4, fill: '#fff', strokeWidth: 2}} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Chart 2: Fee Collections Status (Donut Pie Chart) */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm hover:bg-white transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-black text-slate-800 tracking-tight">Fee Collection Status</h3>
+                    <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase">Collected vs Defaulters</div>
+                  </div>
+                  <p className="text-slate-450 text-[10px] font-bold leading-normal">
+                    Interactive analysis comparing actual collected fees against current overdue fees across the entire student roster.
+                  </p>
+                </div>
+
+                <div className="h-56 relative flex items-center justify-center my-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={feePieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {feePieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => formatINR(value)} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Central Text for Donut Chart */}
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Value</span>
+                    <span className="text-xs font-black text-slate-800">
+                      ₹{((feePieData[0]?.value || 0) + (feePieData[1]?.value || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  {feePieData.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between text-xs font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                        <span className="text-slate-600">{item.name}</span>
+                      </div>
+                      <span className="text-slate-900 font-bold">₹{item.value.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 2: Department Performance & Student Distribution Pie */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Chart 3: Department Performance Matrix (Enrollment & Placement) */}
+              <div className="lg:col-span-2 bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm hover:bg-white transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-base font-black text-slate-800 tracking-tight">Departmental Matrix: Enrollment vs Placement</h3>
+                    <p className="text-slate-455 text-[11px] font-bold mt-0.5">Dynamic comparison comparing total students and faculty with placement percentages</p>
+                  </div>
+                  <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black tracking-wider uppercase">
+                    Live DB Calculations
+                  </div>
+                </div>
+
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={deptAnalytics} margin={{ top: 10, right: -5, left: -15, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={10} />
+                      <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} />
+                      <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} tick={{fill: '#10B981', fontSize: 10, fontWeight: 700}} dx={10} />
+                      <Tooltip 
+                        contentStyle={{borderRadius: '16px', border: '1px solid #E2E8F0', padding: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)'}}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 650 }} iconType="circle" />
+                      <Bar yAxisId="left" dataKey="studentsCount" name="Student Count" fill="#818CF8" radius={[4, 4, 0, 0]} barSize={20} />
+                      <Bar yAxisId="left" dataKey="facultyCount" name="Faculty Count" fill="#C084FC" radius={[4, 4, 0, 0]} barSize={20} />
+                      <Line yAxisId="right" type="monotone" dataKey="placementRate" name="Placement Rate (%)" stroke="#10B981" strokeWidth={3} dot={{r: 4, fill: '#fff', strokeWidth: 2}} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Chart 4: Student Departmental Share (Pie Chart) */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm hover:bg-white transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-black text-slate-800 tracking-tight">Student Department Share</h3>
+                    <div className="px-2 py-0.5 bg-blue-50 text-blue-650 rounded-lg text-[9px] font-black uppercase">Roster Breakdown</div>
+                  </div>
+                  <p className="text-slate-455 text-[10px] font-bold leading-normal">
+                    Student enrollment share divided across all active academic departments.
+                  </p>
+                </div>
+
+                <div className="h-56 relative flex items-center justify-center my-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={deptPieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={0}
+                        outerRadius={75}
+                        labelLine={false}
+                        dataKey="value"
+                      >
+                        {deptPieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="space-y-2 overflow-y-auto max-h-36 pr-1">
+                  {deptPieData.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between text-[11px] font-bold">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }}></span>
+                        <span className="text-slate-600 truncate max-w-[130px]">{item.name}</span>
+                      </div>
+                      <span className="text-slate-900 font-extrabold">{item.value} Students</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3: SYSTEM AUDITS & COMPREHENSIVE REPORTS */}
+        <section id="reports" className="scroll-mt-28 space-y-8 pt-8 border-t border-slate-200/50 pb-16">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/50">
+            <div className="flex items-center gap-2.5">
+              <FileSpreadsheet className="text-indigo-655" size={20} />
+              <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">System Audits & Reports</h2>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">Section 3 of 3</span>
+          </div>
+
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              
+              {/* Report Menu Column */}
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-5 shadow-sm space-y-4 h-fit">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-2">Report Modules</span>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { id: 'defaulters', label: 'Fees Defaulters Audit', icon: DollarSign, badge: pendingFeesList.length, badgeStyle: 'bg-rose-50 text-rose-600' },
+                    { id: 'attendance', label: 'Attendance Compliance', icon: GraduationCap, badge: lowAttendanceList.length, badgeStyle: 'bg-amber-50 text-amber-600' },
+                    { id: 'malpractice', label: 'Exam Malpractice cases', icon: AlertTriangle, badge: malpracticeList.length, badgeStyle: 'bg-red-50 text-red-600' },
+                    { id: 'leaves', label: 'Staff Duty & Leave Logs', icon: Users, badge: leaveRequests.filter(l => l.status === 'Pending').length, badgeStyle: 'bg-blue-50 text-blue-600' }
+                  ].map((rep) => {
+                    const Icon = rep.icon;
+                    const isSelected = selectedReportType === rep.id;
+                    return (
+                      <button
+                        key={rep.id}
+                        onClick={() => { setSelectedReportType(rep.id); setReportSearchQuery(''); }}
+                        className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 text-left cursor-pointer group border ${
+                          isSelected 
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-650 text-white font-bold border-blue-500 shadow-md shadow-blue-500/10'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon size={15} className={isSelected ? 'text-white' : 'text-slate-450 group-hover:text-slate-700'} />
+                          <span className="text-[12px] font-semibold">{rep.label}</span>
+                        </div>
+                        {rep.badge > 0 && (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                            isSelected ? 'bg-white/20 text-white border border-white/25' : rep.badgeStyle
+                          }`}>
+                            {rep.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Report Preview Panel */}
+              <div className="lg:col-span-3 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-6">
+                
+                {/* Report Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800 tracking-tight">
+                      {selectedReportType === 'defaulters' && 'Student Tuition & Fee Defaulters Audit'}
+                      {selectedReportType === 'attendance' && 'Low Attendance Compliance & Warning Report'}
+                      {selectedReportType === 'malpractice' && 'Semester Exam Malpractice & Incident Log'}
+                      {selectedReportType === 'leaves' && 'Faculty Leave Request & Attendance Ledger'}
+                    </h3>
+                    <p className="text-slate-450 text-[11px] font-bold mt-0.5">
+                      Previewing {filteredReportData.length} records. Filter and export for record-keeping.
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button 
+                      onClick={() => {
+                        toast.success("Opening system printing layout...", { icon: '🖨️' });
+                        setTimeout(() => window.print(), 500);
+                      }} 
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer text-slate-655 transition-colors shadow-xs"
+                      title="Print Report"
+                    >
+                      <Printer size={15} />
+                    </button>
+                    <button 
+                      onClick={() => toast.success("PDF generated. Downloading...", { icon: '📄' })} 
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer text-slate-655 transition-colors shadow-xs"
+                      title="Export PDF"
+                    >
+                      <Download size={15} />
+                    </button>
+                    <button 
+                      onClick={() => toast.success("CSV file exported successfully.", { icon: '📊' })} 
+                      className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer text-slate-655 transition-colors shadow-xs"
+                      title="Export CSV"
+                    >
+                      <FileSpreadsheet size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search / Filter bar inside Report */}
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Search size={14} />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search preview data..."
+                    value={reportSearchQuery}
+                    onChange={(e) => setReportSearchQuery(e.target.value)}
+                    className="w-full bg-slate-50/50 border border-slate-200/80 shadow-xs rounded-xl py-2 pl-9 pr-4 text-xs focus:ring-4 focus:ring-blue-500/5 focus:bg-white focus:border-blue-300 outline-none transition-all text-slate-705 placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* Data Table */}
+                <div className="overflow-x-auto border border-slate-200/50 rounded-2xl bg-slate-50/20 max-h-[420px] scrollbar-thin">
+                  <table className="w-full text-left border-collapse border-spacing-0">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200/80 text-[10px] font-black text-slate-450 uppercase tracking-widest">
+                        {selectedReportType === 'defaulters' && (
+                          <>
+                            <th className="px-5 py-3">Roll Number</th>
+                            <th className="px-5 py-3">Student Name</th>
+                            <th className="px-5 py-3">Department</th>
+                            <th className="px-5 py-3 text-right">Total Fees</th>
+                            <th className="px-5 py-3 text-right">Paid Amount</th>
+                            <th className="px-5 py-3 text-right text-rose-600">Balance due</th>
+                          </>
+                        )}
+                        {selectedReportType === 'attendance' && (
+                          <>
+                            <th className="px-5 py-3">Register No</th>
+                            <th className="px-5 py-3">Student Name</th>
+                            <th className="px-5 py-3">Department</th>
+                            <th className="px-5 py-3 text-center">Attendance %</th>
+                            <th className="px-5 py-3 text-center">Admit Card status</th>
+                          </>
+                        )}
+                        {selectedReportType === 'malpractice' && (
+                          <>
+                            <th className="px-5 py-3">Student</th>
+                            <th className="px-5 py-3">Subject / Code</th>
+                            <th className="px-5 py-3">Hall / Invigilator</th>
+                            <th className="px-5 py-3 text-right">Penalty Fine</th>
+                            <th className="px-5 py-3 text-center">Action Status</th>
+                          </>
+                        )}
+                        {selectedReportType === 'leaves' && (
+                          <>
+                            <th className="px-5 py-3">Request ID</th>
+                            <th className="px-5 py-3">Faculty Name</th>
+                            <th className="px-5 py-3">Leave Type</th>
+                            <th className="px-5 py-3 text-center">Duration</th>
+                            <th className="px-5 py-3 text-center">Approval State</th>
+                          </>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                      {filteredReportData.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-5 py-8 text-center text-slate-400 font-bold italic">
+                            No records matching search query.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredReportData.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                            {selectedReportType === 'defaulters' && (
+                              <>
+                                <td className="px-5 py-3.5 font-bold text-blue-600">{row.rollNo}</td>
+                                <td className="px-5 py-3.5 font-black text-slate-800">{row.studentName}</td>
+                                <td className="px-5 py-3.5 font-medium text-slate-500">{row.department}</td>
+                                <td className="px-5 py-3.5 text-right font-medium">{formatINR(row.total)}</td>
+                                <td className="px-5 py-3.5 text-right font-bold text-emerald-600">{formatINR(row.paidAmount)}</td>
+                                <td className="px-5 py-3.5 text-right font-black text-rose-600">{formatINR(row.balance)}</td>
+                              </>
+                            )}
+                            {selectedReportType === 'attendance' && (
+                              <>
+                                <td className="px-5 py-3.5 font-bold text-blue-600">{row.registerNumber || row.reg}</td>
+                                <td className="px-5 py-3.5 font-black text-slate-800">{row.fullName || row.name}</td>
+                                <td className="px-5 py-3.5 font-medium text-slate-500">{row.department}</td>
+                                <td className="px-5 py-3.5 text-center font-black text-rose-600">{row.attendancePercentage}%</td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <span className="px-2 py-0.5 bg-rose-50 text-rose-600 border border-rose-100/50 rounded font-black text-[9px] uppercase">
+                                    Blocked
+                                  </span>
+                                </td>
+                              </>
+                            )}
+                            {selectedReportType === 'malpractice' && (
+                              <>
+                                <td className="px-5 py-3.5">
+                                  <div className="font-black text-slate-800">{row.studentName}</div>
+                                  <span className="text-[10px] text-slate-400 font-bold">{row.registerNumber}</span>
+                                </td>
+                                <td className="px-5 py-3.5">
+                                  <div className="font-bold text-slate-700">{row.subjectName}</div>
+                                  <span className="text-[10px] text-slate-400 font-mono font-bold uppercase">{row.subjectCode}</span>
+                                </td>
+                                <td className="px-5 py-3.5 font-semibold text-slate-550">
+                                  <div>{row.roomNumber}</div>
+                                  <span className="text-[10px] font-bold text-slate-400">Invigilator: {row.invigilatorName}</span>
+                                </td>
+                                <td className="px-5 py-3.5 text-right font-black text-rose-600">₹{row.fineAmount?.toLocaleString()}</td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <span className="px-2 py-0.5 bg-rose-50 text-rose-600 border border-rose-100 rounded text-[9px] font-black uppercase">
+                                    {row.actionStatus}
+                                  </span>
+                                </td>
+                              </>
+                            )}
+                            {selectedReportType === 'leaves' && (
+                              <>
+                                <td className="px-5 py-3.5 font-bold text-blue-600">{row.id}</td>
+                                <td className="px-5 py-3.5 font-black text-slate-800">
+                                  <div>{row.staffName}</div>
+                                  <span className="text-[10px] text-slate-400 font-bold">{row.department} • {row.designation}</span>
+                                </td>
+                                <td className="px-5 py-3.5 font-semibold text-slate-550">{row.leaveType}</td>
+                                <td className="px-5 py-3.5 text-center font-bold">
+                                  <div>{row.days} Days</div>
+                                  <span className="text-[9.5px] font-medium text-slate-400">({row.startDate} to {row.endDate})</span>
+                                </td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase ${
+                                    row.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                  }`}>
+                                    {row.status}
+                                  </span>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Report Executive Summary footer widget */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Executive Summary</span>
+                    <p className="text-[12px] font-semibold text-slate-600">
+                      {selectedReportType === 'defaulters' && `Outstanding balance of ${pendingFeesList.length} students sums to ₹${pendingFeesList.reduce((sum, f) => sum + (f.balance || 0), 0).toLocaleString()}.`}
+                      {selectedReportType === 'attendance' && `A total of ${lowAttendanceList.length} students currently fail to meet the 75% attendance threshold.`}
+                      {selectedReportType === 'malpractice' && `A total of ${malpracticeList.length} malpractice incident records logged in the system database for this examination period.`}
+                      {selectedReportType === 'leaves' && `A total of ${leaveRequests.filter(l => l.status === 'Pending').length} pending leave authorizations awaiting reviews.`}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right w-full sm:w-auto">
+                    {selectedReportType === 'defaulters' && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-450 block uppercase">Outstanding Revenue</span>
+                        <span className="text-xl font-black text-rose-600">{formatINR(pendingFeesList.reduce((sum, f) => sum + (f.balance || 0), 0))}</span>
+                      </div>
+                    )}
+                    {selectedReportType === 'attendance' && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-455 block uppercase">Low Attendance Count</span>
+                        <span className="text-xl font-black text-rose-600">{lowAttendanceList.length} Students</span>
+                      </div>
+                    )}
+                    {selectedReportType === 'malpractice' && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-455 block uppercase">Total Penalties Issued</span>
+                        <span className="text-xl font-black text-rose-600">₹{malpracticeList.reduce((sum, m) => sum + (m.fineAmount || 0), 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {selectedReportType === 'leaves' && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-455 block uppercase">Leave Coverage Status</span>
+                        <span className="text-xl font-black text-emerald-600">100% Covered</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 };

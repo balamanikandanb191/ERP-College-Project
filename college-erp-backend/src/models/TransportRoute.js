@@ -22,8 +22,8 @@ const TransportRoute = sequelize.define('TransportRoute', {
     allowNull: false,
   },
   stops: {
-    type: DataTypes.JSONB, // Array of strings or objects [{ name: 'Stop A', timing: '08:00 AM' }]
-    defaultValue: [],
+    type: DataTypes.JSON, // Array of strings or objects [{ name: 'Stop A', timing: '08:00 AM' }]
+    allowNull: true,
   },
   distance: {
     type: DataTypes.FLOAT, // in km

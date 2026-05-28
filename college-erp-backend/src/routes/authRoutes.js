@@ -12,4 +12,10 @@ router.post('/logout', authenticateToken, authController.logout);
 // GET /api/auth/me
 router.get('/me', authenticateToken, authController.getCurrentUser);
 
+// GET /api/auth/roles
+router.get('/roles', authenticateToken, authController.getRoles);
+
+// POST /api/auth/roles
+router.post('/roles', authenticateToken, authController.createRole);
+
 module.exports = router;

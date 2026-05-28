@@ -12,8 +12,11 @@ const StaffModal = ({ isOpen, staff, onClose, onSave }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
+  const docInputRef = useRef(null);
   const [isAutoId, setIsAutoId] = useState(!staff?.staffId);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState({});
+  const [activeDocType, setActiveDocType] = useState(null);
   
   const initialData = {
     // 1. Personal
@@ -116,6 +119,26 @@ const StaffModal = ({ isOpen, staff, onClose, onSave }) => {
     }
   };
 
+  const handleDocClick = (docName) => {
+    setActiveDocType(docName);
+    if (docInputRef.current) {
+      docInputRef.current.value = '';
+      docInputRef.current.click();
+    }
+  };
+
+  const handleDocFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+      setSelectedDocs(prev => ({ ...prev, [activeDocType]: file }));
+      toast.success(`${activeDocType} selected`);
+    }
+  };
+
   const calculateCompletion = () => {
     const fields = Object.keys(initialData);
     const filledFields = fields.filter(f => {
@@ -135,7 +158,7 @@ const StaffModal = ({ isOpen, staff, onClose, onSave }) => {
     const finalData = { ...formData };
     if (isAutoId && !staff) finalData.staffId = 'AUTO';
     
-    onSave(finalData);
+    onSave(finalData, formData.photo, selectedDocs);
   };
 
   const steps = [
@@ -395,74 +418,79 @@ const StaffModal = ({ isOpen, staff, onClose, onSave }) => {
           <div className="space-y-6 animate-fade-in">
             <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4 uppercase tracking-wider text-sm"><Upload size={18} className="text-slate-400"/> Documents Checklist</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {['Aadhaar Card', 'PAN Card', 'Degree Cert', 'Exp Letter', 'Resume', 'Photo'].map(doc => (
-                <div key={doc} className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-blue-300 hover:bg-white transition-all cursor-pointer group">
-                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                    <Upload size={20} />
+              {['Aadhaar Card', 'PAN Card', 'Degree Cert', 'Exp Letter', 'Resume', 'Photo'].map(doc => {
+                const fileSelected = selectedDocs[doc];
+                return (
+                  <div 
+                    key={doc} 
+                    onClick={() => handleDocClick(doc)}
+                    className={`p-5 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer group ${fileSelected ? 'border-emerald-300 bg-emerald-50/40 shadow-sm shadow-emerald-50' : 'border-slate-200 bg-slate-50/80 hover:border-blue-300 hover:bg-white'}`}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${fileSelected ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600'}`}>
+                      {fileSelected ? <CheckCircle size={20} /> : <Upload size={20} />}
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-650 uppercase text-center">{doc}</span>
+                    {fileSelected ? (
+                      <span className="text-[10px] text-emerald-600 font-semibold text-center truncate max-w-full px-2">
+                        {fileSelected.name}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-slate-400 font-medium">Click to upload</span>
+                    )}
                   </div>
-                  <span className="text-[10px] font-bold text-slate-600 uppercase text-center">{doc}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
       case 5:
         return (
           <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              <div className="flex-1 w-full space-y-6">
-                <div className="bg-slate-900 p-6 rounded-3xl text-white shadow-xl shadow-slate-200 border-l-4 border-blue-500">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold">ERP System Access</h3>
-                      <p className="text-slate-400 text-sm">Create staff login credentials</p>
-                    </div>
-                    <Key size={24} className="text-blue-400" />
+            <div className="w-full space-y-6">
+              <div className="bg-slate-900 p-6 rounded-3xl text-white shadow-xl shadow-slate-200 border-l-4 border-blue-500">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold">ERP System Access</h3>
+                    <p className="text-slate-400 text-sm">Create staff login credentials</p>
+                  </div>
+                  <Key size={24} className="text-blue-400" />
+                </div>
+                
+                <div className="space-y-4 mt-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="e.g. jd_2026" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   
-                  <div className="space-y-4 mt-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                      <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-slate-400 hover:text-white transition-colors">
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
-                      <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="e.g. jd_2026" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="relative">
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
-                        <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-slate-400 hover:text-white transition-colors">
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Confirm</label>
-                        <input type={showPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 pt-2">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="allowLogin" checked={formData.allowLogin} onChange={handleChange} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                      <span className="text-sm font-bold text-slate-300">Grant ERP Access</span>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Confirm</label>
+                      <input type={showPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
-                  <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={20} /></div>
-                  <div>
-                    <h4 className="font-bold text-blue-900 text-sm mb-1">Onboarding Checklist</h4>
-                    <p className="text-xs text-blue-700 leading-relaxed">Once saved, this staff member will be visible in the payroll system and timetable manager. Official email will be used for all internal communications.</p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" name="allowLogin" checked={formData.allowLogin} onChange={handleChange} className="sr-only peer" />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                    <span className="text-sm font-bold text-slate-300">Grant ERP Access</span>
                   </div>
                 </div>
               </div>
 
-              <div className="w-full lg:w-[350px] shrink-0">
-                <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2 px-2"><CreditCard size={18} className="text-blue-500" /> Digital ID Preview</h4>
-                <div className="scale-90 origin-top">
-                  <IDCardPreview type="Staff" data={formData} />
+              <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
+                <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={20} /></div>
+                <div>
+                  <h4 className="font-bold text-blue-900 text-sm mb-1">Onboarding Checklist</h4>
+                  <p className="text-xs text-blue-700 leading-relaxed">Once saved, this staff member will be visible in the payroll system and timetable manager. Official email will be used for all internal communications.</p>
                 </div>
               </div>
             </div>
@@ -474,104 +502,111 @@ const StaffModal = ({ isOpen, staff, onClose, onSave }) => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div 
-        className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-scale-in"
-        onClick={e => e.stopPropagation()}
-      >
-        
-        {/* Header */}
-        <div className="px-8 pt-8 pb-6 bg-white shrink-0">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100">
-                  <Users size={24} />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-                  {staff ? 'Edit Staff Profile' : 'Staff Onboarding'}
-                </h2>
+    <form onSubmit={handleSubmit} className="w-full bg-white rounded-[45px] border border-slate-100 shadow-sm flex flex-col overflow-hidden h-[calc(100vh-140px)] min-h-[600px] animate-fade-in">
+      <input 
+        type="file" 
+        ref={docInputRef} 
+        className="hidden" 
+        onChange={handleDocFileChange} 
+        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+      />
+      {/* Header */}
+      <div className="px-8 pt-8 pb-6 bg-white shrink-0">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100">
+                <Users size={24} />
               </div>
-              <p className="text-slate-500 font-medium ml-1">Establish new employee records for the academic year</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                {staff ? 'Edit Staff Profile' : 'Staff Onboarding'}
+              </h2>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex flex-col items-end">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Onboarding</span>
-                  <span className="text-sm font-black text-blue-600">{calculateCompletion()}%</span>
-                </div>
-                <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 transition-all duration-700 ease-out" style={{ width: `${calculateCompletion()}%` }}></div>
-                </div>
-              </div>
-              <button onClick={onClose} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all">
-                <X size={24} />
-              </button>
-            </div>
+            <p className="text-slate-500 font-medium ml-1">Establish new employee records for the academic year</p>
           </div>
-
-          {/* Stepper */}
-          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto hide-scrollbar pb-2">
-            {steps.map((step, idx) => (
-              <React.Fragment key={step.id}>
-                <div 
-                  className={`flex items-center gap-2 cursor-pointer transition-all shrink-0 ${currentStep === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                  onClick={() => setCurrentStep(idx)}
-                >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${currentStep === idx ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-110' : 'bg-slate-100 text-slate-500'}`}>
-                    {step.icon}
-                  </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider hidden lg:block ${currentStep === idx ? 'text-blue-600' : 'text-slate-500'}`}>
-                    {step.title}
-                  </span>
-                </div>
-                {idx < steps.length - 1 && <div className="h-0.5 w-4 md:w-8 bg-slate-100 shrink-0"></div>}
-              </React.Fragment>
-            ))}
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Onboarding</span>
+                <span className="text-sm font-black text-blue-600">{calculateCompletion()}%</span>
+              </div>
+              <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-600 transition-all duration-700 ease-out" style={{ width: `${calculateCompletion()}%` }}></div>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all">
+              <X size={24} />
+            </button>
           </div>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
-          {renderStepContent()}
-        </form>
+        {/* Stepper */}
+        <div className="flex items-center gap-2 md:gap-4 overflow-x-auto hide-scrollbar pb-2">
+          {steps.map((step, idx) => (
+            <React.Fragment key={step.id}>
+              <div 
+                className={`flex items-center gap-2 cursor-pointer transition-all shrink-0 ${currentStep === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                onClick={() => setCurrentStep(idx)}
+              >
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${currentStep === idx ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-110' : 'bg-slate-100 text-slate-500'}`}>
+                  {step.icon}
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-wider hidden lg:block ${currentStep === idx ? 'text-blue-600' : 'text-slate-500'}`}>
+                  {step.title}
+                </span>
+              </div>
+              {idx < steps.length - 1 && <div className="h-0.5 w-4 md:w-8 bg-slate-100 shrink-0"></div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
-        {/* Footer */}
-        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
-          <button 
-            type="button" 
-            onClick={prevStep}
-            disabled={currentStep === 0}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all disabled:opacity-0"
-          >
-            <ChevronLeft size={18} /> Previous
-          </button>
-          
-          <div className="flex gap-3">
-            {currentStep < steps.length - 1 ? (
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
+        {renderStepContent()}
+      </div>
+
+      {/* Footer */}
+      <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
+        <button 
+          type="button" 
+          onClick={prevStep}
+          disabled={currentStep === 0}
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all disabled:opacity-0"
+        >
+          <ChevronLeft size={18} /> Previous
+        </button>
+        
+        <div className="flex gap-3">
+          {currentStep < steps.length - 1 ? (
+            <button 
+              type="button" 
+              onClick={nextStep}
+              className="flex items-center gap-2 px-8 py-3 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
+            >
+              Next Section <ChevronRight size={18} />
+            </button>
+          ) : (
+            <>
               <button 
                 type="button" 
-                onClick={nextStep}
-                className="flex items-center gap-2 px-8 py-3 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
+                onClick={onClose}
+                className="px-6 py-3 rounded-2xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-750 transition-all"
               >
-                Next Section <ChevronRight size={18} />
+                Cancel
               </button>
-            ) : (
               <button 
                 type="submit"
                 className="flex items-center gap-2 px-10 py-3 rounded-2xl text-sm font-black text-white bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all scale-105 active:scale-100"
               >
-                <Save size={18} /> {staff ? 'Update Records' : 'Complete Onboarding'}
+                <Save size={18} /> Done
               </button>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 

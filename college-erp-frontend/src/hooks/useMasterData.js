@@ -9,11 +9,11 @@ export const useMasterData = (type, seedData = []) => {
     try {
       const { data } = await api.get(`/masters/${type}`);
       if (data && data.length > 0) {
-        setRecords(data.map(r => ({ id: r.id, ...r.data })));
+        setRecords(data.map(r => ({ ...r.data, id: r.id })));
       } else {
         const promises = seedData.map(s => api.post(`/masters/${type}`, { data: s }));
         const results = await Promise.all(promises);
-        setRecords(results.map(r => ({ id: r.data.id, ...r.data.data })));
+        setRecords(results.map(r => ({ ...r.data.data, id: r.data.id })));
       }
     } catch (error) {
       console.error(`Failed to fetch ${type} records, falling back to localStorage:`, error);
@@ -40,14 +40,14 @@ export const useMasterData = (type, seedData = []) => {
   const addRecord = async (form) => {
     try {
       const { data } = await api.post(`/masters/${type}`, { data: form });
-      const updated = [{ id: data.id, ...form }, ...records];
+      const updated = [{ ...form, id: data.id }, ...records];
       setRecords(updated);
       localStorage.setItem(`erp_${type}`, JSON.stringify(updated));
       return { success: true, id: data.id };
     } catch (error) {
       console.error(error);
       const tempId = `${type}-${Date.now()}`;
-      const updated = [{ id: tempId, ...form }, ...records];
+      const updated = [{ ...form, id: tempId }, ...records];
       setRecords(updated);
       localStorage.setItem(`erp_${type}`, JSON.stringify(updated));
       return { success: true, id: tempId, localOnly: true };
@@ -59,13 +59,13 @@ export const useMasterData = (type, seedData = []) => {
       if (id.includes('-') && !id.startsWith(type)) {
         await api.put(`/masters/${type}/${id}`, { data: form });
       }
-      const updated = records.map(r => r.id === id ? { ...r, ...form } : r);
+      const updated = records.map(r => r.id === id ? { ...r, ...form, id } : r);
       setRecords(updated);
       localStorage.setItem(`erp_${type}`, JSON.stringify(updated));
       return { success: true };
     } catch (error) {
       console.error(error);
-      const updated = records.map(r => r.id === id ? { ...r, ...form } : r);
+      const updated = records.map(r => r.id === id ? { ...r, ...form, id } : r);
       setRecords(updated);
       localStorage.setItem(`erp_${type}`, JSON.stringify(updated));
       return { success: true, localOnly: true };

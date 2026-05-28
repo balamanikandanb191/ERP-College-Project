@@ -54,7 +54,7 @@ exports.getStudentFees = async (req, res) => {
     const studentFees = await StudentFee.findAll({
       where: whereClause,
       include: [
-        { model: Student, attributes: ['fullName', 'registerNumber', 'department', 'year'] },
+        { model: Student, attributes: ['fullName', 'registerNumber', 'department'] },
         { model: FeeStructure, attributes: ['title', 'amount', 'dueDate', 'finePerDay'] }
       ],
       order: [['createdAt', 'DESC']]
@@ -63,16 +63,17 @@ exports.getStudentFees = async (req, res) => {
     // Auto calculate fines for overdue payments dynamically before returning
     const today = new Date();
     const updatedFees = studentFees.map(fee => {
-      const dueDate = new Date(fee.FeeStructure.dueDate);
+      const dueDate = fee.FeeStructure ? new Date(fee.FeeStructure.dueDate) : null;
       let calculatedFine = fee.fineAmount;
-      if (fee.paymentStatus !== 'Paid' && today > dueDate && fee.FeeStructure.finePerDay > 0) {
+      const isOverdue = fee.paymentStatus !== 'Paid' && dueDate && today > dueDate;
+      if (isOverdue && fee.FeeStructure?.finePerDay > 0) {
         const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
         calculatedFine = daysOverdue * fee.FeeStructure.finePerDay;
       }
       return {
         ...fee.toJSON(),
         calculatedFine,
-        isOverdue: fee.paymentStatus !== 'Paid' && today > dueDate
+        isOverdue
       };
     });
 
@@ -119,7 +120,7 @@ exports.getPayments = async (req, res) => {
             { model: FeeStructure, attributes: ['title'] }
           ]
         },
-        { model: User, as: 'collector', attributes: ['fullName'] }
+        { model: User, as: 'collector', attributes: ['id', 'email'] }
       ],
       order: [['paymentDate', 'DESC']]
     });
