@@ -134,4 +134,3 @@ const cleanAndSync = async () => {
 };
 
 cleanAndSync();
-// Trigger nodemon reload to seed default fee structures

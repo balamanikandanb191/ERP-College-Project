@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Save, Edit2, FileText, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import api from '../services/api';
 
 const SEED_TCS = [
   { id: 'tc-201', registerNumber: 'REG20261102', studentName: 'Vikas Krishnan', dateOfLeaving: '2026-05-15', conduct: 'Excellent', feeStatus: 'Cleared', reason: 'Course Completed' },
@@ -13,6 +14,21 @@ const EditTC = () => {
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ registerNumber: '', studentName: '', dateOfLeaving: '', conduct: 'Excellent', feeStatus: 'Cleared', reason: 'Course Completed' });
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await api.get('/students');
+        if (data) {
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const handleEdit = (tc) => {
     setEditing(tc);
@@ -54,6 +70,37 @@ const EditTC = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 h-fit space-y-4">
           <h3 className="font-black text-slate-800 text-lg">{editing ? 'Edit TC Entry' : 'Prepare TC Entry'}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Select Student (Register No)</label>
+              <select
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-white font-semibold text-slate-700"
+                value={form.registerNumber}
+                onChange={e => {
+                  const rNum = e.target.value;
+                  const student = students.find(s => s.registerNumber === rNum);
+                  if (student) {
+                    setForm({
+                      ...form,
+                      registerNumber: student.registerNumber,
+                      studentName: student.fullName
+                    });
+                    toast.success(`Autofilled details for ${student.fullName}`);
+                  } else {
+                    setForm({
+                      ...form,
+                      registerNumber: rNum
+                    });
+                  }
+                }}
+              >
+                <option value="">-- Choose Student --</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.registerNumber}>
+                    {s.registerNumber} - {s.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Register / Roll Number *</label>
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none"

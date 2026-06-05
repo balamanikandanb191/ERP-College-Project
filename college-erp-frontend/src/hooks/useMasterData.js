@@ -15,6 +15,9 @@ export const useMasterData = (type, seedData = []) => {
       }
     } catch (error) {
       console.error(`Failed to fetch ${type} records, falling back to localStorage:`, error);
+      if (error.response?.data) {
+        console.error(`Detailed server error for ${type}:`, error.response.data);
+      }
       try {
         const c = localStorage.getItem(`erp_${type}`);
         if (c) {

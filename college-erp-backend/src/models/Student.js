@@ -54,7 +54,7 @@ const Student = sequelize.define('Student', {
     type: DataTypes.STRING,
   },
   photoUrl: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT('long'),
   },
 
   // 2. Academic Information

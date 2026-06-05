@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Printer, FileText, BadgeCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Bonafide = () => {
   const [studentName, setStudentName] = useState('Rahul Krishnan');
@@ -7,6 +9,21 @@ const Bonafide = () => {
   const [rollNo, setRollNo] = useState('REG20261102');
   const [yearSemester, setYearSemester] = useState('2nd Year / 4th Semester');
   const [purpose, setPurpose] = useState('applying for State Government Scholarship');
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await api.get('/students');
+        if (data) {
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 print:p-0 print:m-0">
@@ -30,6 +47,31 @@ const Bonafide = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 h-fit space-y-4 print:hidden">
           <h3 className="font-black text-slate-800 text-base">Bonafide Particulars</h3>
           <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-555 uppercase block mb-1">Select Student (Register No)</label>
+              <select
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-white font-semibold text-slate-700"
+                value={rollNo}
+                onChange={e => {
+                  const rNum = e.target.value;
+                  setRollNo(rNum);
+                  const student = students.find(s => s.registerNumber === rNum);
+                  if (student) {
+                    setStudentName(student.fullName);
+                    setParentName(student.fatherName || student.motherName || '');
+                    setYearSemester(`${student.academicYear || ''}${student.semester ? ' / ' + student.semester : ''}`.trim() || '2nd Year / 4th Semester');
+                    toast.success(`Autofilled details for ${student.fullName}`);
+                  }
+                }}
+              >
+                <option value="">-- Choose Student --</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.registerNumber}>
+                    {s.registerNumber} - {s.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Student Name</label>
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none"

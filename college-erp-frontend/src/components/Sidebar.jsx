@@ -26,6 +26,36 @@ import api from '../services/api';
 // Unified menu sections configuration matching the exact School ERP screenshots and requirements
 const menuSections = [
   {
+    id: 'dashboard',
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    isDirectLink: true,
+    path: (role) => {
+      if (role === 'Student' || role === 'Parent') return '/student';
+      if (role === 'Staff' || role === 'Teacher') return '/staff';
+      return '/admin';
+    },
+    roles: ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student']
+  },
+  {
+    id: 'file',
+    title: 'File',
+    icon: FileText,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      {
+        name: 'User Creation',
+        path: '/admin/user-creation',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Log Details',
+        path: '/admin/log-details',
+        roles: ['Admin', 'Super Admin']
+      }
+    ]
+  },
+  {
     id: 'academics_master',
     title: 'Academic',
     icon: GraduationCap,
@@ -907,7 +937,13 @@ const Sidebar = () => {
 
         {normalSections.map((section) => {
           const elements = [];
-          if (section.id === 'enquiry') {
+          if (section.id === 'file') {
+            elements.push(
+              <div key="category-file" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                File
+              </div>
+            );
+          } else if (section.id === 'enquiry') {
             elements.push(
               <div key="category-admission" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
                 Admission

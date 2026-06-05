@@ -147,7 +147,7 @@ exports.getMasters = async (req, res) => {
     res.json(records.map(toClient));
   } catch (error) {
     console.error(`Error fetching masters for type ${req.params.type}:`, error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + error.message, error: error });
   }
 };
 

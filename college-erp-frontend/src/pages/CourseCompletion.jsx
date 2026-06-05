@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Award, Printer, User, Calendar } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const CourseCompletion = () => {
+  const [registerNumber, setRegisterNumber] = useState('');
   const [studentName, setStudentName] = useState('Anjali Nair');
   const [course, setCourse] = useState('Bachelor of Engineering in Electronics & Communication');
   const [duration, setDuration] = useState('2022 - 2026');
   const [grade, setGrade] = useState('First Class with Distinction');
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await api.get('/students');
+        if (data) {
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 print:p-0 print:m-0">
@@ -29,6 +47,31 @@ const CourseCompletion = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 h-fit space-y-4 print:hidden">
           <h3 className="font-black text-slate-800 text-base">Certificate Details</h3>
           <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Select Student (Register No)</label>
+              <select
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-white font-semibold text-slate-700"
+                value={registerNumber}
+                onChange={e => {
+                  const rNum = e.target.value;
+                  setRegisterNumber(rNum);
+                  const student = students.find(s => s.registerNumber === rNum);
+                  if (student) {
+                    setStudentName(student.fullName);
+                    setCourse(student.course || student.department || '');
+                    setDuration(student.academicYear || '2022 - 2026');
+                    toast.success(`Autofilled details for ${student.fullName}`);
+                  }
+                }}
+              >
+                <option value="">-- Choose Student --</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.registerNumber}>
+                    {s.registerNumber} - {s.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Student Name</label>
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none"
@@ -70,6 +113,7 @@ const CourseCompletion = () => {
               <h3 className="text-xl font-bold italic font-serif text-slate-800">Course Completion Certificate</h3>
               <p className="text-sm font-semibold text-slate-650 leading-loose max-w-lg mx-auto">
                 This is to officially certify that <strong className="text-slate-900 block text-lg font-black uppercase underline my-2">{studentName}</strong> 
+                {registerNumber && <span>bearing Register Number <strong className="font-mono text-indigo-900">{registerNumber}</strong> </span>}
                 has successfully completed the qualifying program for the degree of 
                 <strong className="text-slate-900 block my-2 font-black">{course}</strong>
                 having pursued studies over the academic period of <strong className="text-slate-900 font-bold">{duration}</strong> and passed with the final classification of 

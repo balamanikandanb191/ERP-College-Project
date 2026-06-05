@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Printer, Plus, Trash2, CheckCircle, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const INITIAL_ITEMS = [
   { id: 'item-1', name: 'Tuition Fee (Per Annum)', amount: 85000 },
@@ -10,12 +11,28 @@ const INITIAL_ITEMS = [
 ];
 
 const FeesEstimation = () => {
+  const [registerNumber, setRegisterNumber] = useState('');
   const [studentName, setStudentName] = useState('Rahul Krishnan');
   const [course, setCourse] = useState('B.E. Computer Science & Engineering');
   const [academicYear, setAcademicYear] = useState('2026 - 2027');
   const [items, setItems] = useState(INITIAL_ITEMS);
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState('');
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await api.get('/students');
+        if (data) {
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const handleAddItem = (e) => {
     e.preventDefault();
@@ -54,6 +71,31 @@ const FeesEstimation = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 h-fit space-y-4 print:hidden">
           <h3 className="font-black text-slate-800 text-base">Estimate Particulars</h3>
           <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Select Student (Register No)</label>
+              <select
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-white font-semibold text-slate-700"
+                value={registerNumber}
+                onChange={e => {
+                  const rNum = e.target.value;
+                  setRegisterNumber(rNum);
+                  const student = students.find(s => s.registerNumber === rNum);
+                  if (student) {
+                    setStudentName(student.fullName);
+                    setCourse(student.course || student.department || '');
+                    setAcademicYear(student.academicYear || '2026 - 2027');
+                    toast.success(`Autofilled details for ${student.fullName}`);
+                  }
+                }}
+              >
+                <option value="">-- Choose Student --</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.registerNumber}>
+                    {s.registerNumber} - {s.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Student Name</label>
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none"
@@ -96,6 +138,7 @@ const FeesEstimation = () => {
             {/* Student metadata */}
             <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-600">
               <div>Student Name: <strong className="text-slate-900 block">{studentName}</strong></div>
+              {registerNumber && <div>Register Number: <strong className="text-slate-900 block font-mono">{registerNumber}</strong></div>}
               <div>Course Program: <strong className="text-slate-900 block">{course}</strong></div>
               <div>Academic Period: <strong className="text-slate-900 block">{academicYear}</strong></div>
               <div>Date Issued: <strong className="text-slate-900 block font-mono">{new Date().toLocaleDateString('en-IN')}</strong></div>

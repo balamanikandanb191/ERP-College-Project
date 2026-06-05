@@ -60,7 +60,7 @@ const Staff = sequelize.define('Staff', {
     type: DataTypes.STRING,
   },
   photoUrl: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT('long'),
   },
 
   // 2. Professional Details
