@@ -8,6 +8,7 @@ import BusTable from '../components/transport/BusTable';
 import DriverTable from '../components/transport/DriverTable';
 import RouteTable from '../components/transport/RouteTable';
 import MaintenanceTable from '../components/transport/MaintenanceTable';
+import TransportStudentTable from '../components/transport/TransportStudentTable';
 
 const SafeIcon = ({ icon: Icon, ...props }) => {
   if (!Icon) return <Bus {...props} />;
@@ -150,6 +151,9 @@ const Transport = () => {
         <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap ${activeTab === 'overview' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}>
           <BarChart size={18} /> Analytics
         </button>
+        <button onClick={() => setActiveTab('students')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap ${activeTab === 'students' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}>
+          <Users size={18} /> Students
+        </button>
         <button onClick={() => setActiveTab('buses')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap ${activeTab === 'buses' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}>
           <Bus size={18} /> Buses
         </button>
@@ -168,6 +172,7 @@ const Transport = () => {
       <ErrorBoundary>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[500px] transition-all duration-300">
           {activeTab === 'overview' && <TransportAnalytics data={analytics || {}} loading={loading} />}
+          {activeTab === 'students' && <TransportStudentTable />}
           {activeTab === 'buses' && <BusTable />}
           {activeTab === 'drivers' && <DriverTable />}
           {activeTab === 'routes' && <RouteTable />}

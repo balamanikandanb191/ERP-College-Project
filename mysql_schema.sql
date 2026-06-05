@@ -10,6 +10,9 @@ USE college_erp;
 -- Disable foreign key checks temporarily to avoid drop ordering conflicts
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `application_issues`;
+DROP TABLE IF EXISTS `application_issue`;
+
 -- Drop existing tables if they exist (both plural/singular, underscored/non-underscored variants from Sequelize/previous migrations)
 DROP TABLE IF EXISTS `announcement_reads`;
 DROP TABLE IF EXISTS `announcement_read`;
@@ -148,6 +151,8 @@ DROP TABLE IF EXISTS `exams`;
 DROP TABLE IF EXISTS `exam`;
 DROP TABLE IF EXISTS `fees`;
 DROP TABLE IF EXISTS `fee`;
+DROP TABLE IF EXISTS `castes`;
+DROP TABLE IF EXISTS `districts`;
 
 -- ==========================================
 -- 1. ROLES & USERS
@@ -883,6 +888,38 @@ CREATE TABLE `fees` (
   `updated_at` DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `castes` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `casteName` VARCHAR(255) NOT NULL UNIQUE,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `districts` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `districtName` VARCHAR(255) NOT NULL UNIQUE,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `application_issues` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `applicationNo` VARCHAR(100) NOT NULL UNIQUE,
+  `date` DATE NOT NULL,
+  `standard` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `gender` VARCHAR(50) NOT NULL,
+  `lastStudied` VARCHAR(255) NOT NULL,
+  `parentName` VARCHAR(255) NOT NULL,
+  `parentMobile` VARCHAR(50) NOT NULL,
+  `reference` VARCHAR(255) DEFAULT NULL,
+  `amount` DOUBLE NOT NULL DEFAULT 100,
+  `community` VARCHAR(255) NOT NULL,
+  `address` TEXT NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================
 -- 13. SEED DATA FOR MASTERS
 -- ==========================================
@@ -918,6 +955,54 @@ INSERT INTO `fees` (`id`, `feeType`, `year`, `dept`, `amount`, `dueDate`, `term`
 ('fee-3', 'Transport Fee', 'ALL', 'ALL', 18000, '2026-06-15', 'Annual', 1, NOW(), NOW()),
 ('fee-4', 'Library Deposit', 'I', 'ALL', 2000, '2026-07-01', 'One-time', 1, NOW(), NOW()),
 ('fee-5', 'Hostel Fee', 'ALL', 'ALL', 45000, '2026-06-30', 'Annual', 1, NOW(), NOW());
+
+INSERT INTO `castes` (`id`, `casteName`, `created_at`, `updated_at`) VALUES
+('caste-1', 'BC', NOW(), NOW()),
+('caste-2', 'MBC', NOW(), NOW()),
+('caste-3', 'SC/ST', NOW(), NOW()),
+('caste-4', 'OC', NOW(), NOW()),
+('caste-5', 'DNC', NOW(), NOW());
+
+INSERT INTO `districts` (`id`, `districtName`, `created_at`, `updated_at`) VALUES
+('dist-1', 'Ariyalur', NOW(), NOW()),
+('dist-2', 'Chengalpattu', NOW(), NOW()),
+('dist-3', 'Chennai', NOW(), NOW()),
+('dist-4', 'Coimbatore', NOW(), NOW()),
+('dist-5', 'Cuddalore', NOW(), NOW()),
+('dist-6', 'Dharmapuri', NOW(), NOW()),
+('dist-7', 'Dindigul', NOW(), NOW()),
+('dist-8', 'Erode', NOW(), NOW()),
+('dist-9', 'Kallakurichi', NOW(), NOW()),
+('dist-10', 'Kanchipuram', NOW(), NOW()),
+('dist-11', 'Kanyakumari', NOW(), NOW()),
+('dist-12', 'Karur', NOW(), NOW()),
+('dist-13', 'Krishnagiri', NOW(), NOW()),
+('dist-14', 'Madurai', NOW(), NOW()),
+('dist-15', 'Mayiladuthurai', NOW(), NOW()),
+('dist-16', 'Nagapattinam', NOW(), NOW()),
+('dist-17', 'Namakkal', NOW(), NOW()),
+('dist-18', 'Nilgiris', NOW(), NOW()),
+('dist-19', 'Perambalur', NOW(), NOW()),
+('dist-20', 'Pudukkottai', NOW(), NOW()),
+('dist-21', 'Ramanathapuram', NOW(), NOW()),
+('dist-22', 'Ranipet', NOW(), NOW()),
+('dist-23', 'Salem', NOW(), NOW()),
+('dist-24', 'Sivaganga', NOW(), NOW()),
+('dist-25', 'Tenkasi', NOW(), NOW()),
+('dist-26', 'Thanjavur', NOW(), NOW()),
+('dist-27', 'Theni', NOW(), NOW()),
+('dist-28', 'Thoothukudi', NOW(), NOW()),
+('dist-29', 'Tiruchirappalli', NOW(), NOW()),
+('dist-30', 'Tirunelveli', NOW(), NOW()),
+('dist-31', 'Tirupathur', NOW(), NOW()),
+('dist-32', 'Tiruppur', NOW(), NOW()),
+('dist-33', 'Tiruvallur', NOW(), NOW()),
+('dist-34', 'Tiruvannamalai', NOW(), NOW()),
+('dist-35', 'Tiruvarur', NOW(), NOW()),
+('dist-36', 'Vellore', NOW(), NOW()),
+('dist-37', 'Viluppuram', NOW(), NOW()),
+('dist-38', 'Virudhunagar', NOW(), NOW()),
+('dist-39', 'Other', NOW(), NOW());
 
 SET FOREIGN_KEY_CHECKS = 1;
 

@@ -11,23 +11,53 @@ const AdmittedStudent = () => {
 
   const handleApprove = async (student) => {
     try {
-      // 1. Generate active enrolled Register Number
-      const regNo = `REG2026${Math.floor(1000 + Math.random() * 9000)}`;
+      // 1. Resolve active enrolled Register Number
+      const regNo = student.registerNumber && student.registerNumber.trim() !== ''
+        ? student.registerNumber.trim()
+        : `REG2026${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // 2. Add to active students list on the backend database
+      // 2. Add to active students list on the backend database mapping all registration details
       const newStudent = {
-        fullName: `${student.firstName} ${student.lastName}`,
+        fullName: student.studentName || `${student.firstName} ${student.lastName}`,
         registerNumber: regNo,
-        email: student.email || `${student.firstName.toLowerCase()}-${Date.now().toString().slice(-4)}@college.edu`,
-        phone: student.phone,
+        email: student.email || `${(student.firstName || 'student').toLowerCase()}-${Date.now().toString().slice(-4)}@college.edu`,
+        phone: student.phone || student.fatherPhone || student.motherPhone || '',
         gender: student.gender,
         dob: student.dob,
         bloodGroup: student.bloodGroup,
-        department: student.interestedCourse || 'Computer Science',
+        department: student.course || student.interestedCourse || 'Computer Science',
+        course: student.course || student.interestedCourse || 'Computer Science',
         semester: 'Semester 1',
-        parentName: student.parentName,
-        parentPhone: student.parentPhone,
-        address: student.address
+        section: student.section || 'A',
+        fatherName: student.fatherName || student.parentName,
+        fatherPhone: student.fatherPhone || student.parentPhone,
+        fatherOccupation: student.fatherOccupation,
+        fatherIncome: student.fatherIncome,
+        motherName: student.motherName,
+        motherPhone: student.motherPhone,
+        motherOccupation: student.motherOccupation,
+        guardianName: student.guardianName,
+        emergencyContact: student.guardianPhone || student.emergencyContact,
+        parentAddress: student.parentAddress || student.permanentAddress || student.address,
+        permanentAddress: student.permanentAddress || student.address,
+        communicationAddress: student.currentAddress || student.address,
+        nationality: student.nationality || 'Indian',
+        religion: student.religion,
+        community: student.community,
+        caste: student.caste,
+        aadhaarNumber: student.aadharNumber,
+        photoUrl: student.photoUrl,
+        previousInstitution: student.tenthSchool || student.prevSchool,
+        percentage10th: student.tenthScore ? parseFloat(student.tenthScore) : (student.prevMarks ? parseFloat(student.prevMarks) : null),
+        percentage12th: student.twelfthScore ? parseFloat(student.twelfthScore) : null,
+        academicYear: student.academicYear,
+        admissionType: student.admissionType || 'Regular',
+        admissionDate: student.admissionDate || new Date().toISOString().split('T')[0],
+        hostelRequired: student.hostelRequired === 'Yes' || student.hostelRequired === true ? 1 : 0,
+        busRequired: student.transportRequired === 'Yes' || student.transportRequired === true ? 1 : 0,
+        busRoute: student.busRoute || '',
+        pickupPoint: student.pickupPoint || '',
+        admissionStatus: student.admissionStatus || 'Verified'
       };
       
       await api.post('/students', newStudent);
@@ -53,7 +83,10 @@ const AdmittedStudent = () => {
     }, 'Are you sure you want to reject this registration form?');
   };
 
-  const filtered = (registered || []).filter(r => (r.firstName || '').toLowerCase().includes(search.toLowerCase()) || (r.registerNumber && r.registerNumber.includes(search)));
+  const filtered = (registered || []).filter(r => 
+    (r.studentName || `${r.firstName} ${r.lastName}`).toLowerCase().includes(search.toLowerCase()) || 
+    (r.registerNumber && r.registerNumber.includes(search))
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -92,24 +125,24 @@ const AdmittedStudent = () => {
             <tbody className="divide-y divide-slate-50">
               {filtered.map(r => (
                 <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-5 py-4 font-mono font-black text-indigo-700 text-xs">{r.registerNumber || r.id}</td>
+                  <td className="px-5 py-4 font-mono font-black text-indigo-700 text-xs">{r.applicationNo || r.id}</td>
                   <td className="px-5 py-4">
-                    <div className="font-black text-slate-800">{r.firstName} {r.lastName}</div>
-                    <div className="text-[11px] text-slate-400">{r.phone}</div>
+                    <div className="font-black text-slate-800">{r.studentName || `${r.firstName} ${r.lastName}`}</div>
+                    <div className="text-[11px] text-slate-400">{r.phone || r.fatherPhone || r.motherPhone}</div>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="text-slate-600 font-semibold">{r.prevSchool}</div>
-                    <div className="text-[11px] text-slate-400 font-bold font-mono">Score: {r.prevMarks} ({r.prevBoard})</div>
+                    <div className="text-slate-600 font-semibold">{r.tenthSchool || r.prevSchool}</div>
+                    <div className="text-[11px] text-slate-400 font-bold font-mono">Score: {r.tenthScore || r.prevMarks} ({r.tenthBoard || r.prevBoard})</div>
                   </td>
-                  <td className="px-5 py-4 font-bold text-slate-700 text-xs">{r.interestedCourse}</td>
-                  <td className="px-5 py-4 text-xs font-semibold text-slate-500">{r.quota}</td>
+                  <td className="px-5 py-4 font-bold text-slate-700 text-xs">{r.course || r.interestedCourse}</td>
+                  <td className="px-5 py-4 text-xs font-semibold text-slate-500">{r.admissionType || r.quota}</td>
                   <td className="px-5 py-4">
                     <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${r.status === 'Admitted' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {r.status}
+                      {r.status || 'Pending Review'}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    {r.status === 'Pending Review' ? (
+                    {r.status === 'Pending Review' || !r.status ? (
                       <div className="flex justify-end gap-2">
                         <button onClick={() => handleReject(r.id)} className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors" title="Reject"><X size={15} /></button>
                         <button onClick={() => handleApprove(r)} className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/10 transition-colors">

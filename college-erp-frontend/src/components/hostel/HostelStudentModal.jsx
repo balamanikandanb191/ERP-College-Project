@@ -33,7 +33,14 @@ const HostelStudentModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
   const fetchData = async () => {
     try {
       const [sData, rData] = await Promise.all([api.get('/students'), api.get('/hostel/rooms')]);
-      setStudents(Array.isArray(sData.data) ? sData.data : []);
+      const allStudents = Array.isArray(sData.data) ? sData.data : [];
+      const filtered = allStudents.filter(s => 
+        s.hostelRequired === true || 
+        s.hostelRequired === 1 || 
+        s.hostelRequired === 'Yes' ||
+        (initialData && String(s.id) === String(initialData.studentId))
+      );
+      setStudents(filtered);
       setRooms(Array.isArray(rData.data) ? rData.data : []);
     } catch (e) { console.error(e); }
   };

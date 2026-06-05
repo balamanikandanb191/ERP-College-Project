@@ -26,38 +26,8 @@ import api from '../services/api';
 // Unified menu sections configuration matching the exact School ERP screenshots and requirements
 const menuSections = [
   {
-    id: 'dashboard',
-    title: 'DASHBOARD',
-    icon: LayoutDashboard,
-    roles: ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student'],
-    isDirectLink: true,
-    path: (role) => {
-      if (role === 'Student') return '/student';
-      if (role === 'Staff' || role === 'Teacher') return '/staff';
-      return '/admin';
-    }
-  },
-  {
-    id: 'file',
-    title: 'FILE',
-    icon: FileText,
-    roles: ['Admin', 'Super Admin'],
-    items: [
-      {
-        name: 'User Creation',
-        path: '/admin/user-creation',
-        roles: ['Admin', 'Super Admin']
-      },
-      {
-        name: 'Log Details',
-        path: '/admin/log-details',
-        roles: ['Admin', 'Super Admin']
-      }
-    ]
-  },
-  {
     id: 'academics_master',
-    title: 'ACADEMIC MASTER',
+    title: 'Academic',
     icon: GraduationCap,
     roles: ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student'],
     items: [
@@ -105,7 +75,7 @@ const menuSections = [
   },
   {
     id: 'others_master',
-    title: 'OTHER MASTER',
+    title: 'Others',
     icon: Settings,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -138,8 +108,9 @@ const menuSections = [
   },
   {
     id: 'enquiry',
-    title: 'ENQUIRY',
+    title: 'Enquiry',
     icon: HelpCircle,
+    noSort: true,
     roles: ['Admin', 'Super Admin'],
     items: [
       {
@@ -176,9 +147,10 @@ const menuSections = [
   },
   {
     id: 'application',
-    title: 'APPLICATION',
+    title: 'Application',
     icon: ClipboardCheck,
     roles: ['Admin', 'Super Admin'],
+    noSort: true,
     items: [
       {
         name: 'Application Issue',
@@ -199,7 +171,7 @@ const menuSections = [
   },
   {
     id: 'admission_report',
-    title: 'ADMISSION REPORT',
+    title: 'Admission report',
     icon: FileText,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -222,7 +194,7 @@ const menuSections = [
   },
   {
     id: 'certificates',
-    title: 'CERTIFICATES',
+    title: 'Certificates',
     icon: Award,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -260,7 +232,7 @@ const menuSections = [
   },
   {
     id: 'idcard',
-    title: 'ID CARD',
+    title: 'Idcard',
     icon: Wallet,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -273,7 +245,7 @@ const menuSections = [
   },
   {
     id: 'attendance',
-    title: 'ATTENDANCE',
+    title: 'Attendance',
     icon: Clock,
     roles: ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student'],
     items: [
@@ -300,7 +272,7 @@ const menuSections = [
   },
   {
     id: 'assessment',
-    title: 'ASSESSMENT',
+    title: 'Assessment',
     icon: Layers,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -318,7 +290,7 @@ const menuSections = [
   },
   {
     id: 'campus',
-    title: 'CAMPUS MANAGEMENT',
+    title: 'Campus',
     icon: Building2,
     roles: ['Admin', 'Super Admin', 'Student'],
     items: [
@@ -341,7 +313,7 @@ const menuSections = [
   },
   {
     id: 'library',
-    title: 'LIBRARY',
+    title: 'Library',
     icon: Library,
     noSort: true,
     roles: ['Admin', 'Super Admin'],
@@ -375,7 +347,7 @@ const menuSections = [
   },
   {
     id: 'placements',
-    title: 'PLACEMENT & CAREERS',
+    title: 'Placements',
     icon: Briefcase,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -403,7 +375,7 @@ const menuSections = [
   },
   {
     id: 'settings',
-    title: 'SETTINGS',
+    title: 'Settings',
     icon: Settings,
     roles: ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student'],
     items: [
@@ -440,8 +412,63 @@ const Sidebar = () => {
   const location = useLocation();
   const userRole = user?.role || 'Admin';
 
-  const [expandedSections, setExpandedSections] = useState({});
-  const [expandedSubgroups, setExpandedSubgroups] = useState({});
+  const [expandedSections, setExpandedSections] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_expanded_sections');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [expandedSubgroups, setExpandedSubgroups] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_expanded_subgroups');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebar_expanded_sections', JSON.stringify(expandedSections));
+  }, [expandedSections]);
+
+  useEffect(() => {
+    localStorage.setItem('sidebar_expanded_subgroups', JSON.stringify(expandedSubgroups));
+  }, [expandedSubgroups]);
+
+  const sidebarScrollRef = React.useRef(null);
+
+  // Restore scroll position
+  useEffect(() => {
+    try {
+      const savedScroll = sessionStorage.getItem('sidebar_scroll_position');
+      if (savedScroll && sidebarScrollRef.current) {
+        sidebarScrollRef.current.scrollTop = parseInt(savedScroll, 10);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleScroll = (e) => {
+    sessionStorage.setItem('sidebar_scroll_position', e.target.scrollTop);
+  };
+
+  // Auto-scroll to active item on page refresh or navigation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (sidebarScrollRef.current) {
+        const activeElement = sidebarScrollRef.current.querySelector('[data-sidebar-active="true"]');
+        if (activeElement) {
+          activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [allowedModules, setAllowedModules] = useState(null);
 
@@ -694,6 +721,7 @@ const Sidebar = () => {
           <NavLink
             to={targetPath}
             end={targetPath === '/admin' || targetPath === '/staff' || targetPath === '/student'}
+            data-sidebar-active={active}
             className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group cursor-pointer ${active
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20 text-white font-bold'
               : 'text-slate-700 hover:bg-slate-200/50 hover:text-slate-900'
@@ -794,6 +822,7 @@ const Sidebar = () => {
                                 <NavLink
                                   key={sub.name}
                                   to={subPath}
+                                  data-sidebar-active={location.pathname === subPath}
                                   className={({ isActive }) =>
                                     `flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${isActive
                                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow shadow-blue-500/10 text-white font-bold'
@@ -818,6 +847,7 @@ const Sidebar = () => {
                     key={item.name}
                     to={itemPath}
                     end={itemPath === '/admin' || itemPath === '/staff' || itemPath === '/student'}
+                    data-sidebar-active={location.pathname === itemPath}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white border-l-4 border-cyan-300 font-bold'
@@ -842,16 +872,13 @@ const Sidebar = () => {
       {/* Sticky Header with Logo and Search Bar */}
       <div className="flex flex-col gap-3.5 p-4 border-b border-slate-200/50 bg-white/20">
         <div className="flex items-center gap-3 px-1">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-md shadow-blue-500/15">
+          <div className="bg-pink-500 p-2 rounded-full shadow-md shadow-pink-500/15">
             <GraduationCap className="text-white w-5.5 h-5.5" />
           </div>
           <div>
-            <h1 className="text-lg font-black bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent leading-none">
-              EduERP
+            <h1 className="text-[11px] font-black text-violet-700 tracking-wider uppercase leading-tight">
+              SCHOOL MANAGEMENT SYSTEM
             </h1>
-            <span className="text-[9px] font-black text-slate-400 tracking-wider uppercase block mt-1">
-              Enterprise Suite
-            </span>
           </div>
         </div>
 
@@ -871,10 +898,37 @@ const Sidebar = () => {
       </div>
 
       {/* Menu List Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1.5 scrollbar-thin">
+      <div 
+        ref={sidebarScrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1.5 scrollbar-thin"
+      >
         {dashboardSection && renderSection(dashboardSection)}
 
-        {normalSections.map((section) => renderSection(section))}
+        {normalSections.map((section) => {
+          const elements = [];
+          if (section.id === 'enquiry') {
+            elements.push(
+              <div key="category-admission" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Admission
+              </div>
+            );
+          } else if (section.id === 'idcard') {
+            elements.push(
+              <div key="category-idcard" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                ID Card
+              </div>
+            );
+          } else if (section.id === 'attendance') {
+            elements.push(
+              <div key="category-campus" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Academic
+              </div>
+            );
+          }
+          elements.push(renderSection(section));
+          return elements;
+        })}
       </div>
 
       {/* Sticky Settings Section Pinned at the Bottom */}

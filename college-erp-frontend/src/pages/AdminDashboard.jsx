@@ -1236,6 +1236,19 @@ const AdminDashboard = () => {
     });
   }, [selectedReportType, pendingFeesList, lowAttendanceList, malpracticeList, leaveRequests, reportSearchQuery]);
 
+  const leaveRosterChartData = useMemo(() => [
+    { name: 'On Duty', value: todayStaffAttendance.presentCount || 0, color: '#10B981' },
+    { name: 'On Leave', value: staffOnLeaveList.length || 0, color: '#EF4444' },
+    { name: 'Pending Leaves', value: leaveRequests.filter(l => l.status === 'Pending').length || 0, color: '#6366F1' },
+    { name: 'Approved Leaves', value: leaveRequests.filter(l => l.status === 'Approved').length || 0, color: '#8B5CF6' }
+  ], [todayStaffAttendance.presentCount, staffOnLeaveList.length, leaveRequests]);
+
+  const complianceAlertsData = useMemo(() => [
+    { name: 'Low Attendance', count: lowAttendanceList.length || 0, color: '#EF4444' },
+    { name: 'Pending Admissions', count: pendingAdmissionsList.length || 0, color: '#F59E0B' },
+    { name: 'Active Workloads', count: staff.length || 0, color: '#3B82F6' }
+  ], [lowAttendanceList.length, pendingAdmissionsList.length, staff.length]);
+
   return (
     <div className="space-y-8 w-full pb-12 Outfit-Font bg-slate-50/30 p-2 sm:p-6 rounded-3xl">
       
@@ -1543,257 +1556,92 @@ const AdminDashboard = () => {
 
             {/* Grid of Administrative Areas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              
-              {/* FINANCE COMPONENT */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50/80 text-blue-655 rounded-2xl border border-blue-100/30">
-                      <DollarSign size={18} />
-                    </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Fee Structure & Financial Audits</h4>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Pending Fees" 
-                    count={pendingFeesList.length} 
-                    suffix="Students" 
-                    onClick={() => handleKPIClick('pending_fees', 'Students with Pending Fees')} 
-                    color="blue"
-                  />
-                  <AuditButton 
-                    label="Fee Defaulters" 
-                    count={feeDefaultersList.length} 
-                    suffix="Students" 
-                    onClick={() => handleKPIClick('fee_defaulters', 'Defaulters Overdue Dues')} 
-                    color="rose"
-                  />
-                  <AuditButton 
-                    label="Scholarships Awarded" 
-                    count={scholarshipRegistry.length} 
-                    suffix="Awards" 
-                    onClick={() => handleKPIClick('scholarships', 'Scholarship Grants Registry')} 
-                    color="emerald"
-                  />
-                  <AuditButton 
-                    label="Pending Penalty Fines" 
-                    count={finesPendingList.length} 
-                    suffix="Dues" 
-                    onClick={() => handleKPIClick('fines_pending', 'Unpaid Penalties & Fines')} 
-                    color="amber"
-                  />
-                </div>
-              </div>
-
-              {/* ACADEMICS & EXAMINATIONS */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-indigo-50/80 text-indigo-655 rounded-2xl border border-indigo-100/30">
-                      <BookOpen size={18} />
-                    </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Academics & Examination Control</h4>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Active Exams" 
-                    count={exams.length} 
-                    suffix="Slots" 
-                    onClick={() => handleKPIClick('active_exams', 'Scheduled Active Exams')} 
-                    color="blue"
-                  />
-                  <AuditButton 
-                    label="Students Appearing" 
-                    count={allAppearingStudents.length} 
-                    suffix="Students" 
-                    onClick={() => handleKPIClick('appearing_students', 'Appeared Student Logs')} 
-                    color="slate"
-                  />
-                  <AuditButton 
-                    label="Malpractice Cases" 
-                    count={malpracticeList.length} 
-                    suffix="Logged" 
-                    onClick={() => handleKPIClick('malpractice_cases', 'Logged Malpractice Infractions')} 
-                    color="rose"
-                  />
-                  <AuditButton 
-                    label="Exam Calendar Dates" 
-                    count={SEED_EVENTS.filter(e => e.type === 'Exam').length} 
-                    suffix="Events" 
-                    onClick={() => handleKPIClick('exams_calendar', 'Academic Calendar Exam Cycles')} 
-                  />
-                </div>
-              </div>
-
-              {/* CAMPUS INFRASTRUCTURE & MAPPINGS */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-emerald-50/80 text-emerald-600 rounded-2xl border border-emerald-100/30">
-                      <Building size={18} />
-                    </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Campus Infrastructure & Allocations</h4>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Classrooms Active" 
-                    count={activeAllocations.length} 
-                    suffix="Occupied" 
-                    onClick={() => handleKPIClick('classes_today', 'Timetabled Classrooms')} 
-                    color="slate"
-                  />
-                  <AuditButton 
-                    label="Vacant Rooms" 
-                    count={vacantClassrooms.length} 
-                    suffix="Halls Available" 
-                    onClick={() => handleKPIClick('vacant_classrooms', 'Vacant Classroom Mappings')} 
-                    color="emerald"
-                  />
-                  <AuditButton 
-                    label="Hostel Residents" 
-                    count={students.filter((_, idx) => idx % 2 === 0).length} 
-                    suffix="Checked-In" 
-                    onClick={() => handleKPIClick('hostel_residents', 'Hostel Housing Bed Allocations')} 
-                    color="slate"
-                  />
-                  <AuditButton 
-                    label="Transport Routes" 
-                    count={3} 
-                    suffix="Active Routes" 
-                    onClick={() => handleKPIClick('transport_routes', 'Active Fleet Routes Mapped')} 
-                    color="blue"
-                  />
-                </div>
-              </div>
-
-              {/* LIBRARY & CAMPUS SERVICES */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-violet-50/80 text-violet-650 rounded-2xl border border-violet-100/30">
-                      <BookOpen size={18} />
-                    </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Library Ledger & Campus Services</h4>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Total Book Inventory" 
-                    count={totalBooksInventoryCount} 
-                    suffix="Books" 
-                    onClick={() => handleKPIClick('library_inventory', 'Library Catalog Ledger')} 
-                    color="slate"
-                  />
-                  <AuditButton 
-                    label="Borrowed Books" 
-                    count={borrowRecordsActive.length} 
-                    suffix="Issued" 
-                    onClick={() => handleKPIClick('borrowed_books', 'Active Issued Books')} 
-                    color="indigo"
-                  />
-                  <AuditButton 
-                    label="Overdue Books" 
-                    count={borrowRecordsOverdue.length} 
-                    suffix="Overdue" 
-                    onClick={() => handleKPIClick('overdue_books', 'Library Overdue Book Warnings')} 
-                    color="rose"
-                  />
-                  <AuditButton 
-                    label="Placed Students" 
-                    count={placementStudents.length} 
-                    suffix="Offers" 
-                    onClick={() => handleKPIClick('placed_students', 'Placed Student Drives')} 
-                    color="emerald"
-                  />
-                </div>
-              </div>
 
               {/* STAFF DUTY ROSTERS & LEAVE REQUESTS */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-emerald-50/80 text-emerald-600 rounded-2xl border border-emerald-100/30">
-                      <Users size={18} />
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-emerald-50/80 text-emerald-600 rounded-2xl border border-emerald-100/30">
+                        <Users size={18} />
+                      </div>
+                      <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Faculty Duty Rosters & Leaves</h4>
                     </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Faculty Duty Rosters & Leaves</h4>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <p className="text-slate-450 text-[10px] font-bold mt-2 leading-relaxed">
+                    Live distribution comparing staff active on-duty presence against active/pending leave requests.
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Pending Leave Requests" 
-                    count={leaveRequests.filter(l => l.status === 'Pending').length} 
-                    suffix="Pending" 
-                    onClick={() => handleKPIClick('pending_leaves', 'Pending Leave Applications')} 
-                    color="indigo"
-                  />
-                  <AuditButton 
-                    label="Approved Leaves" 
-                    count={leaveRequests.filter(l => l.status === 'Approved').length} 
-                    suffix="Approved" 
-                    onClick={() => handleKPIClick('approved_leaves', 'Approved Leave Log')} 
-                    color="emerald"
-                  />
-                  <AuditButton 
-                    label="Salary Pending" 
-                    count={salaryPendingList.length} 
-                    suffix="Staff" 
-                    onClick={() => handleKPIClick('salary_pending', 'Faculty Salary Authorizations')} 
-                    color="amber"
-                  />
-                  <AuditButton 
-                    label="Staff On Leave" 
-                    count={staffOnLeaveList.length} 
-                    suffix="Leave Today" 
-                    onClick={() => handleKPIClick('staff_on_leave', 'Staff On Leave Today')} 
-                    color="rose"
-                  />
+                <div className="h-44 w-full flex items-center justify-center my-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={leaveRosterChartData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10, fontWeight: 700}} width={95} />
+                      <Tooltip 
+                        contentStyle={{borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '11px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)'}}
+                      />
+                      <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={12}>
+                        {leaveRosterChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
+                  {leaveRosterChartData.map((item, idx) => (
+                    <div key={idx} className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-slate-455 block truncate">{item.name}</span>
+                      <span className="text-sm font-black text-slate-800">{item.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* ATTENDANCE & ENROLLMENT COMPLIANCE */}
-              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-indigo-50/80 text-indigo-655 rounded-2xl border border-indigo-100/30">
-                      <GraduationCap size={18} />
+              <div className="bg-white/70 backdrop-blur-md border border-white/60 rounded-3xl p-6 shadow-sm space-y-5 hover:bg-white transition-all duration-300 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-indigo-50/80 text-indigo-655 rounded-2xl border border-indigo-100/30">
+                        <GraduationCap size={18} />
+                      </div>
+                      <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Attendance & Compliance Checks</h4>
                     </div>
-                    <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">Attendance & Compliance Checks</h4>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                   </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                  <p className="text-slate-455 text-[10px] font-bold mt-2 leading-relaxed">
+                    Visual comparison tracking critical compliance metrics, student attendance alerts, and active workloads.
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <AuditButton 
-                    label="Low Attendance Alerts" 
-                    count={lowAttendanceList.length} 
-                    suffix="Students (<75%)" 
-                    onClick={() => handleKPIClick('low_attendance', 'Students with Low Attendance')} 
-                    color="rose"
-                  />
-                  <AuditButton 
-                    label="Pending Admissions" 
-                    count={pendingAdmissionsList.length} 
-                    suffix="Verification" 
-                    onClick={() => handleKPIClick('pending_admissions', 'Students Awaiting Verification')} 
-                    color="amber"
-                  />
-                  <AuditButton 
-                    label="Faculty Workload Profiles" 
-                    count={staff.length} 
-                    suffix="Active Workloads Mapped" 
-                    onClick={() => handleKPIClick('staff_workload', 'Faculty Weekly Workload Rating')} 
-                    color="indigo"
-                    className="col-span-2"
-                  />
+                <div className="h-44 w-full flex items-center justify-center my-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={complianceAlertsData} margin={{ top: 15, right: 10, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 9, fontWeight: 700}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10}} />
+                      <Tooltip 
+                        contentStyle={{borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '11px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)'}}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={22}>
+                        {complianceAlertsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-            </div>
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center">
+                  {complianceAlertsData.map((item, idx) => (
+                    <div key={idx} className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-slate-455 block truncate">{item.name}</span>
+                      <span className="text-sm font-black text-slate-800">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
           </div>
         </section>
 

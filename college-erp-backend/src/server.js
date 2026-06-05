@@ -23,6 +23,7 @@ const communicationRoutes = require('./routes/communicationRoutes');
 const masterRoutes = require('./routes/masterRoutes');
 const idCardRoutes = require('./routes/idCardRoutes');
 const classAllocationRoutes = require('./routes/classAllocationRoutes');
+const enquiryRoutes = require('./routes/enquiryRoutes');
 const path = require('path');
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/masters', masterRoutes);
 app.use('/api/id-cards', idCardRoutes);
 app.use('/api/class-allocations', classAllocationRoutes);
+app.use('/api/enquiries', enquiryRoutes);
 
 // Fallback all non-API GET requests to frontend's index.html
 app.get(/.*/, (req, res, next) => {
@@ -79,6 +81,8 @@ const cleanAndSync = async () => {
         await sequelize.transaction(async (t) => {
             await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
             const tables = [
+                'application_issues', 'ApplicationIssues',
+                'enquiries', 'Enquiries',
                 'announcement_reads', 'AnnouncementReads', 'announcements', 'Announcements',
                 'events', 'Events', 'holidays', 'Holidays', 'notifications', 'Notifications',
                 'academic_events', 'AcademicEvents', 'placement_records', 'PlacementRecords',
@@ -103,7 +107,8 @@ const cleanAndSync = async () => {
                 'classes', 'ClassMaster', 'ClassMasters',
                 'designations', 'DesignationMaster', 'DesignationMasters',
                 'exams', 'ExamMaster', 'ExamMasters',
-                'fees', 'FeeMaster', 'FeeMasters'
+                'fees', 'FeeMaster', 'FeeMasters',
+                'castes', 'Castes', 'districts', 'Districts'
             ];
             for (const table of tables) {
                 await sequelize.query(`DROP TABLE IF EXISTS \`${table}\``, { transaction: t });

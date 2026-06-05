@@ -170,3 +170,10 @@
 .animate-slide-in {
   animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Force all pages and layout containers to expand to full width instead of centering mid-page */
+main > div,
+main > div > div,
+main > div > section {
+  max-width: 100% !important;
+}

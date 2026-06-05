@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt');
 const { 
   User, Role, Staff, Student, SystemSetting, FeeStructure, ClassAllocation, Book,
-  AcademicYearMaster, ClassMaster, DesignationMaster, ExamMaster, FeeMaster 
+  AcademicYearMaster, ClassMaster, DesignationMaster, ExamMaster, FeeMaster,
+  Caste, District
 } = require('../models');
 
 async function seedDatabase() {
@@ -417,6 +418,62 @@ async function seedDatabase() {
         });
     }
     console.log('Books seeded successfully.');
+
+    const defaultCastes = ['BC', 'MBC', 'SC/ST', 'OC', 'DNC'];
+    for (const caste of defaultCastes) {
+        await Caste.findOrCreate({
+            where: { casteName: caste }
+        });
+    }
+    console.log('Castes seeded successfully.');
+
+    const defaultDistricts = [
+        'Ariyalur',
+        'Chengalpattu',
+        'Chennai',
+        'Coimbatore',
+        'Cuddalore',
+        'Dharmapuri',
+        'Dindigul',
+        'Erode',
+        'Kallakurichi',
+        'Kanchipuram',
+        'Kanyakumari',
+        'Karur',
+        'Krishnagiri',
+        'Madurai',
+        'Mayiladuthurai',
+        'Nagapattinam',
+        'Namakkal',
+        'Nilgiris',
+        'Perambalur',
+        'Pudukkottai',
+        'Ramanathapuram',
+        'Ranipet',
+        'Salem',
+        'Sivaganga',
+        'Tenkasi',
+        'Thanjavur',
+        'Theni',
+        'Thoothukudi',
+        'Tiruchirappalli',
+        'Tirunelveli',
+        'Tirupathur',
+        'Tiruppur',
+        'Tiruvallur',
+        'Tiruvannamalai',
+        'Tiruvarur',
+        'Vellore',
+        'Viluppuram',
+        'Virudhunagar',
+        'Other'
+    ];
+    for (const district of defaultDistricts) {
+        await District.findOrCreate({
+            where: { districtName: district }
+        });
+    }
+    console.log('Districts seeded successfully.');
 }
 
 module.exports = { seedDatabase };

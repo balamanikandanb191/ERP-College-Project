@@ -7,6 +7,9 @@ const StudentAttendance = require('./StudentAttendance');
 const StaffAttendance = require('./StaffAttendance');
 const Book = require('./Book');
 const BorrowRecord = require('./BorrowRecord');
+const Enquiry = require('./Enquiry');
+const Caste = require('./Caste');
+const District = require('./District');
 
 // Transport Models
 const Driver = require('./Driver');
@@ -43,6 +46,7 @@ const FeeMaster = require('./FeeMaster');
 const { Company, PlacementDrive, PlacementRecord, PlacementFee, Internship } = require('./Placement');
 const { Announcement, Event, Holiday, Notification, AnnouncementRead, AcademicEvent } = require('./Communication')(sequelize);
 const ClassAllocation = require('./ClassAllocation');
+const ApplicationIssue = require('./ApplicationIssue');
 
 // Associations
 Role.hasMany(User, { foreignKey: 'role_id' });
@@ -209,5 +213,9 @@ module.exports = {
   Notification,
   AnnouncementRead,
   AcademicEvent,
-  ClassAllocation
+  ClassAllocation,
+  Enquiry,
+  Caste,
+  District,
+  ApplicationIssue
 };

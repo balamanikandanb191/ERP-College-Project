@@ -43,11 +43,11 @@ const SubjectAllocation = () => {
     try {
       const { data } = await api.get('/masters/subj_alloc');
       if (data && data.length > 0) {
-        setRecords(data.map(r => ({ id: r.id, ...r.data })));
+        setRecords(data.map(r => ({ ...r.data, id: r.id })));
       } else {
         const promises = SEED.map(s => api.post('/masters/subj_alloc', { data: s }));
         const results = await Promise.all(promises);
-        setRecords(results.map(r => ({ id: r.data.id, ...r.data.data })));
+        setRecords(results.map(r => ({ ...r.data.data, id: r.data.id })));
       }
     } catch (error) {
       console.error('Failed to fetch subject allocations, falling back to localStorage:', error);

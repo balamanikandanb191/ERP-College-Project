@@ -4,7 +4,10 @@ const {
   ClassMaster,
   DesignationMaster,
   ExamMaster,
-  FeeMaster
+  FeeMaster,
+  Caste,
+  District,
+  ApplicationIssue
 } = require('../models');
 
 const getModelAndMapping = (type) => {
@@ -77,6 +80,41 @@ const getModelAndMapping = (type) => {
           dueDate: data.dueDate,
           term: data.term || null,
           active: data.active !== false
+        })
+      };
+    case 'caste':
+      return {
+        model: Caste,
+        toClient: (record) => ({ id: record.id, data: { casteName: record.casteName } }),
+        fromClient: (data) => ({
+          casteName: data.casteName
+        })
+      };
+    case 'district':
+      return {
+        model: District,
+        toClient: (record) => ({ id: record.id, data: { districtName: record.districtName } }),
+        fromClient: (data) => ({
+          districtName: data.districtName
+        })
+      };
+    case 'application_issue':
+      return {
+        model: ApplicationIssue,
+        toClient: (record) => ({ id: record.id, data: record.toJSON() }),
+        fromClient: (data) => ({
+          applicationNo: data.applicationNo,
+          date: data.date,
+          standard: data.standard,
+          name: data.name,
+          gender: data.gender,
+          lastStudied: data.lastStudied,
+          parentName: data.parentName,
+          parentMobile: data.parentMobile,
+          reference: data.reference,
+          amount: data.amount,
+          community: data.community,
+          address: data.address
         })
       };
     default:
