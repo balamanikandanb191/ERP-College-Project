@@ -47,6 +47,8 @@ const { Company, PlacementDrive, PlacementRecord, PlacementFee, Internship } = r
 const { Announcement, Event, Holiday, Notification, AnnouncementRead, AcademicEvent } = require('./Communication')(sequelize);
 const ClassAllocation = require('./ClassAllocation');
 const ApplicationIssue = require('./ApplicationIssue');
+const AssessmentConfig = require('./AssessmentConfig');
+const AssessmentMark = require('./AssessmentMark');
 
 // Associations
 Role.hasMany(User, { foreignKey: 'role_id' });
@@ -217,5 +219,7 @@ module.exports = {
   Enquiry,
   Caste,
   District,
-  ApplicationIssue
+  ApplicationIssue,
+  AssessmentConfig,
+  AssessmentMark
 };

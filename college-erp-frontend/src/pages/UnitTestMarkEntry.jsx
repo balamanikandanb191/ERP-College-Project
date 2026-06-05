@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Save, Award, Clipboard, User, Hash, Calendar, Percent, AlertCircle } from 'lucide-react';
+import { Search, Save, Clipboard, Award, User, Hash, Calendar, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -23,43 +23,40 @@ const COURSES = [
 
 const SEMESTERS = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8', 'Year 1', 'Year 2', 'Year 3'];
 
-const AssignmentMarkEntry = () => {
-  // Selection criteria
+const TEST_TYPES = ['Internal Test 1', 'Internal Test 2', 'Internal Test 3', 'Model Exam'];
+
+const UnitTestMarkEntry = () => {
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [course, setCourse] = useState('');
   const [semester, setSemester] = useState('');
   const [subject, setSubject] = useState('');
   const [staffName, setStaffName] = useState('');
-  const [assignmentNo, setAssignmentNo] = useState('1');
+  const [unitTestNo, setUnitTestNo] = useState('Internal Test 1');
 
-  // Auto fetched / master data lists
   const [subjectList, setSubjectList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
   const [availableConfigs, setAvailableConfigs] = useState([]);
 
-  // Auto-filled details
   const [subCode, setSubCode] = useState('');
-  const [assignmentDate, setAssignmentDate] = useState('');
-  const [maxMarks, setMaxMarks] = useState(20);
+  const [unitTestDate, setUnitTestDate] = useState('');
+  const [maxMarks, setMaxMarks] = useState(50);
   const [staffId, setStaffId] = useState('');
   const [configId, setConfigId] = useState('');
 
-  // Students and marks data
   const [students, setStudents] = useState([]);
-  const [marksData, setMarksData] = useState({}); // student_id -> mark
-  const [statusData, setStatusData] = useState({}); // student_id -> 'Present' / 'Absent'
+  const [marksData, setMarksData] = useState({});
+  const [statusData, setStatusData] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load master data
   useEffect(() => {
     const loadMasters = async () => {
       try {
         const [staffRes, yearRes, configRes] = await Promise.allSettled([
           api.get('/masters/staff_master'),
           api.get('/masters/acad_year'),
-          api.get('/assessment/config?assessmentType=Assignment')
+          api.get('/assessment/config')
         ]);
         if (staffRes.status === 'fulfilled') {
           setStaffList(staffRes.value.data.map(r => ({ id: r.id, ...r.data })));
@@ -77,17 +74,15 @@ const AssignmentMarkEntry = () => {
     loadMasters();
   }, []);
 
-  // When criteria change, filter configs and auto-fill details
+  // Filter subjects based on course and semester selection
   useEffect(() => {
     if (course && semester) {
-      // Load configurations for this combination to find subjects
       const matchConfigs = availableConfigs.filter(
         c => c.course === course &&
              c.semester === semester &&
              c.academic_year === academicYear &&
-             c.assessment_type === 'Assignment'
+             TEST_TYPES.includes(c.assessment_type)
       );
-      
       const uniqueSubjects = [...new Set(matchConfigs.map(c => c.subject_name))];
       setSubjectList(uniqueSubjects);
     } else {
@@ -95,7 +90,7 @@ const AssignmentMarkEntry = () => {
     }
   }, [course, semester, academicYear, availableConfigs]);
 
-  // When subject or assignment number changes, auto fetch subject code, date, max marks, and staff
+  // Auto-fill test code, date, and max marks based on subject and test number selection
   useEffect(() => {
     if (course && semester && subject) {
       const match = availableConfigs.find(
@@ -103,14 +98,13 @@ const AssignmentMarkEntry = () => {
              c.semester === semester &&
              c.academic_year === academicYear &&
              c.subject_name === subject &&
-             c.assessment_type === 'Assignment' &&
-             String(c.assessment_number) === String(assignmentNo)
+             c.assessment_type === unitTestNo
       );
 
       if (match) {
         setSubCode(match.subject_code || '');
-        setAssignmentDate(match.assessment_date || '');
-        setMaxMarks(match.max_marks || 20);
+        setUnitTestDate(match.assessment_date || '');
+        setMaxMarks(match.max_marks || 50);
         setConfigId(match.id);
         
         if (match.staff_name) {
@@ -119,14 +113,14 @@ const AssignmentMarkEntry = () => {
         }
       } else {
         setSubCode('');
-        setAssignmentDate('');
-        setMaxMarks(20);
+        setUnitTestDate('');
+        setMaxMarks(50);
         setConfigId('');
       }
     }
-  }, [course, semester, subject, assignmentNo, academicYear, availableConfigs]);
+  }, [course, semester, subject, unitTestNo, academicYear, availableConfigs]);
 
-  // Handle staff name selection manually or auto-fill staff ID
+  // Auto-fill staff ID when staff name is selected
   useEffect(() => {
     if (staffName) {
       const foundStaff = staffList.find(s => s.fullName === staffName || s.name === staffName);
@@ -136,7 +130,7 @@ const AssignmentMarkEntry = () => {
     }
   }, [staffName, staffList]);
 
-  // Fetch students
+  // Load students for mark entry
   const handleViewStudents = async () => {
     if (!academicYear || !course || !semester || !subject) {
       toast.error('Please select Academic Year, Course, Semester, and Subject');
@@ -144,11 +138,8 @@ const AssignmentMarkEntry = () => {
     }
     setLoading(true);
     try {
-      // 1. Fetch student list
       const studentsRes = await api.get(`/assessment/students?course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&academic_year=${academicYear}`);
-      
-      // 2. Fetch existing marks if any
-      const marksRes = await api.get(`/assessment/marks?academic_year=${academicYear}&course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&subject_name=${encodeURIComponent(subject)}&assessment_type=Assignment&assessment_number=${assignmentNo}`);
+      const marksRes = await api.get(`/assessment/marks?academic_year=${academicYear}&course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&subject_name=${encodeURIComponent(subject)}&assessment_type=${encodeURIComponent(unitTestNo)}`);
       
       const studentsList = studentsRes.data;
       const existingMarks = marksRes.data;
@@ -170,7 +161,7 @@ const AssignmentMarkEntry = () => {
       setStudents(studentsList);
       setMarksData(marksMap);
       setStatusData(statusMap);
-      
+
       if (studentsList.length === 0) {
         toast.error('No students found registered for the selected Course and Semester');
       } else {
@@ -198,8 +189,6 @@ const AssignmentMarkEntry = () => {
     setStatusData(prev => {
       const current = prev[studentId] || 'Present';
       const next = current === 'Present' ? 'Absent' : 'Present';
-      
-      // If setting to Absent, clear the marks
       if (next === 'Absent') {
         setMarksData(m => ({ ...m, [studentId]: '' }));
       } else {
@@ -209,6 +198,7 @@ const AssignmentMarkEntry = () => {
     });
   };
 
+  // Save marks to database
   const handleSaveMarks = async () => {
     if (students.length === 0) {
       toast.error('No student records to save. Please click "View Students" first.');
@@ -225,8 +215,8 @@ const AssignmentMarkEntry = () => {
         semester: semester,
         subject_name: subject,
         subject_code: subCode,
-        assessment_type: 'Assignment',
-        assessment_number: Number(assignmentNo),
+        assessment_type: unitTestNo,
+        assessment_number: 1,
         assessment_id: configId || null,
         academic_year: academicYear,
         staff_id: staffId,
@@ -237,7 +227,7 @@ const AssignmentMarkEntry = () => {
       }));
 
       await api.post('/assessment/marks', { marks: marksPayload });
-      toast.success('Assignment marks saved successfully!');
+      toast.success('Internal Test marks saved successfully!');
     } catch (err) {
       toast.error('Failed to save marks: ' + (err?.response?.data?.message || err.message));
     } finally {
@@ -252,8 +242,8 @@ const AssignmentMarkEntry = () => {
     setStaffName('');
     setStaffId('');
     setSubCode('');
-    setAssignmentDate('');
-    setMaxMarks(20);
+    setUnitTestDate('');
+    setMaxMarks(50);
     setConfigId('');
     setStudents([]);
     setMarksData({});
@@ -270,9 +260,9 @@ const AssignmentMarkEntry = () => {
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30">
               Assessment Scoring
             </span>
-            <h1 className="text-3xl font-black mt-2">Assignment Mark Entry</h1>
+            <h1 className="text-3xl font-black mt-2">Unit / Internal Test Mark Entry</h1>
             <p className="text-indigo-200 text-xs font-semibold mt-1">
-              Register assignment marks, continuous evaluation scores, and log candidate attendance
+              Enter marks for Internal Assessments, Model Examinations, and continuous evaluation tests
             </p>
           </div>
           {students.length > 0 && (
@@ -292,7 +282,7 @@ const AssignmentMarkEntry = () => {
           </div>
           <div>
             <p className="font-black text-sm text-slate-800">Selection Panel</p>
-            <p className="text-xs text-slate-500 font-medium">Please select the criteria below to load the student list for assignment marks entry.</p>
+            <p className="text-xs text-slate-500 font-medium">Please select the criteria below to load the student list for Unit Test mark entry.</p>
           </div>
         </div>
 
@@ -331,7 +321,7 @@ const AssignmentMarkEntry = () => {
 
             {/* Subject */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subject *</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subject Name *</label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={subject} onChange={e => setSubject(e.target.value)}>
                 <option value="">Select Subject</option>
@@ -371,20 +361,20 @@ const AssignmentMarkEntry = () => {
                 placeholder="Auto-fetched" value={subCode} />
             </div>
 
-            {/* Assignment No */}
+            {/* Test No */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assignment Number</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Unit Test No *</label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={assignmentNo} onChange={e => setAssignmentNo(e.target.value)}>
-                {['1', '2', '3', '4', '5'].map(n => <option key={n} value={n}>{n}</option>)}
+                value={unitTestNo} onChange={e => setUnitTestNo(e.target.value)}>
+                {TEST_TYPES.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
 
-            {/* Assignment Date */}
+            {/* Test Date */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assignment Date</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Unit Test Date</label>
               <input type="text" readOnly className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500 font-semibold"
-                placeholder="Auto-fetched" value={assignmentDate} />
+                placeholder="Auto-fetched" value={unitTestDate} />
             </div>
 
             {/* Max Marks */}
@@ -402,7 +392,7 @@ const AssignmentMarkEntry = () => {
             </button>
             <button onClick={handleClear}
               className="px-6 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-2xl text-sm flex items-center gap-2 hover:bg-slate-50 transition-colors">
-              Clear
+              Clear Filters
             </button>
           </div>
         </div>
@@ -456,4 +446,4 @@ const AssignmentMarkEntry = () => {
   );
 };
 
-export default AssignmentMarkEntry;
+export default UnitTestMarkEntry;

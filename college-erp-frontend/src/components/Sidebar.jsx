@@ -308,12 +308,27 @@ const menuSections = [
     items: [
       {
         name: 'Assessment Configuration',
-        path: '/admin/assessment-configuration',
+        path: '/admin/academic/assessment/AssessmentConfiguration',
         roles: ['Admin', 'Super Admin']
       },
       {
         name: 'Assignment Mark Entry',
-        path: '/admin/assignment-mark-entry',
+        path: '/admin/academic/assessment/AssignmentMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Unit Test Mark Entry',
+        path: '/admin/academic/assessment/UnitTestMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Practical Mark Entry',
+        path: '/admin/academic/assessment/PracticalMark',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Assessment Reports',
+        path: '/admin/academic/assessment/AssessmentReport',
         roles: ['Admin', 'Super Admin']
       }
     ]

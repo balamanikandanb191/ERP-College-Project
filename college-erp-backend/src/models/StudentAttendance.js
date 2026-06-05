@@ -20,6 +20,26 @@ const StudentAttendance = sequelize.define('StudentAttendance', {
     allowNull: false,
     defaultValue: 'Present',
   },
+  course_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  semester_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  subject_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  staff_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
+  period_hour: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   marked_by: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -35,8 +55,8 @@ const StudentAttendance = sequelize.define('StudentAttendance', {
   indexes: [
     {
       unique: true,
-      fields: ['student_id', 'date'],
-      name: 'unique_student_attendance_per_day'
+      fields: ['student_id', 'date', 'subject_id', 'period_hour'],
+      name: 'unique_student_attendance_subject_period'
     }
   ]
 });

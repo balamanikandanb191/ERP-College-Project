@@ -59,6 +59,9 @@ import AttendanceConfiguration from './pages/AttendanceConfiguration';
 import MarkedAttendance from './pages/MarkedAttendance';
 import AssessmentConfiguration from './pages/AssessmentConfiguration';
 import AssignmentMarkEntry from './pages/AssignmentMarkEntry';
+import UnitTestMarkEntry from './pages/UnitTestMarkEntry';
+import PracticalMark from './pages/PracticalMark';
+import AssessmentReport from './pages/AssessmentReport';
 
 // Library Sub-routes Imports
 import AddBook from './pages/library/AddBook';
@@ -176,6 +179,16 @@ function App() {
               <Route path="marked-attendance" element={<MarkedAttendance />} />
               <Route path="assessment-configuration" element={<AssessmentConfiguration />} />
               <Route path="assignment-mark-entry" element={<AssignmentMarkEntry />} />
+              <Route path="unit-test-mark-entry" element={<UnitTestMarkEntry />} />
+              <Route path="practical-mark-entry" element={<PracticalMark />} />
+              <Route path="assessment-report" element={<AssessmentReport />} />
+
+              {/* Support exact paths from screenshots */}
+              <Route path="academic/assessment/AssessmentConfiguration" element={<AssessmentConfiguration />} />
+              <Route path="academic/assessment/AssignmentMarkEntry" element={<AssignmentMarkEntry />} />
+              <Route path="academic/assessment/UnitTestMarkEntry" element={<UnitTestMarkEntry />} />
+              <Route path="academic/assessment/PracticalMark" element={<PracticalMark />} />
+              <Route path="academic/assessment/AssessmentReport" element={<AssessmentReport />} />
 
               {/* Fallback Sub-routes for Grouped Sidebar */}
               <Route path="dashboard/analytics" element={<AdminDashboard />} />

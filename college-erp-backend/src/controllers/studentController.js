@@ -5,7 +5,15 @@ const { Student } = require('../models');
 // @access  Private
 exports.getStudents = async (req, res) => {
   try {
+    const { course, semester, section, academicYear } = req.query;
+    const where = {};
+    if (course) where.course = course;
+    if (semester) where.semester = semester;
+    if (section) where.section = section;
+    if (academicYear) where.academicYear = academicYear;
+
     const students = await Student.findAll({
+      where: Object.keys(where).length > 0 ? where : undefined,
       order: [['created_at', 'DESC']]
     });
     res.json(students);

@@ -24,6 +24,7 @@ const masterRoutes = require('./routes/masterRoutes');
 const idCardRoutes = require('./routes/idCardRoutes');
 const classAllocationRoutes = require('./routes/classAllocationRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
+const assessmentRoutes = require('./routes/assessmentRoutes');
 const path = require('path');
 
 const app = express();
@@ -60,6 +61,7 @@ app.use('/api/masters', masterRoutes);
 app.use('/api/id-cards', idCardRoutes);
 app.use('/api/class-allocations', classAllocationRoutes);
 app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/assessment', assessmentRoutes);
 
 // Fallback all non-API GET requests to frontend's index.html
 app.get(/.*/, (req, res, next) => {
@@ -75,56 +77,27 @@ app.get(/.*/, (req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Sync DB and Start Server
-const cleanAndSync = async () => {
+// Sync DB and Start Server — SAFE mode: never drop tables on restart
+const startServer = async () => {
     try {
-        await sequelize.transaction(async (t) => {
-            await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
-            const tables = [
-                'application_issues', 'ApplicationIssues',
-                'enquiries', 'Enquiries',
-                'announcement_reads', 'AnnouncementReads', 'announcements', 'Announcements',
-                'events', 'Events', 'holidays', 'Holidays', 'notifications', 'Notifications',
-                'academic_events', 'AcademicEvents', 'placement_records', 'PlacementRecords',
-                'placement_drives', 'PlacementDrives', 'companies', 'Companies',
-                'placement_fees', 'PlacementFees', 'internships', 'Internships',
-                'student_documents', 'StudentDocuments', 'staff_documents', 'StaffDocuments',
-                'timetables', 'Timetables', 'timetable_settings', 'TimetableSettings',
-                'class_allocations', 'ClassAllocations',
-                'fee_payment_history', 'FeePaymentHistory', 'fee_payment_histories', 'FeePaymentHistories', 'student_fees', 'StudentFees',
-                'fee_structures', 'FeeStructures', 'hostel_complaints', 'HostelComplaints',
-                'hostel_expenses', 'HostelExpenses', 'hostel_financial_reports', 'HostelFinancialReports',
-                'hostel_students', 'HostelStudents', 'hostel_rooms', 'HostelRooms',
-                'hostel_wardens', 'HostelWardens', 'maintenance_records', 'MaintenanceRecords',
-                'buses', 'Buses', 'drivers', 'Drivers', 'transport_routes', 'TransportRoutes',
-                'borrow_records', 'BorrowRecords', 'books', 'Books',
-                'staff_attendance', 'StaffAttendance', 'StaffAttendances',
-                'student_attendance', 'StudentAttendance', 'StudentAttendances',
-                'staff', 'Staffs', 'students', 'Students', 'users', 'Users', 'roles', 'Roles',
-                'system_settings', 'SystemSettings',
-                'master_records', 'MasterRecord', 'MasterRecords',
-                'academic_years', 'AcademicYearMaster', 'AcademicYearMasters',
-                'classes', 'ClassMaster', 'ClassMasters',
-                'designations', 'DesignationMaster', 'DesignationMasters',
-                'exams', 'ExamMaster', 'ExamMasters',
-                'fees', 'FeeMaster', 'FeeMasters',
-                'castes', 'Castes', 'districts', 'Districts'
-            ];
-            for (const table of tables) {
-                await sequelize.query(`DROP TABLE IF EXISTS \`${table}\``, { transaction: t });
-            }
-            await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction: t });
-        });
-
+        // Only create/alter tables — never drop data
         await sequelize.sync({ alter: true });
         console.log('Database synced successfully');
+
+        // Only seed if the users table is empty (first run only)
         try {
-            await seedDatabase();
-            console.log('Database seeded successfully');
+            const { User } = require('./models');
+            const userCount = await User.count();
+            if (userCount === 0) {
+                await seedDatabase();
+                console.log('Default admin user created successfully.');
+            } else {
+                console.log(`Database already has ${userCount} user(s) — skipping seed.`);
+            }
         } catch (err) {
-            console.error('Failed to seed database:', err);
+            console.error('Seed check failed:', err.message);
         }
-        
+
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
@@ -133,4 +106,4 @@ const cleanAndSync = async () => {
     }
 };
 
-cleanAndSync();
+startServer();

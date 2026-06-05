@@ -1,10 +1,35 @@
 const { StudentAttendance, Student, User } = require('../models');
+const { Op } = require('sequelize');
 
 exports.getAttendance = async (req, res) => {
   try {
+    const { course_id, semester_id, subject_id, staff_id, period_hour, date, academicYear, search } = req.query;
+    
+    const where = {};
+    if (course_id) where.course_id = course_id;
+    if (semester_id) where.semester_id = semester_id;
+    if (subject_id) where.subject_id = subject_id;
+    if (staff_id) where.staff_id = staff_id;
+    if (period_hour) where.period_hour = period_hour;
+    if (date) where.date = date;
+
+    const studentWhere = {};
+    if (academicYear) studentWhere.academicYear = academicYear;
+    if (search) {
+      studentWhere[Op.or] = [
+        { fullName: { [Op.like]: `%${search}%` } },
+        { registerNumber: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
     const attendance = await StudentAttendance.findAll({
+      where,
       include: [
-        { model: Student, attributes: ['id', 'fullName', 'registerNumber', 'department', 'semester'] },
+        { 
+          model: Student, 
+          where: Object.keys(studentWhere).length > 0 ? studentWhere : undefined,
+          attributes: ['id', 'fullName', 'registerNumber', 'department', 'semester', 'academicYear'] 
+        },
         { model: User, as: 'StudentMarker', attributes: ['email'] }
       ],
       order: [['date', 'DESC']]
@@ -18,23 +43,73 @@ exports.getAttendance = async (req, res) => {
 
 exports.createAttendance = async (req, res) => {
   try {
-    const { student_id, date, status, remarks } = req.body;
-    
-    // Check for existing record
-    const existing = await StudentAttendance.findOne({ where: { student_id, date } });
-    if (existing) {
-      return res.status(400).json({ message: 'Attendance already marked for this student on this date' });
-    }
+    if (Array.isArray(req.body)) {
+      const results = [];
+      for (const item of req.body) {
+        const { student_id, date, status, remarks, course_id, semester_id, subject_id, staff_id, period_hour } = item;
+        
+        // Find existing record by student_id, date, subject_id, period_hour
+        const existing = await StudentAttendance.findOne({ 
+          where: { 
+            student_id, 
+            date, 
+            subject_id: subject_id || null, 
+            period_hour: period_hour || null 
+          } 
+        });
 
-    const attendance = await StudentAttendance.create({
-      student_id,
-      date,
-      status,
-      remarks,
-      marked_by: req.user.id
-    });
-    
-    res.status(201).json(attendance);
+        if (existing) {
+          await existing.update({ status, remarks, course_id, semester_id, staff_id, marked_by: req.user.id });
+          results.push(existing);
+        } else {
+          const attendance = await StudentAttendance.create({
+            student_id,
+            date,
+            status,
+            remarks,
+            course_id,
+            semester_id,
+            subject_id,
+            staff_id,
+            period_hour,
+            marked_by: req.user.id
+          });
+          results.push(attendance);
+        }
+      }
+      return res.status(201).json(results);
+    } else {
+      const { student_id, date, status, remarks, course_id, semester_id, subject_id, staff_id, period_hour } = req.body;
+      
+      const existing = await StudentAttendance.findOne({ 
+        where: { 
+          student_id, 
+          date, 
+          subject_id: subject_id || null, 
+          period_hour: period_hour || null 
+        } 
+      });
+
+      if (existing) {
+        await existing.update({ status, remarks, course_id, semester_id, staff_id, marked_by: req.user.id });
+        return res.json(existing);
+      }
+
+      const attendance = await StudentAttendance.create({
+        student_id,
+        date,
+        status,
+        remarks,
+        course_id,
+        semester_id,
+        subject_id,
+        staff_id,
+        period_hour,
+        marked_by: req.user.id
+      });
+      
+      return res.status(201).json(attendance);
+    }
   } catch (error) {
     console.error('Error creating student attendance:', error);
     res.status(500).json({ message: 'Server error creating student attendance' });
@@ -44,14 +119,14 @@ exports.createAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, remarks } = req.body;
+    const { status, remarks, course_id, semester_id, subject_id, staff_id, period_hour } = req.body;
 
     const attendance = await StudentAttendance.findByPk(id);
     if (!attendance) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
 
-    await attendance.update({ status, remarks });
+    await attendance.update({ status, remarks, course_id, semester_id, subject_id, staff_id, period_hour });
     res.json(attendance);
   } catch (error) {
     console.error('Error updating student attendance:', error);

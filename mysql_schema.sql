@@ -338,9 +338,15 @@ CREATE TABLE `student_attendance` (
   `date` DATE NOT NULL,
   `status` ENUM('Present', 'Absent', 'Late', 'Half Day') NOT NULL,
   `remarks` TEXT DEFAULT NULL,
+  `course_id` VARCHAR(255) DEFAULT NULL,
+  `semester_id` VARCHAR(50) DEFAULT NULL,
+  `subject_id` VARCHAR(255) DEFAULT NULL,
+  `staff_id` CHAR(36) DEFAULT NULL,
+  `period_hour` VARCHAR(50) DEFAULT NULL,
   `marked_by` CHAR(36) DEFAULT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME NOT NULL,
+  UNIQUE KEY `unique_student_attendance_subject_period` (`student_id`, `date`, `subject_id`, `period_hour`),
   CONSTRAINT `fk_stud_attendance_student_id` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_stud_attendance_marked_by` FOREIGN KEY (`marked_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

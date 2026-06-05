@@ -2,11 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { Search, Printer, FileText, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import api from '../services/api';
+
+const SEED_TCS = [
+  { id: 'tc-201', registerNumber: 'REG20261102', studentName: 'Vikas Krishnan', dateOfLeaving: '2026-05-15', conduct: 'Excellent', feeStatus: 'Cleared', reason: 'Course Completed' },
+  { id: 'tc-202', registerNumber: 'REG20268841', studentName: 'Shreya Roy', dateOfLeaving: '2026-05-18', conduct: 'Good', feeStatus: 'Cleared', reason: 'Higher Studies' }
+];
 
 const TC = () => {
-  const { records } = useMasterData('tc_details');
+  const { records } = useMasterData('tc_details', SEED_TCS);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [search, setSearch] = useState('');
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await api.get('/students');
+        if (data) {
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   useEffect(() => {
     if (records && records.length > 0 && !selectedRecord) {
@@ -43,6 +64,46 @@ const TC = () => {
         {/* Records list */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 space-y-4 print:hidden">
           <h3 className="font-black text-slate-800 text-base">Exiting Students Registry</h3>
+          
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Select Student (Register No)</label>
+            <select
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-white font-semibold text-slate-700"
+              value={selectedRecord?.registerNumber || ''}
+              onChange={e => {
+                const rNum = e.target.value;
+                const student = students.find(s => s.registerNumber === rNum);
+                if (student) {
+                  const matchedTc = (records || []).find(t => t.registerNumber === rNum);
+                  if (matchedTc) {
+                    setSelectedRecord(matchedTc);
+                    toast.success(`Loaded prepared TC for ${student.fullName}`);
+                  } else {
+                    setSelectedRecord({
+                      id: `temp-${student.registerNumber}`,
+                      registerNumber: student.registerNumber,
+                      studentName: student.fullName,
+                      dateOfLeaving: new Date().toISOString().split('T')[0],
+                      reason: 'Course Completed',
+                      conduct: 'Excellent',
+                      feeStatus: 'Cleared'
+                    });
+                    toast.success(`Generated preview TC for ${student.fullName}`);
+                  }
+                } else {
+                  setSelectedRecord(null);
+                }
+              }}
+            >
+              <option value="">-- Choose Student --</option>
+              {students.map(s => (
+                <option key={s.id} value={s.registerNumber}>
+                  {s.registerNumber} - {s.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-slate-400" size={14} />
             <input className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"

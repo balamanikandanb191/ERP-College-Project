@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Save, Award, Clipboard, User, Hash, Calendar, Percent, AlertCircle } from 'lucide-react';
+import { Search, Save, Clipboard, Award, User, Hash, Calendar, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -23,43 +23,46 @@ const COURSES = [
 
 const SEMESTERS = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8', 'Year 1', 'Year 2', 'Year 3'];
 
-const AssignmentMarkEntry = () => {
-  // Selection criteria
+const PRACTICAL_TYPES = ['Practical', 'Record Work', 'Viva Voce'];
+
+const PracticalMark = () => {
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [course, setCourse] = useState('');
   const [semester, setSemester] = useState('');
   const [subject, setSubject] = useState('');
   const [staffName, setStaffName] = useState('');
-  const [assignmentNo, setAssignmentNo] = useState('1');
+  const [practicalType, setPracticalType] = useState('Practical');
 
-  // Auto fetched / master data lists
   const [subjectList, setSubjectList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
   const [availableConfigs, setAvailableConfigs] = useState([]);
 
-  // Auto-filled details
   const [subCode, setSubCode] = useState('');
-  const [assignmentDate, setAssignmentDate] = useState('');
-  const [maxMarks, setMaxMarks] = useState(20);
+  const [practicalDate, setPracticalDate] = useState('');
+  const [maxMarks, setMaxMarks] = useState(100);
+  const [experimentCount, setExperimentCount] = useState('');
   const [staffId, setStaffId] = useState('');
   const [configId, setConfigId] = useState('');
 
-  // Students and marks data
   const [students, setStudents] = useState([]);
-  const [marksData, setMarksData] = useState({}); // student_id -> mark
-  const [statusData, setStatusData] = useState({}); // student_id -> 'Present' / 'Absent'
+  // Sub-components of mark: Observation (20%), Record (20%), Viva (20%), Practical (40%)
+  const [observationMarks, setObservationMarks] = useState({});
+  const [recordMarks, setRecordMarks] = useState({});
+  const [vivaMarks, setVivaMarks] = useState({});
+  const [practicalMarks, setPracticalMarks] = useState({});
+  const [statusData, setStatusData] = useState({});
+  
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load master data
   useEffect(() => {
     const loadMasters = async () => {
       try {
         const [staffRes, yearRes, configRes] = await Promise.allSettled([
           api.get('/masters/staff_master'),
           api.get('/masters/acad_year'),
-          api.get('/assessment/config?assessmentType=Assignment')
+          api.get('/assessment/config')
         ]);
         if (staffRes.status === 'fulfilled') {
           setStaffList(staffRes.value.data.map(r => ({ id: r.id, ...r.data })));
@@ -77,17 +80,15 @@ const AssignmentMarkEntry = () => {
     loadMasters();
   }, []);
 
-  // When criteria change, filter configs and auto-fill details
+  // Filter subjects based on selection
   useEffect(() => {
     if (course && semester) {
-      // Load configurations for this combination to find subjects
       const matchConfigs = availableConfigs.filter(
         c => c.course === course &&
              c.semester === semester &&
              c.academic_year === academicYear &&
-             c.assessment_type === 'Assignment'
+             PRACTICAL_TYPES.includes(c.assessment_type)
       );
-      
       const uniqueSubjects = [...new Set(matchConfigs.map(c => c.subject_name))];
       setSubjectList(uniqueSubjects);
     } else {
@@ -95,7 +96,7 @@ const AssignmentMarkEntry = () => {
     }
   }, [course, semester, academicYear, availableConfigs]);
 
-  // When subject or assignment number changes, auto fetch subject code, date, max marks, and staff
+  // Auto-fill configuration fields
   useEffect(() => {
     if (course && semester && subject) {
       const match = availableConfigs.find(
@@ -103,14 +104,14 @@ const AssignmentMarkEntry = () => {
              c.semester === semester &&
              c.academic_year === academicYear &&
              c.subject_name === subject &&
-             c.assessment_type === 'Assignment' &&
-             String(c.assessment_number) === String(assignmentNo)
+             c.assessment_type === practicalType
       );
 
       if (match) {
         setSubCode(match.subject_code || '');
-        setAssignmentDate(match.assessment_date || '');
-        setMaxMarks(match.max_marks || 20);
+        setPracticalDate(match.assessment_date || '');
+        setMaxMarks(match.max_marks || 100);
+        setExperimentCount(match.experiment_count || '');
         setConfigId(match.id);
         
         if (match.staff_name) {
@@ -119,14 +120,14 @@ const AssignmentMarkEntry = () => {
         }
       } else {
         setSubCode('');
-        setAssignmentDate('');
-        setMaxMarks(20);
+        setPracticalDate('');
+        setMaxMarks(100);
+        setExperimentCount('');
         setConfigId('');
       }
     }
-  }, [course, semester, subject, assignmentNo, academicYear, availableConfigs]);
+  }, [course, semester, subject, practicalType, academicYear, availableConfigs]);
 
-  // Handle staff name selection manually or auto-fill staff ID
   useEffect(() => {
     if (staffName) {
       const foundStaff = staffList.find(s => s.fullName === staffName || s.name === staffName);
@@ -136,7 +137,7 @@ const AssignmentMarkEntry = () => {
     }
   }, [staffName, staffList]);
 
-  // Fetch students
+  // Load students
   const handleViewStudents = async () => {
     if (!academicYear || !course || !semester || !subject) {
       toast.error('Please select Academic Year, Course, Semester, and Subject');
@@ -144,33 +145,42 @@ const AssignmentMarkEntry = () => {
     }
     setLoading(true);
     try {
-      // 1. Fetch student list
       const studentsRes = await api.get(`/assessment/students?course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&academic_year=${academicYear}`);
-      
-      // 2. Fetch existing marks if any
-      const marksRes = await api.get(`/assessment/marks?academic_year=${academicYear}&course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&subject_name=${encodeURIComponent(subject)}&assessment_type=Assignment&assessment_number=${assignmentNo}`);
+      const marksRes = await api.get(`/assessment/marks?academic_year=${academicYear}&course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}&subject_name=${encodeURIComponent(subject)}&assessment_type=${encodeURIComponent(practicalType)}`);
       
       const studentsList = studentsRes.data;
       const existingMarks = marksRes.data;
 
-      const marksMap = {};
+      const obsMap = {};
+      const recMap = {};
+      const vivMap = {};
+      const pracMap = {};
       const statusMap = {};
       
       studentsList.forEach(stud => {
         const foundMark = existingMarks.find(m => m.student_id === stud.id);
         if (foundMark) {
-          marksMap[stud.id] = foundMark.marks_obtained !== null ? foundMark.marks_obtained : '';
+          obsMap[stud.id] = foundMark.observation_mark !== null ? foundMark.observation_mark : '';
+          recMap[stud.id] = foundMark.record_mark !== null ? foundMark.record_mark : '';
+          vivMap[stud.id] = foundMark.viva_mark !== null ? foundMark.viva_mark : '';
+          pracMap[stud.id] = foundMark.practical_mark !== null ? foundMark.practical_mark : '';
           statusMap[stud.id] = foundMark.status || 'Present';
         } else {
-          marksMap[stud.id] = '';
+          obsMap[stud.id] = '';
+          recMap[stud.id] = '';
+          vivMap[stud.id] = '';
+          pracMap[stud.id] = '';
           statusMap[stud.id] = 'Present';
         }
       });
 
       setStudents(studentsList);
-      setMarksData(marksMap);
+      setObservationMarks(obsMap);
+      setRecordMarks(recMap);
+      setVivaMarks(vivMap);
+      setPracticalMarks(pracMap);
       setStatusData(statusMap);
-      
+
       if (studentsList.length === 0) {
         toast.error('No students found registered for the selected Course and Semester');
       } else {
@@ -183,61 +193,94 @@ const AssignmentMarkEntry = () => {
     }
   };
 
-  const handleMarkChange = (studentId, value) => {
-    if (value !== '' && (Number(value) < 0 || Number(value) > maxMarks)) {
-      toast.error(`Marks must be between 0 and ${maxMarks}`);
-      return;
+  const handleSubMarkChange = (studentId, type, value) => {
+    if (value !== '') {
+      const val = Number(value);
+      if (val < 0) {
+        toast.error('Marks cannot be negative');
+        return;
+      }
+      
+      // Let's check constraints based on 20/20/20/40 rule or simple max marks constraint
+      // Sum of observation, record, viva, practical cannot exceed maxMarks
+      const obs = type === 'obs' ? val : Number(observationMarks[studentId] || 0);
+      const rec = type === 'rec' ? val : Number(recordMarks[studentId] || 0);
+      const viv = type === 'viv' ? val : Number(vivaMarks[studentId] || 0);
+      const prac = type === 'prac' ? val : Number(practicalMarks[studentId] || 0);
+
+      if (obs + rec + viv + prac > maxMarks) {
+        toast.error(`Total marks cannot exceed Maximum Marks: ${maxMarks}`);
+        return;
+      }
     }
-    setMarksData(prev => ({
-      ...prev,
-      [studentId]: value
-    }));
+
+    if (type === 'obs') setObservationMarks(prev => ({ ...prev, [studentId]: value }));
+    if (type === 'rec') setRecordMarks(prev => ({ ...prev, [studentId]: value }));
+    if (type === 'viv') setVivaMarks(prev => ({ ...prev, [studentId]: value }));
+    if (type === 'prac') setPracticalMarks(prev => ({ ...prev, [studentId]: value }));
   };
 
   const toggleStatus = (studentId) => {
     setStatusData(prev => {
       const current = prev[studentId] || 'Present';
       const next = current === 'Present' ? 'Absent' : 'Present';
-      
-      // If setting to Absent, clear the marks
       if (next === 'Absent') {
-        setMarksData(m => ({ ...m, [studentId]: '' }));
+        setObservationMarks(prev => ({ ...prev, [studentId]: '' }));
+        setRecordMarks(prev => ({ ...prev, [studentId]: '' }));
+        setVivaMarks(prev => ({ ...prev, [studentId]: '' }));
+        setPracticalMarks(prev => ({ ...prev, [studentId]: '' }));
       } else {
-        setMarksData(m => ({ ...m, [studentId]: '0' }));
+        setObservationMarks(prev => ({ ...prev, [studentId]: '0' }));
+        setRecordMarks(prev => ({ ...prev, [studentId]: '0' }));
+        setVivaMarks(prev => ({ ...prev, [studentId]: '0' }));
+        setPracticalMarks(prev => ({ ...prev, [studentId]: '0' }));
       }
       return { ...prev, [studentId]: next };
     });
   };
 
+  // Save marks to database
   const handleSaveMarks = async () => {
     if (students.length === 0) {
-      toast.error('No student records to save. Please click "View Students" first.');
+      toast.error('No student records to save. Please click "Search Students" first.');
       return;
     }
     setSaving(true);
     try {
-      const marksPayload = students.map(stud => ({
-        student_id: stud.id,
-        register_no: stud.registerNumber,
-        roll_number: stud.rollNumber || stud.registerNumber,
-        student_name: stud.fullName,
-        course: course,
-        semester: semester,
-        subject_name: subject,
-        subject_code: subCode,
-        assessment_type: 'Assignment',
-        assessment_number: Number(assignmentNo),
-        assessment_id: configId || null,
-        academic_year: academicYear,
-        staff_id: staffId,
-        staff_name: staffName,
-        marks_obtained: statusData[stud.id] === 'Present' && marksData[stud.id] !== '' ? Number(marksData[stud.id]) : null,
-        max_marks: Number(maxMarks),
-        status: statusData[stud.id] || 'Present'
-      }));
+      const marksPayload = students.map(stud => {
+        const obs = observationMarks[stud.id] !== '' ? Number(observationMarks[stud.id]) : 0;
+        const rec = recordMarks[stud.id] !== '' ? Number(recordMarks[stud.id]) : 0;
+        const viv = vivaMarks[stud.id] !== '' ? Number(vivaMarks[stud.id]) : 0;
+        const prac = practicalMarks[stud.id] !== '' ? Number(practicalMarks[stud.id]) : 0;
+        const total = obs + rec + viv + prac;
+
+        return {
+          student_id: stud.id,
+          register_no: stud.registerNumber,
+          roll_number: stud.rollNumber || stud.registerNumber,
+          student_name: stud.fullName,
+          course: course,
+          semester: semester,
+          subject_name: subject,
+          subject_code: subCode,
+          assessment_type: practicalType,
+          assessment_number: 1,
+          assessment_id: configId || null,
+          academic_year: academicYear,
+          staff_id: staffId,
+          staff_name: staffName,
+          observation_mark: statusData[stud.id] === 'Present' ? obs : null,
+          record_mark: statusData[stud.id] === 'Present' ? rec : null,
+          viva_mark: statusData[stud.id] === 'Present' ? viv : null,
+          practical_mark: statusData[stud.id] === 'Present' ? prac : null,
+          marks_obtained: statusData[stud.id] === 'Present' ? total : null,
+          max_marks: Number(maxMarks),
+          status: statusData[stud.id] || 'Present'
+        };
+      });
 
       await api.post('/assessment/marks', { marks: marksPayload });
-      toast.success('Assignment marks saved successfully!');
+      toast.success('Laboratory/Practical marks saved successfully!');
     } catch (err) {
       toast.error('Failed to save marks: ' + (err?.response?.data?.message || err.message));
     } finally {
@@ -252,11 +295,15 @@ const AssignmentMarkEntry = () => {
     setStaffName('');
     setStaffId('');
     setSubCode('');
-    setAssignmentDate('');
-    setMaxMarks(20);
+    setPracticalDate('');
+    setMaxMarks(100);
+    setExperimentCount('');
     setConfigId('');
     setStudents([]);
-    setMarksData({});
+    setObservationMarks({});
+    setRecordMarks({});
+    setVivaMarks({});
+    setPracticalMarks({});
     setStatusData({});
   };
 
@@ -268,11 +315,11 @@ const AssignmentMarkEntry = () => {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30">
-              Assessment Scoring
+              Laboratory Scoring
             </span>
-            <h1 className="text-3xl font-black mt-2">Assignment Mark Entry</h1>
+            <h1 className="text-3xl font-black mt-2">Laboratory Assessment Entry</h1>
             <p className="text-indigo-200 text-xs font-semibold mt-1">
-              Register assignment marks, continuous evaluation scores, and log candidate attendance
+              Log observation, records, viva-voce, and final laboratory marks for experimental courses
             </p>
           </div>
           {students.length > 0 && (
@@ -292,7 +339,7 @@ const AssignmentMarkEntry = () => {
           </div>
           <div>
             <p className="font-black text-sm text-slate-800">Selection Panel</p>
-            <p className="text-xs text-slate-500 font-medium">Please select the criteria below to load the student list for assignment marks entry.</p>
+            <p className="text-xs text-slate-500 font-medium">Please select the criteria below to load the student list for Practical marks entry.</p>
           </div>
         </div>
 
@@ -331,14 +378,14 @@ const AssignmentMarkEntry = () => {
 
             {/* Subject */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subject *</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subject Name *</label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={subject} onChange={e => setSubject(e.target.value)}>
                 <option value="">Select Subject</option>
                 {subjectList.length > 0 ? (
                   subjectList.map(s => <option key={s} value={s}>{s}</option>)
                 ) : (
-                  ['Software Engineering', 'Database Systems', 'Computer Networks', 'Theory of Computation'].map(s => (
+                  ['Physics Lab', 'Chemistry Lab', 'Data Structures Lab', 'OOP Lab'].map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))
                 )}
@@ -371,20 +418,20 @@ const AssignmentMarkEntry = () => {
                 placeholder="Auto-fetched" value={subCode} />
             </div>
 
-            {/* Assignment No */}
+            {/* Practical No */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assignment Number</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Practical No *</label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={assignmentNo} onChange={e => setAssignmentNo(e.target.value)}>
-                {['1', '2', '3', '4', '5'].map(n => <option key={n} value={n}>{n}</option>)}
+                value={practicalType} onChange={e => setPracticalType(e.target.value)}>
+                {PRACTICAL_TYPES.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
 
-            {/* Assignment Date */}
+            {/* Practical Date */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assignment Date</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Practical Date</label>
               <input type="text" readOnly className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500 font-semibold"
-                placeholder="Auto-fetched" value={assignmentDate} />
+                placeholder="Auto-fetched" value={practicalDate} />
             </div>
 
             {/* Max Marks */}
@@ -393,12 +440,19 @@ const AssignmentMarkEntry = () => {
               <input type="text" readOnly className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500 font-semibold font-mono font-bold"
                 placeholder="Auto-fetched" value={maxMarks} />
             </div>
+
+            {/* Experiment Count */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Experiment Count</label>
+              <input type="text" readOnly className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500 font-semibold font-mono"
+                placeholder="Auto-fetched" value={experimentCount} />
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">
             <button onClick={handleViewStudents} disabled={loading}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm flex items-center gap-2 shadow-lg transition-colors disabled:opacity-60">
-              <Search size={16} /> {loading ? 'Loading...' : 'View Students'}
+              <Search size={16} /> {loading ? 'Searching...' : 'Search Students'}
             </button>
             <button onClick={handleClear}
               className="px-6 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-2xl text-sm flex items-center gap-2 hover:bg-slate-50 transition-colors">
@@ -419,13 +473,22 @@ const AssignmentMarkEntry = () => {
                   <th className="px-5 py-4">Student Name</th>
                   <th className="px-5 py-4">Roll Number</th>
                   <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4 text-right w-40">Obtained Marks / {maxMarks}</th>
+                  <th className="px-5 py-4 w-28 text-right">Obs Mark</th>
+                  <th className="px-5 py-4 w-28 text-right">Rec Mark</th>
+                  <th className="px-5 py-4 w-28 text-right">Viva Mark</th>
+                  <th className="px-5 py-4 w-28 text-right">Prac Mark</th>
+                  <th className="px-5 py-4 text-right w-32">Total / {maxMarks}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {students.map(s => {
-                  const markVal = Number(marksData[s.id]);
-                  const isFail = statusData[s.id] === 'Present' && marksData[s.id] !== '' && markVal < (maxMarks * 0.4);
+                  const obs = Number(observationMarks[s.id] || 0);
+                  const rec = Number(recordMarks[s.id] || 0);
+                  const viv = Number(vivaMarks[s.id] || 0);
+                  const prac = Number(practicalMarks[s.id] || 0);
+                  const total = obs + rec + viv + prac;
+                  const isFail = statusData[s.id] === 'Present' && total < (maxMarks * 0.4);
+                  
                   return (
                     <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-5 py-4 font-mono font-black text-indigo-700 text-xs">{s.registerNumber}</td>
@@ -437,11 +500,30 @@ const AssignmentMarkEntry = () => {
                           {statusData[s.id] || 'Present'}
                         </button>
                       </td>
+                      {/* Sub marks inputs */}
+                      <td className="px-5 py-4 text-right">
+                        <input type="number" className="w-20 border rounded-xl px-2 py-1.5 text-sm focus:outline-none text-right font-bold font-mono border-slate-200 focus:ring-2 focus:ring-indigo-550 disabled:bg-slate-100 disabled:text-slate-400"
+                          disabled={statusData[s.id] === 'Absent'} placeholder="-" value={observationMarks[s.id] || ''} onChange={e => handleSubMarkChange(s.id, 'obs', e.target.value)} />
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <input type="number" className="w-20 border rounded-xl px-2 py-1.5 text-sm focus:outline-none text-right font-bold font-mono border-slate-200 focus:ring-2 focus:ring-indigo-550 disabled:bg-slate-100 disabled:text-slate-400"
+                          disabled={statusData[s.id] === 'Absent'} placeholder="-" value={recordMarks[s.id] || ''} onChange={e => handleSubMarkChange(s.id, 'rec', e.target.value)} />
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <input type="number" className="w-20 border rounded-xl px-2 py-1.5 text-sm focus:outline-none text-right font-bold font-mono border-slate-200 focus:ring-2 focus:ring-indigo-550 disabled:bg-slate-100 disabled:text-slate-400"
+                          disabled={statusData[s.id] === 'Absent'} placeholder="-" value={vivaMarks[s.id] || ''} onChange={e => handleSubMarkChange(s.id, 'viv', e.target.value)} />
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <input type="number" className="w-20 border rounded-xl px-2 py-1.5 text-sm focus:outline-none text-right font-bold font-mono border-slate-200 focus:ring-2 focus:ring-indigo-550 disabled:bg-slate-100 disabled:text-slate-400"
+                          disabled={statusData[s.id] === 'Absent'} placeholder="-" value={practicalMarks[s.id] || ''} onChange={e => handleSubMarkChange(s.id, 'prac', e.target.value)} />
+                      </td>
+                      {/* Total */}
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {isFail && <span className="text-xs text-rose-500 font-bold flex items-center gap-1"><AlertCircle size={12} /> Fail Alert</span>}
-                          <input type="number" className={`w-20 border rounded-xl px-3 py-1.5 text-sm focus:outline-none text-right font-bold font-mono ${statusData[s.id] === 'Absent' ? 'bg-slate-105 border-slate-200 text-slate-400' : isFail ? 'border-rose-300 text-rose-700 focus:ring-2 focus:ring-rose-500' : 'border-slate-200 focus:ring-2 focus:ring-indigo-500'}`}
-                            disabled={statusData[s.id] === 'Absent'} placeholder="-" value={marksData[s.id] || ''} onChange={e => handleMarkChange(s.id, e.target.value)} />
+                          {isFail && <span className="text-xs text-rose-500 font-bold flex items-center gap-1"><AlertCircle size={12} /> Fail</span>}
+                          <span className={`text-base font-black font-mono ${statusData[s.id] === 'Absent' ? 'text-slate-400' : isFail ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {statusData[s.id] === 'Absent' ? 'Ab' : total}
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -456,4 +538,4 @@ const AssignmentMarkEntry = () => {
   );
 };
 
-export default AssignmentMarkEntry;
+export default PracticalMark;
