@@ -3,6 +3,7 @@ import api from '../services/api';
 import { Search, Filter, Plus, ClipboardList, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BorrowModal from './BorrowModal';
+import { confirmWarning } from '../utils/confirmToast';
 
 const BorrowTable = () => {
   const [records, setRecords] = useState([]);
@@ -29,7 +30,7 @@ const BorrowTable = () => {
   }, []);
 
   const handleReturn = async (id) => {
-    if (window.confirm('Mark this book as returned?')) {
+    confirmWarning(async () => {
       try {
         await api.put(`/borrow-records/${id}`, { status: 'Returned' });
         toast.success('Book returned successfully');
@@ -37,7 +38,7 @@ const BorrowTable = () => {
       } catch (error) {
         toast.error('Failed to return book');
       }
-    }
+    }, 'Mark this book as returned?', 'Book Return', 'Yes, Return');
   };
 
   const filteredData = Array.isArray(records) ? records.filter(record => {

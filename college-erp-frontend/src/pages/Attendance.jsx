@@ -35,6 +35,28 @@ const Attendance = () => {
     setIsModalOpen(false);
   };
 
+  if (isModalOpen) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in p-6">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleCloseModal}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-650 cursor-pointer shadow-sm animate-fade-in"
+          >
+            ← Back to Attendance
+          </button>
+        </div>
+        <AttendanceModal 
+          isOpen={isModalOpen} 
+          onClose={handleCloseModal}
+          attendanceData={attendanceToEdit}
+          type={activeTab}
+          inline={true}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
@@ -145,16 +167,6 @@ const Attendance = () => {
           <StaffAttendanceTable onEdit={handleOpenModal} />
         )}
       </div>
-
-      {/* Modal */}
-      {isModalOpen && (
-        <AttendanceModal 
-          isOpen={isModalOpen} 
-          onClose={handleCloseModal}
-          attendanceData={attendanceToEdit}
-          type={activeTab}
-        />
-      )}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import {
   Send, AlertOctagon, Trash, UserX, CheckSquare 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { confirmWarning } from '../../utils/confirmToast';
 
 const StudentAdminControls = ({ student = {} }) => {
   const safeData = student || {};
@@ -34,10 +35,10 @@ const StudentAdminControls = ({ student = {} }) => {
 
   const handleSuspendToggle = () => {
     const action = isSuspended ? 'unsuspend' : 'suspend';
-    if (window.confirm(`Are you absolutely sure you want to ${action} this student?`)) {
+    confirmWarning(() => {
       setIsSuspended(!isSuspended);
       toast.success(`Student status updated successfully: ${action.toUpperCase()}`);
-    }
+    }, `Are you absolutely sure you want to ${action} this student?`, 'Status Override', `Yes, ${action.charAt(0).toUpperCase() + action.slice(1)}`);
   };
 
   return (

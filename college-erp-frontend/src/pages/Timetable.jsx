@@ -56,6 +56,29 @@ const Timetable = () => {
     fetchTimetables();
   }, []);
 
+  if (isModalOpen) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-12 animate-fade-in">
+        <div className="flex items-center gap-3 mb-6">
+          <button 
+            onClick={() => setIsModalOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-650 cursor-pointer shadow-sm animate-fade-in"
+          >
+            ← Back to Timetable
+          </button>
+        </div>
+        <TimetableModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onSuccess={fetchTimetables} 
+          settings={settings} 
+          timetables={timetables} 
+          inline={true}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
@@ -115,8 +138,6 @@ const Timetable = () => {
           {activeTab === 'analytics' && <TimetableAnalytics timetables={timetables} loading={loading} />}
         </div>
       </ErrorBoundary>
-      
-      <TimetableModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchTimetables} settings={settings} timetables={timetables} />
     </div>
   );
 };

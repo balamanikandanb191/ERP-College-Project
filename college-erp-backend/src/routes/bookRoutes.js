@@ -9,6 +9,8 @@ router.route('/')
   .get(bookController.getAllBooks)
   .post(requireRole(['Super Admin', 'Admin', 'Staff']), bookController.createBook);
 
+router.get('/next-id', bookController.getNextBookId);
+
 router.route('/:id')
   .put(requireRole(['Super Admin', 'Admin', 'Staff']), bookController.updateBook)
   .delete(requireRole(['Super Admin', 'Admin']), bookController.deleteBook);

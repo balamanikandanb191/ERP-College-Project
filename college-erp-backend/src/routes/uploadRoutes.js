@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { StudentDocument, StaffDocument, Student, Staff } = require('../models');
+const { StudentDocument, StaffDocument, Student, Staff, Book } = require('../models');
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'applicatio
 // Create multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const { type } = req.params; // 'students' or 'staff'
+    const { type } = req.params; // 'students', 'staff', or 'books'
     const isPhoto = file.fieldname === 'photo';
     const folder = `uploads/${type}/${isPhoto ? 'photos' : 'documents'}`;
     
@@ -74,6 +74,11 @@ router.post('/photo/:type/:id', upload.single('photo'), handleUploadError, async
       if (!staff) return res.status(404).json({ message: 'Staff not found' });
       staff.photoUrl = photoUrl;
       await staff.save();
+    } else if (type === 'books') {
+      const book = await Book.findByPk(id);
+      if (!book) return res.status(404).json({ message: 'Book not found' });
+      book.coverImage = photoUrl;
+      await book.save();
     } else {
       return res.status(400).json({ message: 'Invalid type' });
     }

@@ -41,7 +41,7 @@ const ComplaintTable = () => {
   };
 
   const getPriorityColor = (priority) => {
-    switch(priority) {
+    switch (priority) {
       case 'Low': return 'bg-gray-100 text-gray-700';
       case 'Medium': return 'bg-amber-100 text-amber-700';
       case 'High': return 'bg-orange-100 text-orange-700';
@@ -51,7 +51,7 @@ const ComplaintTable = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Open': return 'bg-rose-50 text-rose-600 border-rose-200';
       case 'In Progress': return 'bg-blue-50 text-blue-600 border-blue-200';
       case 'Resolved': return 'bg-emerald-50 text-emerald-600 border-emerald-200';

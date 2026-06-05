@@ -14,11 +14,15 @@ exports.createBook = async (req, res) => {
   try {
     const newBook = await Book.create({
       ...req.body,
-      availableCopies: req.body.quantity, // initially available = quantity
+      availableCopies: req.body.quantity,
       borrowCount: 0
     });
     res.status(201).json(newBook);
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors?.[0]?.path || 'field';
+      return res.status(409).json({ message: `A book with this ${field} already exists. Please use a unique value.` });
+    }
     console.error('Error creating book:', error);
     res.status(500).json({ message: 'Server error creating book' });
   }
@@ -67,3 +71,26 @@ exports.deleteBook = async (req, res) => {
     res.status(500).json({ message: 'Server error deleting book' });
   }
 };
+
+exports.getNextBookId = async (req, res) => {
+  try {
+    // Find the book with the highest numeric ID by fetching all and computing max
+    const books = await Book.findAll({ attributes: ['customBookId'] });
+    let maxNum = 0;
+    books.forEach(b => {
+      if (b.customBookId) {
+        const match = b.customBookId.match(/^BK(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    });
+    const nextId = `BK${String(maxNum + 1).padStart(3, '0')}`;
+    res.json({ nextId });
+  } catch (error) {
+    console.error('Error generating next book ID:', error);
+    res.status(500).json({ message: 'Server error generating next book ID' });
+  }
+};
+

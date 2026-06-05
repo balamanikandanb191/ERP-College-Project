@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Edit2, AlertTriangle, Users } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const DailyTimetableView = ({ timetables, loading, settings, searchQuery, onRefresh }) => {
   const [filterDept, setFilterDept] = useState('CSE');
@@ -9,7 +10,7 @@ const DailyTimetableView = ({ timetables, loading, settings, searchQuery, onRefr
   const [filterSec, setFilterSec] = useState('A');
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this scheduled class?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/timetable/${id}`);
         toast.success('Deleted successfully');
@@ -17,7 +18,7 @@ const DailyTimetableView = ({ timetables, loading, settings, searchQuery, onRefr
       } catch (e) {
         toast.error('Failed to delete class');
       }
-    }
+    }, 'Delete this scheduled class?');
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500 animate-pulse">Loading daily timetable...</div>;
@@ -32,12 +33,12 @@ const DailyTimetableView = ({ timetables, loading, settings, searchQuery, onRefr
     const matchDept = t.department === filterDept;
     const matchSem = t.semester === filterSem;
     const matchSec = t.section === filterSec;
-    
+
     if (searchQuery) {
       const sq = searchQuery.toLowerCase();
-      return t.subject?.toLowerCase().includes(sq) || 
-             t.staff?.fullName?.toLowerCase().includes(sq) || 
-             t.roomNumber?.toLowerCase().includes(sq);
+      return t.subject?.toLowerCase().includes(sq) ||
+        t.staff?.fullName?.toLowerCase().includes(sq) ||
+        t.roomNumber?.toLowerCase().includes(sq);
     }
     return matchDept && matchSem && matchSec;
   });
@@ -90,7 +91,7 @@ const DailyTimetableView = ({ timetables, loading, settings, searchQuery, onRefr
                 <td className="px-4 py-4 font-bold text-gray-900 text-center border-r border-gray-200 bg-gray-50">{day}</td>
                 {periods.map(period => {
                   const cell = getCellData(day, period);
-                  
+
                   if (period === breakPeriod) {
                     return <td key={period} className="px-2 py-4 text-center border-r border-gray-200 bg-gray-50"><span className="text-xs font-semibold text-gray-400 rotate-90 block">LUNCH</span></td>;
                   }

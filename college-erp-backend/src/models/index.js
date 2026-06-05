@@ -35,8 +35,14 @@ const StudentDocument = require('./StudentDocument');
 const StaffDocument = require('./StaffDocument');
 const SystemSetting = require('./SystemSetting');
 const MasterRecord = require('./MasterRecord');
+const AcademicYearMaster = require('./AcademicYearMaster');
+const ClassMaster = require('./ClassMaster');
+const DesignationMaster = require('./DesignationMaster');
+const ExamMaster = require('./ExamMaster');
+const FeeMaster = require('./FeeMaster');
 const { Company, PlacementDrive, PlacementRecord, PlacementFee, Internship } = require('./Placement');
 const { Announcement, Event, Holiday, Notification, AnnouncementRead, AcademicEvent } = require('./Communication')(sequelize);
+const ClassAllocation = require('./ClassAllocation');
 
 // Associations
 Role.hasMany(User, { foreignKey: 'role_id' });
@@ -78,13 +84,13 @@ StaffAttendance.belongsTo(User, {
 });
 
 Book.hasMany(BorrowRecord, { foreignKey: 'bookId' });
-BorrowRecord.belongsTo(Book, { foreignKey: 'bookId' });
+BorrowRecord.belongsTo(Book, { foreignKey: 'bookId', as: 'Book' });
 
 Student.hasMany(BorrowRecord, { foreignKey: 'studentId' });
-BorrowRecord.belongsTo(Student, { foreignKey: 'studentId' });
+BorrowRecord.belongsTo(Student, { foreignKey: 'studentId', as: 'Student' });
 
 Staff.hasMany(BorrowRecord, { foreignKey: 'staffId' });
-BorrowRecord.belongsTo(Staff, { foreignKey: 'staffId' });
+BorrowRecord.belongsTo(Staff, { foreignKey: 'staffId', as: 'Staff' });
 
 // Hostel Associations
 HostelRoom.hasMany(HostelStudent, { foreignKey: 'roomId', as: 'occupants' });
@@ -187,6 +193,11 @@ module.exports = {
   StaffDocument,
   SystemSetting,
   MasterRecord,
+  AcademicYearMaster,
+  ClassMaster,
+  DesignationMaster,
+  ExamMaster,
+  FeeMaster,
   Company,
   PlacementDrive,
   PlacementRecord,
@@ -197,5 +208,6 @@ module.exports = {
   Holiday,
   Notification,
   AnnouncementRead,
-  AcademicEvent
+  AcademicEvent,
+  ClassAllocation
 };

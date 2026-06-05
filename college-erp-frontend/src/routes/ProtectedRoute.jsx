@@ -7,6 +7,7 @@ const PATH_TO_MODULE_NAME = {
   '/admin/log-details': 'Log Details',
   '/admin/academic-calendar': 'Academic Calendar',
   '/admin/standard': 'Standard',
+  '/admin/department': 'Department',
   '/admin/subject': 'Subject',
   '/admin/class-allocation': 'Class Allocation',
   '/admin/subject-allocation': 'Subject Allocation',
@@ -97,8 +98,13 @@ const ProtectedRoute = ({ allowedRoles }) => {
     // Since they have custom permissions, verify if the specific path they are requesting is allowed
     if (pathname && pathname !== '/admin') {
       const moduleName = PATH_TO_MODULE_NAME[pathname];
-      if (moduleName && !allowedModules.includes(moduleName)) {
-        return <Navigate to="/unauthorized" replace />;
+      if (moduleName) {
+        const hasAccess = allowedModules.includes(moduleName) || 
+          (moduleName === 'Department' && allowedModules.includes('Standard')) ||
+          (moduleName === 'Standard' && allowedModules.includes('Department'));
+        if (!hasAccess) {
+          return <Navigate to="/unauthorized" replace />;
+        }
       }
     }
   }

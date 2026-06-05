@@ -3,6 +3,7 @@ import { Map, Edit2, Trash2, Plus, Clock, MapPin, Bus } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import RouteModal from './RouteModal';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const RouteTable = () => {
   const [routes, setRoutes] = useState([]);
@@ -27,7 +28,7 @@ const RouteTable = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this route?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/transport/routes/${id}`);
         toast.success('Route deleted successfully');
@@ -35,7 +36,7 @@ const RouteTable = () => {
       } catch (error) {
         toast.error('Failed to delete route');
       }
-    }
+    }, 'Are you sure you want to delete this route?');
   };
 
   const openAddModal = () => {

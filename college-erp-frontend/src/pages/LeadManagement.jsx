@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Plus, Trash2, ArrowRight, Star, AlertCircle, Phone, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import { confirmDelete } from '../utils/confirmToast';
 
 const STAGES = ['New Lead', 'Contacted', 'Applied', 'Admitted'];
 const STAGE_COLORS = {
@@ -32,9 +33,10 @@ const LeadManagement = () => {
   };
 
   const deleteLead = async id => {
-    if (!window.confirm('Delete lead?')) return;
-    const res = await deleteRecord(id);
-    if (res.success) toast.success('Lead deleted');
+    confirmDelete(async () => {
+      const res = await deleteRecord(id);
+      if (res.success) toast.success('Lead deleted');
+    }, 'Are you sure you want to delete this lead?');
   };
 
   const getPriorityColor = p => {
@@ -72,7 +74,7 @@ const LeadManagement = () => {
                 <span className="font-black text-slate-800 text-sm tracking-wide">{stage}</span>
                 <span className="bg-white/80 border border-slate-200 shadow-sm text-slate-700 px-2 py-0.5 rounded-full text-xs font-bold">{stageLeads.length}</span>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
                 {stageLeads.map(l => (
                   <div key={l.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative group">
@@ -84,10 +86,10 @@ const LeadManagement = () => {
                         <Trash2 size={13} />
                       </button>
                     </div>
-                    
+
                     <h4 className="font-black text-slate-800 text-sm mt-2">{l.name}</h4>
                     <p className="text-[11px] text-slate-500 font-semibold mt-0.5">{l.course}</p>
-                    
+
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50 text-[11px]">
                       <span className="font-mono text-slate-400 font-bold">{l.phone}</span>
                       <span className="font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md font-mono">{l.score}</span>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { Pencil, Trash2, Search, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { confirmDelete } from '../utils/confirmToast';
 
 const StaffAttendanceTable = ({ onEdit }) => {
   const [attendance, setAttendance] = useState([]);
@@ -27,7 +28,7 @@ const StaffAttendanceTable = ({ onEdit }) => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/staff-attendance/${id}`);
         toast.success('Attendance record deleted');
@@ -35,7 +36,7 @@ const StaffAttendanceTable = ({ onEdit }) => {
       } catch (error) {
         toast.error('Failed to delete record');
       }
-    }
+    }, 'Are you sure you want to delete this attendance record?');
   };
 
   const filteredData = Array.isArray(attendance) ? attendance.filter(record => {

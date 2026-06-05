@@ -46,11 +46,8 @@ import AssignCall from './pages/AssignCall';
 import CallerDetails from './pages/CallerDetails';
 import LeadManagement from './pages/LeadManagement';
 import EnquiryReport from './pages/EnquiryReport';
-import ApplicationIssue from './pages/ApplicationIssue';
-import StudentRegister from './pages/StudentRegister';
-import AdmittedStudent from './pages/AdmittedStudent';
+import { ApplicationIssue, StudentRegister, AdmittedStudent, AppIssueConsolidate } from './pages/admission';
 import GeneralForms from './pages/GeneralForms';
-import AppIssueConsolidate from './pages/AppIssueConsolidate';
 import EditTC from './pages/EditTC';
 import TC from './pages/TC';
 import FeesEstimation from './pages/FeesEstimation';
@@ -63,13 +60,24 @@ import MarkedAttendance from './pages/MarkedAttendance';
 import AssessmentConfiguration from './pages/AssessmentConfiguration';
 import AssignmentMarkEntry from './pages/AssignmentMarkEntry';
 
+// Library Sub-routes Imports
+import AddBook from './pages/library/AddBook';
+import AddBorrower from './pages/library/AddBorrower';
+import AvailableBooks from './pages/library/AvailableBooks';
+import BookIssue from './pages/library/BookIssue';
+import BookHistory from './pages/library/BookHistory';
+import FineReport from './pages/library/FineReport';
+import NoDueCertificate from './pages/library/NoDueCertificate';
+import LibraryLayout from './pages/library/LibraryLayout';
+import LibraryDashboardIndex from './pages/library/LibraryDashboardIndex';
+
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  
+
   switch (user.role) {
     case 'Super Admin':
     case 'Admin':
@@ -111,7 +119,16 @@ function App() {
               <Route path="students" element={<Students />} />
               <Route path="staff" element={<Staff />} />
               <Route path="attendance" element={<Attendance />} />
-              <Route path="library" element={<Library />} />
+              <Route path="library" element={<LibraryLayout />}>
+                <Route index element={<LibraryDashboardIndex />} />
+                <Route path="management/Addbook" element={<AddBook />} />
+                <Route path="management/Addborrower" element={<AddBorrower />} />
+                <Route path="management/Availablebooks" element={<AvailableBooks />} />
+                <Route path="circulation/Bookissue" element={<BookIssue />} />
+                <Route path="reports/Bookhistory" element={<BookHistory />} />
+                <Route path="reports/Finereport" element={<FineReport />} />
+                <Route path="reports/Noduecertificate" element={<NoDueCertificate />} />
+              </Route>
               <Route path="transport" element={<Transport />} />
               <Route path="hostel" element={<Hostel />} />
               <Route path="fees" element={<Fees />} />
@@ -124,11 +141,12 @@ function App() {
               <Route path="leaves" element={<LeaveRequests />} />
               <Route path="exams" element={<ExamManagement />} />
               <Route path="/admin/class-allocation" element={<ClassAllocation />} />
-              
+
               {/* New ERP Module Routes */}
               <Route path="user-creation" element={<UserCreation />} />
               <Route path="log-details" element={<LogDetails />} />
-              <Route path="standard" element={<Standard />} />
+              <Route path="standard" element={<Navigate to="/admin/department" replace />} />
+              <Route path="department" element={<Standard />} />
               <Route path="subject" element={<Subject />} />
               <Route path="subject-allocation" element={<SubjectAllocation />} />
               <Route path="class-master" element={<ClassMaster />} />

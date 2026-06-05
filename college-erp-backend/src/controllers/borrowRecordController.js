@@ -5,9 +5,9 @@ exports.getAllBorrowRecords = async (req, res) => {
   try {
     const records = await BorrowRecord.findAll({
       include: [
-        { model: Book, attributes: ['bookName', 'isbn', 'author', 'coverImage'] },
-        { model: Student, attributes: ['fullName', 'registerNumber', 'department'] },
-        { model: Staff, attributes: ['fullName', 'staffId', 'department'] }
+        { model: Book,    as: 'Book',    attributes: ['bookName', 'isbn', 'author', 'coverImage'] },
+        { model: Student, as: 'Student', attributes: ['fullName', 'registerNumber', 'department', 'academicYear', 'semester', 'course'] },
+        { model: Staff,   as: 'Staff',   attributes: ['fullName', 'staffId', 'department'] }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -17,16 +17,16 @@ exports.getAllBorrowRecords = async (req, res) => {
     const updatedRecords = [];
     for (let record of records) {
       if (record.status === 'Borrowed' && record.returnDate < today) {
-        // Calculate fine: 10 per day
+        // Calculate fine: 5 per day
         const diffTime = Math.abs(new Date(today) - new Date(record.returnDate));
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const fine = diffDays * 10;
+        const fine = diffDays * 5;
         await record.update({ status: 'Overdue', fineAmount: fine });
         updatedRecords.push(record);
       } else if (record.status === 'Overdue' && !record.actualReturnDate) {
         const diffTime = Math.abs(new Date(today) - new Date(record.returnDate));
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const fine = diffDays * 10;
+        const fine = diffDays * 5;
         if (record.fineAmount !== fine) {
           await record.update({ fineAmount: fine });
         }
@@ -37,9 +37,9 @@ exports.getAllBorrowRecords = async (req, res) => {
       // Re-fetch if updated
       const freshRecords = await BorrowRecord.findAll({
         include: [
-          { model: Book, attributes: ['bookName', 'isbn', 'author', 'coverImage'] },
-          { model: Student, attributes: ['fullName', 'registerNumber', 'department'] },
-          { model: Staff, attributes: ['fullName', 'staffId', 'department'] }
+          { model: Book,    as: 'Book',    attributes: ['bookName', 'isbn', 'author', 'coverImage'] },
+          { model: Student, as: 'Student', attributes: ['fullName', 'registerNumber', 'department', 'academicYear', 'semester', 'course'] },
+          { model: Staff,   as: 'Staff',   attributes: ['fullName', 'staffId', 'department'] }
         ],
         order: [['createdAt', 'DESC']]
       });
@@ -60,6 +60,15 @@ exports.createBorrowRecord = async (req, res) => {
     const book = await Book.findByPk(bookId);
     if (!book) return res.status(404).json({ message: 'Book not found' });
     
+    if (book.status === 'Lost') {
+      return res.status(400).json({ message: 'Book is marked as Lost and cannot be issued' });
+    }
+    if (book.status === 'Damaged') {
+      return res.status(400).json({ message: 'Book is marked as Damaged and cannot be issued' });
+    }
+    if (book.status === 'Reference Only') {
+      return res.status(400).json({ message: 'Book is for Reference Only and cannot be issued' });
+    }
     if (book.availableCopies <= 0) {
       return res.status(400).json({ message: 'Book is not available for borrowing' });
     }
@@ -102,7 +111,15 @@ exports.updateBorrowRecord = async (req, res) => {
     if (fineAmount !== undefined) updates.fineAmount = fineAmount;
 
     if (wasActive && isReturned) {
-      updates.actualReturnDate = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      updates.actualReturnDate = today;
+      
+      // Calculate final fine on return if overdue
+      if (record.returnDate < today) {
+        const diffTime = Math.abs(new Date(today) - new Date(record.returnDate));
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        updates.fineAmount = diffDays * 5;
+      }
       
       // Increment available copies
       const book = await Book.findByPk(record.bookId);

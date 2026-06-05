@@ -3,6 +3,7 @@ import { Settings, Edit2, Trash2, Plus, Calendar, IndianRupee } from 'lucide-rea
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import MaintenanceModal from './MaintenanceModal';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const MaintenanceTable = () => {
   const [records, setRecords] = useState([]);
@@ -27,7 +28,7 @@ const MaintenanceTable = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this maintenance record?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/transport/maintenance/${id}`);
         toast.success('Maintenance record deleted successfully');
@@ -35,7 +36,7 @@ const MaintenanceTable = () => {
       } catch (error) {
         toast.error('Failed to delete maintenance record');
       }
-    }
+    }, 'Are you sure you want to delete this maintenance record?');
   };
 
   const openAddModal = () => {

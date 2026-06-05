@@ -3,52 +3,151 @@
 -- Auto-generated DDL Script matching Express Models
 -- ==========================================
 
-CREATE DATABASE IF NOT EXISTS college_erp;
+DROP DATABASE IF EXISTS college_erp;
+CREATE DATABASE college_erp;
 USE college_erp;
 
 -- Disable foreign key checks temporarily to avoid drop ordering conflicts
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Drop existing tables if they exist
+-- Drop existing tables if they exist (both plural/singular, underscored/non-underscored variants from Sequelize/previous migrations)
 DROP TABLE IF EXISTS `announcement_reads`;
+DROP TABLE IF EXISTS `announcement_read`;
+DROP TABLE IF EXISTS `announcementreads`;
+DROP TABLE IF EXISTS `announcementread`;
 DROP TABLE IF EXISTS `announcements`;
+DROP TABLE IF EXISTS `announcement`;
 DROP TABLE IF EXISTS `events`;
+DROP TABLE IF EXISTS `event`;
 DROP TABLE IF EXISTS `holidays`;
+DROP TABLE IF EXISTS `holiday`;
 DROP TABLE IF EXISTS `notifications`;
+DROP TABLE IF EXISTS `notification`;
 DROP TABLE IF EXISTS `academic_events`;
+DROP TABLE IF EXISTS `academic_event`;
+DROP TABLE IF EXISTS `academicevents`;
+DROP TABLE IF EXISTS `academicevent`;
 DROP TABLE IF EXISTS `placement_records`;
+DROP TABLE IF EXISTS `placement_record`;
+DROP TABLE IF EXISTS `placementrecords`;
+DROP TABLE IF EXISTS `placementrecord`;
 DROP TABLE IF EXISTS `placement_drives`;
+DROP TABLE IF EXISTS `placement_drive`;
+DROP TABLE IF EXISTS `placementdrives`;
+DROP TABLE IF EXISTS `placementdrive`;
 DROP TABLE IF EXISTS `companies`;
+DROP TABLE IF EXISTS `company`;
 DROP TABLE IF EXISTS `placement_fees`;
+DROP TABLE IF EXISTS `placement_fee`;
+DROP TABLE IF EXISTS `placementfees`;
+DROP TABLE IF EXISTS `placementfee`;
 DROP TABLE IF EXISTS `internships`;
+DROP TABLE IF EXISTS `internship`;
 DROP TABLE IF EXISTS `student_documents`;
+DROP TABLE IF EXISTS `student_document`;
+DROP TABLE IF EXISTS `studentdocuments`;
+DROP TABLE IF EXISTS `studentdocument`;
 DROP TABLE IF EXISTS `staff_documents`;
+DROP TABLE IF EXISTS `staff_document`;
+DROP TABLE IF EXISTS `staffdocuments`;
+DROP TABLE IF EXISTS `staffdocument`;
 DROP TABLE IF EXISTS `timetables`;
+DROP TABLE IF EXISTS `timetable`;
 DROP TABLE IF EXISTS `timetable_settings`;
+DROP TABLE IF EXISTS `timetable_setting`;
+DROP TABLE IF EXISTS `timetablesettings`;
+DROP TABLE IF EXISTS `timetablesetting`;
+DROP TABLE IF EXISTS `class_allocations`;
+DROP TABLE IF EXISTS `class_allocation`;
+DROP TABLE IF EXISTS `classallocations`;
+DROP TABLE IF EXISTS `classallocation`;
 DROP TABLE IF EXISTS `fee_payment_histories`;
+DROP TABLE IF EXISTS `fee_payment_history`;
+DROP TABLE IF EXISTS `feepaymenthistories`;
+DROP TABLE IF EXISTS `feepaymenthistory`;
 DROP TABLE IF EXISTS `student_fees`;
+DROP TABLE IF EXISTS `student_fee`;
+DROP TABLE IF EXISTS `studentfees`;
+DROP TABLE IF EXISTS `studentfee`;
 DROP TABLE IF EXISTS `fee_structures`;
+DROP TABLE IF EXISTS `fee_structure`;
+DROP TABLE IF EXISTS `feestructures`;
+DROP TABLE IF EXISTS `feestructure`;
 DROP TABLE IF EXISTS `hostel_complaints`;
+DROP TABLE IF EXISTS `hostel_complaint`;
+DROP TABLE IF EXISTS `hostelcomplaints`;
+DROP TABLE IF EXISTS `hostelcomplaint`;
 DROP TABLE IF EXISTS `hostel_expenses`;
+DROP TABLE IF EXISTS `hostel_expense`;
+DROP TABLE IF EXISTS `hostelexpenses`;
+DROP TABLE IF EXISTS `hostelexpense`;
 DROP TABLE IF EXISTS `hostel_financial_reports`;
+DROP TABLE IF EXISTS `hostel_financial_report`;
+DROP TABLE IF EXISTS `hostelfinancialreports`;
+DROP TABLE IF EXISTS `hostelfinancialreport`;
 DROP TABLE IF EXISTS `hostel_students`;
+DROP TABLE IF EXISTS `hostel_student`;
+DROP TABLE IF EXISTS `hostelstudents`;
+DROP TABLE IF EXISTS `hostelstudent`;
 DROP TABLE IF EXISTS `hostel_rooms`;
+DROP TABLE IF EXISTS `hostel_room`;
+DROP TABLE IF EXISTS `hostelrooms`;
+DROP TABLE IF EXISTS `hostelroom`;
 DROP TABLE IF EXISTS `hostel_wardens`;
+DROP TABLE IF EXISTS `hostel_warden`;
+DROP TABLE IF EXISTS `hostelwardens`;
+DROP TABLE IF EXISTS `hostelwarden`;
 DROP TABLE IF EXISTS `maintenance_records`;
+DROP TABLE IF EXISTS `maintenance_record`;
+DROP TABLE IF EXISTS `maintenancerecords`;
+DROP TABLE IF EXISTS `maintenancerecord`;
 DROP TABLE IF EXISTS `buses`;
+DROP TABLE IF EXISTS `bus`;
 DROP TABLE IF EXISTS `drivers`;
+DROP TABLE IF EXISTS `driver`;
 DROP TABLE IF EXISTS `transport_routes`;
+DROP TABLE IF EXISTS `transport_route`;
+DROP TABLE IF EXISTS `transportroutes`;
+DROP TABLE IF EXISTS `transportroute`;
 DROP TABLE IF EXISTS `borrow_records`;
+DROP TABLE IF EXISTS `borrow_record`;
+DROP TABLE IF EXISTS `borrowrecords`;
+DROP TABLE IF EXISTS `borrowrecord`;
 DROP TABLE IF EXISTS `books`;
+DROP TABLE IF EXISTS `book`;
 DROP TABLE IF EXISTS `staff_attendance`;
+DROP TABLE IF EXISTS `staff_attendance_record`;
+DROP TABLE IF EXISTS `staffattendance`;
 DROP TABLE IF EXISTS `student_attendance`;
+DROP TABLE IF EXISTS `student_attendance_record`;
+DROP TABLE IF EXISTS `studentattendance`;
 DROP TABLE IF EXISTS `staff`;
 DROP TABLE IF EXISTS `students`;
+DROP TABLE IF EXISTS `student`;
 DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `user`;
 DROP TABLE IF EXISTS `roles`;
+DROP TABLE IF EXISTS `role`;
 DROP TABLE IF EXISTS `system_settings`;
-
-SET FOREIGN_KEY_CHECKS = 1;
+DROP TABLE IF EXISTS `system_setting`;
+DROP TABLE IF EXISTS `systemsettings`;
+DROP TABLE IF EXISTS `systemsetting`;
+DROP TABLE IF EXISTS `master_records`;
+DROP TABLE IF EXISTS `master_record`;
+DROP TABLE IF EXISTS `masterrecords`;
+DROP TABLE IF EXISTS `masterrecord`;
+DROP TABLE IF EXISTS `academic_years`;
+DROP TABLE IF EXISTS `academic_year`;
+DROP TABLE IF EXISTS `academicyears`;
+DROP TABLE IF EXISTS `academicyear`;
+DROP TABLE IF EXISTS `classes`;
+DROP TABLE IF EXISTS `class`;
+DROP TABLE IF EXISTS `designations`;
+DROP TABLE IF EXISTS `designation`;
+DROP TABLE IF EXISTS `exams`;
+DROP TABLE IF EXISTS `exam`;
+DROP TABLE IF EXISTS `fees`;
+DROP TABLE IF EXISTS `fee`;
 
 -- ==========================================
 -- 1. ROLES & USERS
@@ -174,8 +273,8 @@ CREATE TABLE `staff` (
   `officialEmail` VARCHAR(255) UNIQUE DEFAULT NULL,
   `maritalStatus` VARCHAR(50) DEFAULT NULL,
   `nationality` VARCHAR(100) DEFAULT 'Indian',
-  `aadhaarNumber` VARCHAR(50) UNIQUE DEFAULT NULL,
-  `panNumber` VARCHAR(50) UNIQUE DEFAULT NULL,
+  `aadhaarNumber` VARCHAR(50) DEFAULT NULL,
+  `panNumber` VARCHAR(50) DEFAULT NULL,
   `religion` VARCHAR(100) DEFAULT NULL,
   `community` VARCHAR(100) DEFAULT NULL,
   `photoUrl` VARCHAR(255) DEFAULT NULL,
@@ -254,29 +353,50 @@ CREATE TABLE `staff_attendance` (
   CONSTRAINT `fk_staff_attendance_marked_by` FOREIGN KEY (`marked_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `timetable_settings` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `totalPeriods` INT DEFAULT 8,
+  `breakAfterPeriod` INT DEFAULT 4,
+  `collegeStartTime` TIME DEFAULT '09:00:00',
+  `collegeEndTime` TIME DEFAULT '16:00:00',
+  `workingDays` JSON DEFAULT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `timetables` (
   `id` CHAR(36) NOT NULL PRIMARY KEY,
   `staffId` CHAR(36) NOT NULL,
-  `day` VARCHAR(50) NOT NULL,
-  `periodNumber` INT NOT NULL,
-  `roomNumber` VARCHAR(50) DEFAULT NULL,
-  `department` VARCHAR(255) DEFAULT NULL,
-  `year` VARCHAR(50) DEFAULT NULL,
-  `semester` VARCHAR(50) DEFAULT NULL,
-  `section` VARCHAR(50) DEFAULT NULL,
-  `subjectName` VARCHAR(255) DEFAULT NULL,
-  `subjectCode` VARCHAR(100) DEFAULT NULL,
-  `status` ENUM('Scheduled', 'Completed', 'Cancelled', 'Substitute') DEFAULT 'Scheduled',
+  `subject` VARCHAR(255) NOT NULL,
+  `department` VARCHAR(255) NOT NULL,
+  `year` VARCHAR(255) NOT NULL,
+  `section` VARCHAR(255) NOT NULL,
+  `day` VARCHAR(255) NOT NULL,
+  `periodNumber` INT NOT NULL DEFAULT 1,
+  `startTime` TIME NOT NULL,
+  `endTime` TIME NOT NULL,
+  `roomNumber` VARCHAR(255) NOT NULL,
+  `semester` VARCHAR(255) NOT NULL,
+  `academicYear` VARCHAR(255) DEFAULT '2025-2026',
+  `status` VARCHAR(255) DEFAULT 'Scheduled',
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME NOT NULL,
-  CONSTRAINT `fk_timetable_staffId` FOREIGN KEY (`staffId`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_timetables_staffId` FOREIGN KEY (`staffId`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `timetable_settings` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `periodsPerDay` INT DEFAULT 8,
-  `periodDuration` INT DEFAULT 50, -- in minutes
-  `workingDays` VARCHAR(255) DEFAULT 'Monday,Tuesday,Wednesday,Thursday,Friday',
+CREATE TABLE `class_allocations` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `department` VARCHAR(255) NOT NULL,
+  `year` VARCHAR(50) NOT NULL,
+  `semester` VARCHAR(50) NOT NULL,
+  `section` VARCHAR(50) NOT NULL,
+  `classroomNumber` VARCHAR(255) NOT NULL,
+  `classAdvisor` VARCHAR(255) DEFAULT NULL,
+  `assignedFaculty` TEXT DEFAULT NULL,
+  `labAllocation` VARCHAR(255) DEFAULT 'None',
+  `currentStrength` INT NOT NULL DEFAULT 0,
+  `status` VARCHAR(100) NOT NULL DEFAULT 'Occupied',
+  `timetableSyncStatus` VARCHAR(100) NOT NULL DEFAULT 'Synced',
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -287,33 +407,45 @@ CREATE TABLE `timetable_settings` (
 
 CREATE TABLE `books` (
   `id` CHAR(36) NOT NULL PRIMARY KEY,
-  `title` VARCHAR(255) NOT NULL,
+  `customBookId` VARCHAR(255) NOT NULL UNIQUE,
+  `bookName` VARCHAR(255) NOT NULL,
   `author` VARCHAR(255) NOT NULL,
-  `isbn` VARCHAR(100) UNIQUE DEFAULT NULL,
+  `isbn` VARCHAR(255) NOT NULL UNIQUE,
+  `category` VARCHAR(255) NOT NULL,
+  `language` VARCHAR(255) DEFAULT NULL,
   `publisher` VARCHAR(255) DEFAULT NULL,
-  `category` VARCHAR(255) DEFAULT NULL,
-  `quantity` INT DEFAULT 1,
-  `availableQuantity` INT DEFAULT 1,
-  `location` VARCHAR(100) DEFAULT NULL,
-  `created_at` DATETIME NOT NULL,
-  `updated_at` DATETIME NOT NULL
+  `edition` VARCHAR(255) DEFAULT NULL,
+  `publicationYear` INT DEFAULT NULL,
+  `pages` INT DEFAULT NULL,
+  `price` DOUBLE NOT NULL DEFAULT 0,
+  `status` VARCHAR(255) NOT NULL DEFAULT 'Available',
+  `quantity` INT NOT NULL DEFAULT 1,
+  `availableCopies` INT NOT NULL DEFAULT 1,
+  `rack` VARCHAR(255) DEFAULT NULL,
+  `position` VARCHAR(255) DEFAULT NULL,
+  `description` TEXT DEFAULT NULL,
+  `coverImage` VARCHAR(255) DEFAULT NULL,
+  `borrowCount` INT NOT NULL DEFAULT 0,
+  `createdAt` DATETIME NOT NULL,
+  `updatedAt` DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `borrow_records` (
   `id` CHAR(36) NOT NULL PRIMARY KEY,
-  `bookId` CHAR(36) NOT NULL,
+  `borrowerType` ENUM('Student', 'Staff') NOT NULL,
   `studentId` CHAR(36) DEFAULT NULL,
   `staffId` CHAR(36) DEFAULT NULL,
+  `bookId` CHAR(36) NOT NULL,
   `borrowDate` DATE NOT NULL,
-  `dueDate` DATE NOT NULL,
-  `returnDate` DATE DEFAULT NULL,
-  `fineAmount` FLOAT DEFAULT 0,
-  `status` ENUM('Borrowed', 'Returned', 'Overdue') DEFAULT 'Borrowed',
-  `created_at` DATETIME NOT NULL,
-  `updated_at` DATETIME NOT NULL,
-  CONSTRAINT `fk_borrow_bookId` FOREIGN KEY (`bookId`) REFERENCES `books` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_borrow_studentId` FOREIGN KEY (`studentId`) REFERENCES `students` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_borrow_staffId` FOREIGN KEY (`staffId`) REFERENCES `staff` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  `returnDate` DATE NOT NULL,
+  `actualReturnDate` DATE DEFAULT NULL,
+  `fineAmount` DOUBLE NOT NULL DEFAULT 0,
+  `status` ENUM('Borrowed', 'Returned', 'Overdue') NOT NULL DEFAULT 'Borrowed',
+  `createdAt` DATETIME NOT NULL,
+  `updatedAt` DATETIME NOT NULL,
+  CONSTRAINT `fk_borrow_records_studentId` FOREIGN KEY (`studentId`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_borrow_records_staffId` FOREIGN KEY (`staffId`) REFERENCES `staff` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_borrow_records_bookId` FOREIGN KEY (`bookId`) REFERENCES `books` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================
@@ -677,3 +809,115 @@ CREATE TABLE `academic_events` (
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `master_records` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `type` VARCHAR(255) NOT NULL,
+  `data` JSON NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `academic_years` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `year` VARCHAR(100) NOT NULL UNIQUE,
+  `startDate` DATE NOT NULL,
+  `endDate` DATE NOT NULL,
+  `admissionStart` DATE DEFAULT NULL,
+  `admissionEnd` DATE DEFAULT NULL,
+  `active` TINYINT(1) DEFAULT 0,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `classes` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `shortCode` VARCHAR(50) DEFAULT NULL,
+  `depts` TEXT DEFAULT NULL,
+  `maxSections` INT DEFAULT 4,
+  `maxStrength` INT DEFAULT 60,
+  `semType` VARCHAR(50) DEFAULT 'Semester',
+  `active` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `designations` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `shortCode` VARCHAR(100) DEFAULT NULL,
+  `dept` VARCHAR(255) DEFAULT 'All',
+  `gradePay` VARCHAR(100) DEFAULT NULL,
+  `level` VARCHAR(100) DEFAULT 'Junior',
+  `active` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `exams` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `shortName` VARCHAR(100) DEFAULT NULL,
+  `type` VARCHAR(100) DEFAULT NULL,
+  `maxMarks` INT DEFAULT 100,
+  `passMark` INT DEFAULT 40,
+  `month` VARCHAR(50) DEFAULT NULL,
+  `year` VARCHAR(50) DEFAULT NULL,
+  `gpaWeight` INT DEFAULT 0,
+  `active` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `fees` (
+  `id` CHAR(36) NOT NULL PRIMARY KEY,
+  `feeType` VARCHAR(255) NOT NULL,
+  `year` VARCHAR(50) DEFAULT NULL,
+  `dept` VARCHAR(255) DEFAULT NULL,
+  `amount` DOUBLE NOT NULL DEFAULT 0,
+  `dueDate` DATE NOT NULL,
+  `term` VARCHAR(100) DEFAULT NULL,
+  `active` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- 13. SEED DATA FOR MASTERS
+-- ==========================================
+
+INSERT INTO `academic_years` (`id`, `year`, `startDate`, `endDate`, `admissionStart`, `admissionEnd`, `active`, `created_at`, `updated_at`) VALUES
+('acad-year-1', '2025-2026', '2025-06-01', '2026-05-31', '2025-04-01', '2025-07-31', 1, NOW(), NOW()),
+('acad-year-2', '2024-2025', '2024-06-01', '2025-05-31', '2024-04-01', '2025-07-31', 0, NOW(), NOW()),
+('acad-year-3', '2023-2024', '2023-06-01', '2024-05-31', '2023-04-01', '2024-07-31', 0, NOW(), NOW());
+
+INSERT INTO `classes` (`id`, `name`, `shortCode`, `depts`, `maxSections`, `maxStrength`, `semType`, `active`, `created_at`, `updated_at`) VALUES
+('class-1', 'I Year', 'I', 'CS, IT, EC, ME', 4, 60, 'Semester', 1, NOW(), NOW()),
+('class-2', 'II Year', 'II', 'CS, IT, EC, ME', 4, 60, 'Semester', 1, NOW(), NOW()),
+('class-3', 'III Year', 'III', 'CS, IT, EC', 3, 60, 'Semester', 1, NOW(), NOW()),
+('class-4', 'IV Year', 'IV', 'CS, IT, EC', 3, 55, 'Semester', 1, NOW(), NOW());
+
+INSERT INTO `designations` (`id`, `title`, `shortCode`, `dept`, `gradePay`, `level`, `active`, `created_at`, `updated_at`) VALUES
+('desig-1', 'Professor', 'Prof.', 'All', 'AGP-10000', 'Senior', 1, NOW(), NOW()),
+('desig-2', 'Associate Professor', 'Assoc. Prof.', 'All', 'AGP-8000', 'Senior', 1, NOW(), NOW()),
+('desig-3', 'Assistant Professor', 'Asst. Prof.', 'All', 'AGP-6000', 'Junior', 1, NOW(), NOW()),
+('desig-4', 'Head of Department', 'HOD', 'All', 'AGP-10000', 'Senior', 1, NOW(), NOW()),
+('desig-5', 'Registrar', 'Reg.', 'Administration', 'AGP-7600', 'Administrative', 1, NOW(), NOW()),
+('desig-6', 'Lab Instructor', 'Lab Instr.', 'Technical', 'AGP-4200', 'Technical', 1, NOW(), NOW());
+
+INSERT INTO `exams` (`id`, `name`, `shortName`, `type`, `maxMarks`, `passMark`, `month`, `year`, `gpaWeight`, `active`, `created_at`, `updated_at`) VALUES
+('exam-1', 'Internal Assessment 1', 'IA1', 'Internal', 50, 20, 'August', '2026', 20, 1, NOW(), NOW()),
+('exam-2', 'Internal Assessment 2', 'IA2', 'Internal', 50, 20, 'November', '2026', 20, 1, NOW(), NOW()),
+('exam-3', 'End Semester Examination', 'ESE', 'External', 100, 40, 'December', '2026', 60, 1, NOW(), NOW()),
+('exam-4', 'Lab Practical Exam', 'LAB', 'Practical', 75, 30, 'November', '2026', 0, 1, NOW(), NOW());
+
+INSERT INTO `fees` (`id`, `feeType`, `year`, `dept`, `amount`, `dueDate`, `term`, `active`, `created_at`, `updated_at`) VALUES
+('fee-1', 'Tuition Fee', 'I', 'Computer Science', 85000, '2026-06-30', 'Annual', 1, NOW(), NOW()),
+('fee-2', 'Tuition Fee', 'II', 'Computer Science', 85000, '2026-06-30', 'Annual', 1, NOW(), NOW()),
+('fee-3', 'Transport Fee', 'ALL', 'ALL', 18000, '2026-06-15', 'Annual', 1, NOW(), NOW()),
+('fee-4', 'Library Deposit', 'I', 'ALL', 2000, '2026-07-01', 'One-time', 1, NOW(), NOW()),
+('fee-5', 'Hostel Fee', 'ALL', 'ALL', 45000, '2026-06-30', 'Annual', 1, NOW(), NOW());
+
+SET FOREIGN_KEY_CHECKS = 1;
+

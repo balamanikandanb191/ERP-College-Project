@@ -3,7 +3,7 @@ import api from '../services/api';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const AttendanceModal = ({ isOpen, onClose, attendanceData, type }) => {
+const AttendanceModal = ({ isOpen, onClose, attendanceData, type, inline = false }) => {
   const isEdit = !!attendanceData;
   const isStudent = type === 'student';
 
@@ -84,6 +84,97 @@ const AttendanceModal = ({ isOpen, onClose, attendanceData, type }) => {
   };
 
   if (!isOpen) return null;
+
+  if (inline) {
+    return (
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 w-full overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center p-6 border-b border-border-color">
+          <h2 className="text-xl font-bold text-text-main">
+            {isEdit ? 'Edit Attendance' : `Mark ${isStudent ? 'Student' : 'Staff'} Attendance`}
+          </h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-text-main mb-1.5">
+                Select {isStudent ? 'Student' : 'Staff'}
+              </label>
+              <select
+                required
+                disabled={isEdit}
+                value={formData.target_id}
+                onChange={(e) => setFormData({...formData, target_id: e.target.value})}
+                className="w-full px-4 py-2.5 rounded-xl border border-border-color focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm bg-white disabled:bg-gray-100 disabled:text-text-muted"
+              >
+                <option value="">-- Select --</option>
+                {Array.isArray(targets) && targets.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.fullName} ({isStudent ? t.registerNumber : t.staffId})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-text-main mb-1.5">Date</label>
+              <input
+                type="date"
+                required
+                disabled={isEdit}
+                value={formData.date}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                className="w-full px-4 py-2.5 rounded-xl border border-border-color focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-text-muted"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-text-main mb-1.5">Status</label>
+              <select
+                required
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="w-full px-4 py-2.5 rounded-xl border border-border-color focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm bg-white"
+              >
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+                {!isStudent && <option value="Leave">On Leave</option>}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-text-main mb-1.5">Remarks (Optional)</label>
+              <textarea
+                value={formData.remarks}
+                onChange={(e) => setFormData({...formData, remarks: e.target.value})}
+                rows="2"
+                className="w-full px-4 py-2.5 rounded-xl border border-border-color focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm resize-none"
+                placeholder="Add any notes..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 text-sm font-semibold text-text-muted hover:text-text-main hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-dark rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : 'Save Attendance'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">

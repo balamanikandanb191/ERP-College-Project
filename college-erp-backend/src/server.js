@@ -21,13 +21,15 @@ const settingRoutes = require('./routes/settingRoutes');
 const placementRoutes = require('./routes/placementRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
 const masterRoutes = require('./routes/masterRoutes');
+const idCardRoutes = require('./routes/idCardRoutes');
+const classAllocationRoutes = require('./routes/classAllocationRoutes');
 const path = require('path');
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -54,6 +56,8 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/placement', placementRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/masters', masterRoutes);
+app.use('/api/id-cards', idCardRoutes);
+app.use('/api/class-allocations', classAllocationRoutes);
 
 // Fallback all non-API GET requests to frontend's index.html
 app.get(/.*/, (req, res, next) => {
@@ -82,6 +86,7 @@ const cleanAndSync = async () => {
                 'placement_fees', 'PlacementFees', 'internships', 'Internships',
                 'student_documents', 'StudentDocuments', 'staff_documents', 'StaffDocuments',
                 'timetables', 'Timetables', 'timetable_settings', 'TimetableSettings',
+                'class_allocations', 'ClassAllocations',
                 'fee_payment_history', 'FeePaymentHistory', 'fee_payment_histories', 'FeePaymentHistories', 'student_fees', 'StudentFees',
                 'fee_structures', 'FeeStructures', 'hostel_complaints', 'HostelComplaints',
                 'hostel_expenses', 'HostelExpenses', 'hostel_financial_reports', 'HostelFinancialReports',
@@ -92,7 +97,13 @@ const cleanAndSync = async () => {
                 'staff_attendance', 'StaffAttendance', 'StaffAttendances',
                 'student_attendance', 'StudentAttendance', 'StudentAttendances',
                 'staff', 'Staffs', 'students', 'Students', 'users', 'Users', 'roles', 'Roles',
-                'system_settings', 'SystemSettings'
+                'system_settings', 'SystemSettings',
+                'master_records', 'MasterRecord', 'MasterRecords',
+                'academic_years', 'AcademicYearMaster', 'AcademicYearMasters',
+                'classes', 'ClassMaster', 'ClassMasters',
+                'designations', 'DesignationMaster', 'DesignationMasters',
+                'exams', 'ExamMaster', 'ExamMasters',
+                'fees', 'FeeMaster', 'FeeMasters'
             ];
             for (const table of tables) {
                 await sequelize.query(`DROP TABLE IF EXISTS \`${table}\``, { transaction: t });

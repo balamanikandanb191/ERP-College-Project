@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Calendar, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import { confirmDelete } from '../utils/confirmToast';
 
 const SEED = [
   { id: 'ay1', year: '2025-2026', startDate: '2025-06-01', endDate: '2026-05-31', admissionStart: '2025-04-01', admissionEnd: '2025-07-31', active: true },
@@ -64,12 +65,62 @@ const AcademicYearMaster = () => {
     }
   };
   const del = async (id) => { 
-    if (!window.confirm('Delete?')) return; 
-    const res = await deleteRecord(id);
-    if (res.success) toast.success('Deleted');
-    else toast.error('Failed to delete');
+    confirmDelete(async () => {
+      const res = await deleteRecord(id);
+      if (res.success) toast.success('Deleted');
+      else toast.error('Failed to delete');
+    }, 'Are you sure you want to delete this academic year record?');
   };
   const openEdit = r => { setEditing(r); setForm({ year: r.year, startDate: r.startDate, endDate: r.endDate, admissionStart: r.admissionStart, admissionEnd: r.admissionEnd, active: r.active }); setShowModal(true); };
+
+  if (showModal) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto pb-12 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => { setShowModal(false); setEditing(null); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 cursor-pointer shadow-sm"
+          >
+            ← Back to List
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-slide-in">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Year' : 'Add Academic Year'}</h3>
+            <button onClick={() => { setShowModal(false); setEditing(null); }} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button>
+          </div>
+          <form onSubmit={submit} className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-600">
+              <div className="col-span-2">
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Academic Year *</label>
+                <input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="2026-2027" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Start Date *</label>
+                <input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">End Date *</label>
+                <input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Admission Start</label>
+                <input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.admissionStart} onChange={e => setForm({ ...form, admissionStart: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Admission End</label>
+                <input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.admissionEnd} onChange={e => setForm({ ...form, admissionEnd: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => { setShowModal(false); setEditing(null); }} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -110,27 +161,6 @@ const AcademicYearMaster = () => {
           </div>
         ))}
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between"><h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Year' : 'Add Academic Year'}</h3><button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button></div>
-            <form onSubmit={submit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Academic Year *</label><input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="2026-2027" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Start Date *</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">End Date *</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Admission Start</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.admissionStart} onChange={e => setForm({ ...form, admissionStart: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Admission End</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.admissionEnd} onChange={e => setForm({ ...form, admissionEnd: e.target.value })} /></div>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Building2, 
-  School, 
-  LayoutGrid, 
-  Search, 
-  Plus, 
-  X, 
-  Trash2, 
-  Edit2, 
-  AlertTriangle, 
-  Check, 
-  Users, 
-  TrendingUp, 
-  Activity, 
-  Printer, 
-  FileText, 
-  Download, 
+import { useNavigate } from 'react-router-dom';
+import {
+  Building2,
+  School,
+  LayoutGrid,
+  Search,
+  Plus,
+  X,
+  Trash2,
+  Edit2,
+  AlertTriangle,
+  Check,
+  Users,
+  TrendingUp,
+  Activity,
+  Printer,
+  FileText,
+  Download,
   HelpCircle,
   Clock,
   Layers,
@@ -39,6 +40,8 @@ import {
   Area
 } from 'recharts';
 import toast from 'react-hot-toast';
+import api from '../services/api';
+import { confirmDelete } from '../utils/confirmToast';
 
 // Master list of classrooms and labs
 const ALL_ROOMS = [
@@ -153,23 +156,33 @@ const STATUS_COLORS = {
 };
 
 const ClassAllocation = () => {
+  const navigate = useNavigate();
   // --- Central Allocation State ---
-  const [allocations, setAllocations] = useState(() => {
+  const [allocations, setAllocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAllocations = async () => {
     try {
-      const cached = localStorage.getItem('edu_erp_class_allocations');
-      if (cached) return JSON.parse(cached);
-    } catch (e) {
-      console.error('Failed to parse cached class allocations:', e);
+      setLoading(true);
+      const res = await api.get('/class-allocations');
+      setAllocations(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch allocations:', err);
+      toast.error('Failed to load class allocations from database.');
+    } finally {
+      setLoading(false);
     }
-    localStorage.setItem('edu_erp_class_allocations', JSON.stringify(SEED_ALLOCATIONS));
-    return SEED_ALLOCATIONS;
-  });
+  };
+
+  useEffect(() => {
+    fetchAllocations();
+  }, []);
 
   const saveAllocations = (updated) => {
     setAllocations(updated);
     localStorage.setItem('edu_erp_class_allocations', JSON.stringify(updated));
     window.dispatchEvent(new Event('storage'));
-    
+
     // Auto-sync telemetry with related modules (timetable, exams, staff, attendance)
     try {
       const timetableSync = updated.map(a => ({
@@ -276,7 +289,7 @@ const ClassAllocation = () => {
 
   // --- Synchronized Calculations (Derive from Single Source of Truth) ---
   const totalClassrooms = ALL_ROOMS.length;
-  
+
   const activeAllocationsCount = useMemo(() => {
     return (allocations ?? []).filter(a => a.classroomNumber !== 'None').length;
   }, [allocations]);
@@ -313,9 +326,9 @@ const ClassAllocation = () => {
     return (allocations ?? []).filter(a => {
       const rDetails = getRoomDetails(a.classroomNumber);
       const matchSearch = a.department?.toLowerCase().includes(filters.search.toLowerCase()) ||
-                          a.classAdvisor?.toLowerCase().includes(filters.search.toLowerCase()) ||
-                          a.classroomNumber?.toLowerCase().includes(filters.search.toLowerCase());
-      
+        a.classAdvisor?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        a.classroomNumber?.toLowerCase().includes(filters.search.toLowerCase());
+
       const matchDept = !filters.department || a.department === filters.department;
       const matchBlock = !filters.block || rDetails.block === filters.block;
       const matchFloor = !filters.floor || rDetails.floor === filters.floor;
@@ -340,12 +353,18 @@ const ClassAllocation = () => {
 
   // --- Delete Handler ---
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to remove this classroom allocation?')) {
-      const updated = (allocations ?? []).filter(a => a.id !== id);
-      saveAllocations(updated);
-      setSelectedAllocationId(null);
-      toast.success('Class allocation removed successfully.');
-    }
+    confirmDelete(async () => {
+      try {
+        await api.delete(`/class-allocations/${id}`);
+        const updated = (allocations ?? []).filter(a => a.id !== id);
+        saveAllocations(updated);
+        setSelectedAllocationId(null);
+        toast.success('Class allocation removed successfully.');
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to remove class allocation.');
+      }
+    }, 'Are you sure you want to remove this classroom allocation? This action cannot be undone.');
   };
 
   // --- Open Modals ---
@@ -376,29 +395,85 @@ const ClassAllocation = () => {
   // --- Save Handler ---
   const handleSave = (e) => {
     e.preventDefault();
+
+    const executeSave = async () => {
+      try {
+        if (editingAllocation) {
+          const res = await api.put(`/class-allocations/${editingAllocation.id}`, formData);
+          const updated = (allocations ?? []).map(a => a.id === editingAllocation.id ? res.data : a);
+          saveAllocations(updated);
+          toast.success('Classroom allocation updated!');
+        } else {
+          const res = await api.post('/class-allocations', formData);
+          const updated = [res.data, ...(allocations ?? [])];
+          saveAllocations(updated);
+          toast.success('Classroom allocation created!');
+        }
+        setShowFormModal(false);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to save classroom allocation.');
+      }
+    };
+
     const conflicts = getConflicts(formData, allocations.filter(a => a.id !== editingAllocation?.id));
     if (conflicts.length > 0) {
-      const msgs = conflicts.map(c => `• ${c.type}: ${c.message}`).join('\n');
-      if (!window.confirm(`Validation Warnings Detected:\n\n${msgs}\n\nDo you want to override and save anyway?`)) {
-        return;
-      }
+      toast((t) => (
+        <div className="flex flex-col gap-2.5 p-1 text-slate-100 max-w-sm">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+            <div>
+              <h4 className="font-extrabold text-sm tracking-tight">Validation Warnings Detected</h4>
+              <div className="mt-2 space-y-1.5 text-xs text-slate-300 max-h-48 overflow-y-auto pr-1">
+                {conflicts.map((c, idx) => (
+                  <div key={idx} className="flex gap-1.5 items-start leading-relaxed">
+                    <span className="text-amber-400 mt-0.5 shrink-0">•</span>
+                    <span>
+                      <strong className="text-slate-100 font-bold">{c.type}:</strong> {c.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-slate-700/50 my-1"></div>
+          <p className="text-xs font-semibold text-slate-200">
+            Do you want to override and save anyway?
+          </p>
+          <div className="flex gap-2 justify-end mt-1">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                executeSave();
+              }}
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-xl text-[10px] uppercase tracking-wider transition-colors shadow-lg shadow-amber-500/10"
+            >
+              Yes, Override
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-[10px] uppercase tracking-wider transition-colors border border-slate-700/60"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: Infinity,
+        id: 'validation-conflict-toast',
+        style: {
+          background: '#0F172A',
+          color: '#fff',
+          borderRadius: '20px',
+          padding: '16px',
+          border: '1px solid #334155',
+          boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)'
+        }
+      });
+      return;
     }
 
-    let updated = [];
-    if (editingAllocation) {
-      updated = (allocations ?? []).map(a => a.id === editingAllocation.id ? { ...formData, id: a.id } : a);
-      toast.success('Classroom allocation updated!');
-    } else {
-      const newAlloc = {
-        ...formData,
-        id: `alloc-${Date.now()}`
-      };
-      updated = [...(allocations ?? []), newAlloc];
-      toast.success('Classroom allocation created!');
-    }
-
-    saveAllocations(updated);
-    setShowFormModal(false);
+    executeSave();
   };
 
   // --- Export Actions ---
@@ -465,14 +540,183 @@ const ClassAllocation = () => {
 
   const selectedDrawerAlloc = allocations.find(a => a.id === selectedAllocationId);
 
+  if (showFormModal) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto pb-12 animate-fade-in Outfit-Font">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => { setShowFormModal(false); setEditingAllocation(null); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 cursor-pointer shadow-sm"
+          >
+            ← Back to List
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-slide-in p-6">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-lg font-black text-slate-800">
+                {editingAllocation ? 'Modify Class Allocation' : 'Create Class Allocation'}
+              </h3>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">
+                Configure department classrooms and advisors
+              </span>
+            </div>
+            <button onClick={() => { setShowFormModal(false); setEditingAllocation(null); }} className="p-2 hover:bg-slate-100 rounded-xl">
+              <X size={18} />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSave} className="space-y-4 mt-4 text-xs font-semibold text-slate-600">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Department</label>
+                <select
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Section</label>
+                <select
+                  value={formData.section}
+                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                  <option value="C">Section C</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Year</label>
+                <select
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  <option value="I">I Year</option>
+                  <option value="II">II Year</option>
+                  <option value="III">III Year</option>
+                  <option value="IV">IV Year</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Semester</label>
+                <select
+                  value={formData.semester}
+                  onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  {['1', '2', '3', '4', '5', '6', '7', '8'].map(s => <option key={s} value={s}>Sem {s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Classroom Number</label>
+                <select
+                  value={formData.classroomNumber}
+                  onChange={(e) => setFormData({ ...formData, classroomNumber: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  {ALL_ROOMS.map(r => <option key={r.roomNumber} value={r.roomNumber}>{r.roomNumber}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Class Advisor</label>
+                <input
+                  type="text"
+                  value={formData.classAdvisor}
+                  onChange={(e) => setFormData({ ...formData, classAdvisor: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                  placeholder="Dr. John Doe"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Student Strength</label>
+                <input
+                  type="number"
+                  value={formData.currentStrength}
+                  onChange={(e) => setFormData({ ...formData, currentStrength: Number(e.target.value) })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                  placeholder="e.g. 50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Assigned Subject Faculty</label>
+              <input
+                type="text"
+                value={formData.assignedFaculty}
+                onChange={(e) => setFormData({ ...formData, assignedFaculty: e.target.value })}
+                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                placeholder="e.g. Prof. Sneha Iyer, Dr. Anand K. Varma (comma separated)"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Lab Mapping</label>
+                <select
+                  value={formData.labAllocation}
+                  onChange={(e) => setFormData({ ...formData, labAllocation: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  <option value="None">None</option>
+                  <option value="IT Lab Block A">IT Lab Block A</option>
+                  <option value="CS Lab 3 Block C">CS Lab 3 Block C</option>
+                  <option value="EC Lab Block B">EC Lab Block B</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-black uppercase mb-1.5 block">Initial Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-xs font-bold"
+                >
+                  {Object.keys(STATUS_COLORS).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => { setShowFormModal(false); setEditingAllocation(null); }}
+                className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg shadow-indigo-500/15"
+              >
+                Save Allocation
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-12 Outfit-Font text-slate-800 antialiased selection:bg-indigo-500 selection:text-white animate-fade-in">
-      
+
       {/* 1. TOP HERO SECTION */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 text-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden border border-slate-800">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none"></div>
         <div className="absolute -right-24 -top-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        
+
         <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-1 shrink-0 overflow-hidden shadow-lg flex items-center justify-center">
@@ -526,13 +770,15 @@ const ClassAllocation = () => {
           { title: 'Staff Advisors Assigned', value: staffAdvisorsCount, color: 'bg-cyan-600', icon: Users, action: () => handleKpiClick('Staff Advisors Mapped', (e) => e.classAdvisor && e.classAdvisor !== 'None') },
           { title: 'Lab Rooms Active', value: labRoomsActiveCount, color: 'bg-violet-600', icon: Layers, action: () => handleKpiClick('Active Labs', (e) => e.labAllocation && e.labAllocation !== 'None') },
           { title: 'Total Students Allocated', value: totalStudentsAllocated, color: 'bg-pink-500', icon: Users, action: () => handleKpiClick('Allocated Student Strengths', (e) => Number(e.currentStrength) > 0) },
-          { title: 'Vacant Rooms', value: vacantRoomsCount, color: 'bg-amber-500', icon: MapPin, action: () => handleKpiClick('Vacant Classrooms', (e) => {
-            const allocatedRooms = allocations.map(a => a.classroomNumber);
-            return !allocatedRooms.includes(e.roomNumber);
-          }, true) }, // true indicates to filter from ALL_ROOMS
+          {
+            title: 'Vacant Rooms', value: vacantRoomsCount, color: 'bg-amber-500', icon: MapPin, action: () => handleKpiClick('Vacant Classrooms', (e) => {
+              const allocatedRooms = allocations.map(a => a.classroomNumber);
+              return !allocatedRooms.includes(e.roomNumber);
+            }, true)
+          }, // true indicates to filter from ALL_ROOMS
           { title: 'Conflict Warnings', value: conflictWarningsCount, color: 'bg-rose-500', icon: AlertTriangle, action: () => handleKpiClick('Conflict Warnings', (e) => getConflicts(e).length > 0) }
         ].map((kpi, idx) => (
-          <div 
+          <div
             key={idx}
             onClick={kpi.action}
             className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden"
@@ -567,7 +813,7 @@ const ClassAllocation = () => {
               className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all placeholder:text-slate-400"
             />
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button
               onClick={handlePrint}
@@ -695,87 +941,104 @@ const ClassAllocation = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/60 font-medium">
-                {(filteredAllocations ?? []).map((alloc, idx) => {
-                  if (!alloc) return null;
-                  const rDetails = getRoomDetails(alloc.classroomNumber);
-                  const conflicts = getConflicts(alloc);
-                  const isConflict = conflicts.length > 0;
-                  const colors = STATUS_COLORS[alloc.status] || { bg: 'bg-slate-500', text: 'text-white' };
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-20 text-slate-400 font-bold">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-[11px] uppercase tracking-widest text-slate-500 font-black">Loading classroom allocations...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  (filteredAllocations ?? []).map((alloc, idx) => {
+                    if (!alloc) return null;
+                    const rDetails = getRoomDetails(alloc.classroomNumber);
+                    const conflicts = getConflicts(alloc);
+                    const isConflict = conflicts.length > 0;
+                    const colors = STATUS_COLORS[alloc.status] || { bg: 'bg-slate-500', text: 'text-white' };
 
-                  return (
-                    <tr 
-                      key={alloc.id || idx} 
-                      className={`hover:bg-slate-50/50 transition-colors group cursor-pointer ${isConflict ? 'bg-red-50/30' : ''}`}
-                      onClick={() => setSelectedAllocationId(alloc.id)}
-                    >
-                      <td className="p-4">
-                        <div className="font-black text-slate-800 text-sm">{alloc.department}</div>
-                        <div className="text-[10px] text-slate-400 font-bold mt-0.5">
-                          Year {alloc.year} • Semester {alloc.semester} • Section {alloc.section}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-extrabold text-indigo-600 text-sm flex items-center gap-1">
-                          <School size={13} /> {alloc.classroomNumber}
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-bold mt-0.5">
-                          {rDetails.block} • {rDetails.floor}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-bold text-slate-700">Advisor: {alloc.classAdvisor}</div>
-                        <div className="text-[10px] text-slate-400 font-medium truncate max-w-[200px]">
-                          Faculty: {alloc.assignedFaculty}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-bold text-slate-700">
-                          {alloc.currentStrength} / {rDetails.capacity} Students
-                        </div>
-                        <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${isConflict ? 'bg-rose-500' : 'bg-indigo-600'}`} 
-                            style={{ width: `${Math.min(100, (Number(alloc.currentStrength) / Number(rDetails.capacity)) * 100)}%` }}
-                          ></div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-col gap-1 items-start">
-                          <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase text-white ${isConflict ? 'bg-rose-600' : colors.bg}`}>
-                            {isConflict ? 'Timetable Conflict' : alloc.status}
-                          </span>
-                          <span className="text-[8px] font-black uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5">
-                            {alloc.timetableSyncStatus}
-                          </span>
-                          {isConflict && (
-                            <span className="text-[8px] text-rose-600 font-black animate-pulse flex items-center gap-0.5 mt-0.5">
-                              <AlertCircle size={10} /> Conflict Detected
+                    return (
+                      <tr
+                        key={alloc.id || idx}
+                        className={`hover:bg-slate-50/50 transition-colors group cursor-pointer ${isConflict ? 'bg-red-50/30' : ''}`}
+                        onClick={() => {
+                          if (alloc.classAdvisor && alloc.classAdvisor !== 'None') {
+                            navigate('/admin/staff', { state: { searchStaffName: alloc.classAdvisor } });
+                          } else {
+                            setSelectedAllocationId(alloc.id);
+                          }
+                        }}
+                      >
+                        <td className="p-4">
+                          <div className="font-black text-slate-800 text-sm">{alloc.department}</div>
+                          <div className="text-[10px] text-slate-400 font-bold mt-0.5">
+                            Year {alloc.year} • Semester {alloc.semester} • Section {alloc.section}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="font-extrabold text-indigo-600 text-sm flex items-center gap-1">
+                            <School size={13} /> {alloc.classroomNumber}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-bold mt-0.5">
+                            {rDetails.block} • {rDetails.floor}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-700">Advisor: {alloc.classAdvisor}</div>
+                          <div className="text-[10px] text-slate-400 font-medium truncate max-w-[200px]">
+                            Faculty: {alloc.assignedFaculty}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-700">
+                            {alloc.currentStrength} / {rDetails.capacity} Students
+                          </div>
+                          <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${isConflict ? 'bg-rose-500' : 'bg-indigo-600'}`}
+                              style={{ width: `${Math.min(100, (Number(alloc.currentStrength) / Number(rDetails.capacity)) * 100)}%` }}
+                            ></div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase text-white ${isConflict ? 'bg-rose-600' : colors.bg}`}>
+                              {isConflict ? 'Timetable Conflict' : alloc.status}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleOpenEdit(alloc)}
-                            className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
-                            title="Edit Allocation"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(alloc.id)}
-                            className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {(filteredAllocations ?? []).length === 0 && (
+                            <span className="text-[8px] font-black uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5">
+                              {alloc.timetableSyncStatus}
+                            </span>
+                            {isConflict && (
+                              <span className="text-[8px] text-rose-600 font-black animate-pulse flex items-center gap-0.5 mt-0.5">
+                                <AlertCircle size={10} /> Conflict Detected
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleOpenEdit(alloc)}
+                              className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                              title="Edit Allocation"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(alloc.id)}
+                              className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-rose-600 rounded-lg transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+                {!loading && (filteredAllocations ?? []).length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center py-20 text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-3xl m-4">
                       No matching records found
@@ -971,7 +1234,7 @@ const ClassAllocation = () => {
                       const rDetails = getRoomDetails(item.classroomNumber);
                       const conflicts = getConflicts(item);
                       const usagePct = Math.round((Number(item.currentStrength) / Number(rDetails.capacity)) * 100) || 0;
-                      
+
                       return (
                         <div key={idx} className="bg-slate-50 border border-slate-100 rounded-3xl p-5 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
                           <div>
@@ -1032,166 +1295,6 @@ const ClassAllocation = () => {
                 Close Registry
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. ADD/EDIT ALLOCATION FORM MODAL */}
-      {showFormModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-xl bg-white border border-slate-100 rounded-[32px] shadow-2xl overflow-hidden flex flex-col justify-between">
-            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                  {editingAllocation ? 'Modify Class Allocation' : 'Create Class Allocation'}
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowFormModal(false)}
-                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-4 text-xs font-semibold text-slate-600">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Department</label>
-                  <select
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:bg-white"
-                  >
-                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Section</label>
-                  <select
-                    value={formData.section}
-                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:bg-white"
-                  >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  >
-                    <option value="I">I Year</option>
-                    <option value="II">II Year</option>
-                    <option value="III">III Year</option>
-                    <option value="IV">IV Year</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Semester</label>
-                  <select
-                    value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  >
-                    {['1','2','3','4','5','6','7','8'].map(s => <option key={s} value={s}>Sem {s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Classroom Number</label>
-                  <select
-                    value={formData.classroomNumber}
-                    onChange={(e) => setFormData({ ...formData, classroomNumber: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  >
-                    {ALL_ROOMS.map(r => <option key={r.roomNumber} value={r.roomNumber}>{r.roomNumber}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Class Advisor</label>
-                  <input
-                    type="text"
-                    value={formData.classAdvisor}
-                    onChange={(e) => setFormData({ ...formData, classAdvisor: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                    placeholder="Dr. John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Student Strength</label>
-                  <input
-                    type="number"
-                    value={formData.currentStrength}
-                    onChange={(e) => setFormData({ ...formData, currentStrength: Number(e.target.value) })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                    placeholder="e.g. 50"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Assigned Subject Faculty</label>
-                <input
-                  type="text"
-                  value={formData.assignedFaculty}
-                  onChange={(e) => setFormData({ ...formData, assignedFaculty: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  placeholder="e.g. Prof. Sneha Iyer, Dr. Anand K. Varma (comma separated)"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Lab Mapping</label>
-                  <select
-                    value={formData.labAllocation}
-                    onChange={(e) => setFormData({ ...formData, labAllocation: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  >
-                    <option value="None">None</option>
-                    <option value="IT Lab Block A">IT Lab Block A</option>
-                    <option value="CS Lab 3 Block C">CS Lab 3 Block C</option>
-                    <option value="EC Lab Block B">EC Lab Block B</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-black uppercase mb-1 block">Initial Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none"
-                  >
-                    {Object.keys(STATUS_COLORS).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowFormModal(false)}
-                  className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-slate-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
-                >
-                  Save Allocation
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

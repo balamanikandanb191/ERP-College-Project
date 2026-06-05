@@ -67,8 +67,8 @@ const menuSections = [
         roles: ['Admin', 'Super Admin']
       },
       {
-        name: 'Standard',
-        path: '/admin/standard',
+        name: 'Department',
+        path: '/admin/department',
         roles: ['Admin', 'Super Admin']
       },
       {
@@ -105,7 +105,7 @@ const menuSections = [
   },
   {
     id: 'others_master',
-    title: 'OTHERS MASTER',
+    title: 'OTHER MASTER',
     icon: Settings,
     roles: ['Admin', 'Super Admin'],
     items: [
@@ -320,7 +320,7 @@ const menuSections = [
     id: 'campus',
     title: 'CAMPUS MANAGEMENT',
     icon: Building2,
-    roles: ['Admin', 'Super Admin'],
+    roles: ['Admin', 'Super Admin', 'Student'],
     items: [
       {
         name: 'Hostel',
@@ -334,8 +334,42 @@ const menuSections = [
       },
       {
         name: 'Library',
-        path: (role) => role === 'Student' ? '/student/library' : '/admin/library',
-        roles: ['Admin', 'Super Admin', 'Student']
+        path: '/student/library',
+        roles: ['Student']
+      }
+    ]
+  },
+  {
+    id: 'library',
+    title: 'LIBRARY',
+    icon: Library,
+    noSort: true,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      {
+        name: 'Management',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Add Book', path: '/admin/library/management/Addbook' },
+          { name: 'Add Borrower', path: '/admin/library/management/Addborrower' },
+          { name: 'Available Books', path: '/admin/library/management/Availablebooks' }
+        ]
+      },
+      {
+        name: 'Circulation',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Book Issue', path: '/admin/library/circulation/Bookissue' }
+        ]
+      },
+      {
+        name: 'Reports',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Book History', path: '/admin/library/reports/Bookhistory' },
+          { name: 'Fine Report', path: '/admin/library/reports/Finereport' },
+          { name: 'No Due Certificate', path: '/admin/library/reports/Noduecertificate' }
+        ]
       }
     ]
   },
@@ -407,6 +441,7 @@ const Sidebar = () => {
   const userRole = user?.role || 'Admin';
 
   const [expandedSections, setExpandedSections] = useState({});
+  const [expandedSubgroups, setExpandedSubgroups] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [allowedModules, setAllowedModules] = useState(null);
 
@@ -459,9 +494,10 @@ const Sidebar = () => {
       }
 
       const allowedItems = section.items?.filter(item => {
+        if (item.isSubGroup) return true;
         // If they have custom permissions configured, use them to decide access
         if (allowedModules !== null) {
-          return allowedModules.includes(item.name);
+          return allowedModules.includes(item.name) || (item.name === 'Department' && allowedModules.includes('Standard'));
         }
         // Fallback to default role checks
         if (!item.roles) return true;
@@ -490,9 +526,24 @@ const Sidebar = () => {
         return null;
       }
 
-      const matchingItems = section.items?.filter(item =>
-        item.name.toLowerCase().includes(query)
-      ) ?? [];
+      const matchingItems = section.items?.map(item => {
+        if (item.isSubGroup) {
+          const matchingSubItems = item.subItems?.filter(sub =>
+            sub.name.toLowerCase().includes(query)
+          );
+          if (matchingSubItems && matchingSubItems.length > 0) {
+            return {
+              ...item,
+              subItems: matchingSubItems
+            };
+          }
+          return null;
+        }
+        if (item.name.toLowerCase().includes(query)) {
+          return item;
+        }
+        return null;
+      }).filter(Boolean) ?? [];
 
       if (matchingItems.length > 0) {
         return {
@@ -511,8 +562,30 @@ const Sidebar = () => {
     const fileSec = searchFilteredSections.find(s => s.id === 'file');
     const normals = searchFilteredSections.filter(s => s.id !== 'dashboard' && s.id !== 'settings' && s.id !== 'file');
 
-    // Sort normal sections alphabetically by their titles
-    const sortedNormals = [...normals].sort((a, b) => a.title.localeCompare(b.title));
+    const sectionOrder = [
+      'academics_master',
+      'others_master',
+      'enquiry',
+      'application',
+      'admission_report',
+      'certificates',
+      'idcard',
+      'attendance',
+      'assessment',
+      'campus',
+      'library',
+      'placements'
+    ];
+
+    // Sort normal sections by defined sequence
+    const sortedNormals = [...normals].sort((a, b) => {
+      const indexA = sectionOrder.indexOf(a.id);
+      const indexB = sectionOrder.indexOf(b.id);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.title.localeCompare(b.title);
+    });
 
     // Sort child items alphabetically inside each section
     const sortItems = (items) => {
@@ -530,7 +603,7 @@ const Sidebar = () => {
 
     return {
       dashboardSection: dashboard ? (dashboard.isDirectLink ? dashboard : { ...dashboard, items: sortItems(dashboard.items) }) : null,
-      normalSections: finalNormals.map(s => ({ ...s, items: sortItems(s.items) })),
+      normalSections: finalNormals.map(s => ({ ...s, items: s.noSort ? s.items : sortItems(s.items) })),
       settingsSection: settings ? { ...settings, items: sortItems(settings.items) } : null
     };
   }, [searchFilteredSections]);
@@ -546,6 +619,12 @@ const Sidebar = () => {
         return currentPath === targetPath;
       }
       return section.items?.some(item => {
+        if (item.isSubGroup) {
+          return item.subItems?.some(sub => {
+            const subPath = typeof sub.path === 'function' ? sub.path(userRole) : sub.path;
+            return currentPath === subPath;
+          });
+        }
         const itemPath = typeof item.path === 'function' ? item.path(userRole) : item.path;
         return currentPath === itemPath;
       });
@@ -558,6 +637,29 @@ const Sidebar = () => {
       }));
     }
   }, [location.pathname, userRole, dashboardSection, normalSections, settingsSection]);
+
+  // Auto-expand active subgroups
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const allSections = [dashboardSection, ...normalSections, settingsSection].filter(Boolean);
+    
+    allSections.forEach(section => {
+      section.items?.forEach(item => {
+        if (item.isSubGroup) {
+          const hasActiveSubItem = item.subItems?.some(sub => {
+            const subPath = typeof sub.path === 'function' ? sub.path(userRole) : sub.path;
+            return currentPath === subPath;
+          });
+          if (hasActiveSubItem) {
+            setExpandedSubgroups(prev => ({
+              ...prev,
+              [item.name]: true
+            }));
+          }
+        }
+      });
+    });
+  }, [location.pathname, dashboardSection, normalSections, settingsSection, userRole]);
 
   const toggleSection = (id) => {
     setExpandedSections(prev => ({
@@ -593,14 +695,14 @@ const Sidebar = () => {
             to={targetPath}
             end={targetPath === '/admin' || targetPath === '/staff' || targetPath === '/student'}
             className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group cursor-pointer ${active
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20 text-white font-bold'
-                : 'text-slate-700 hover:bg-slate-200/50 hover:text-slate-900'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20 text-white font-bold'
+              : 'text-slate-700 hover:bg-slate-200/50 hover:text-slate-900'
               }`}
           >
             <div className="flex items-center gap-3">
               <div className={`p-1.5 rounded-lg transition-colors ${active
-                  ? 'bg-white/20 text-white'
-                  : 'bg-slate-200/40 text-slate-500 group-hover:bg-slate-200/75 group-hover:text-slate-800'
+                ? 'bg-white/20 text-white'
+                : 'bg-slate-200/40 text-slate-500 group-hover:bg-slate-200/75 group-hover:text-slate-800'
                 }`}>
                 {SectionIcon && <SectionIcon className="w-5 h-5 shrink-0" />}
               </div>
@@ -620,14 +722,14 @@ const Sidebar = () => {
           whileHover={{ x: 4, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group cursor-pointer ${active
-              ? 'bg-blue-600/5 text-blue-700 border-l-4 border-blue-500 font-semibold'
-              : 'text-slate-700 hover:bg-slate-200/50 hover:text-slate-900'
+            ? 'bg-blue-600/5 text-blue-700 border-l-4 border-blue-500 font-semibold'
+            : 'text-slate-700 hover:bg-slate-200/50 hover:text-slate-900'
             }`}
         >
           <div className="flex items-center gap-3">
             <div className={`p-1.5 rounded-lg transition-colors ${active
-                ? 'bg-blue-600/15 text-blue-700'
-                : 'bg-slate-200/40 text-slate-500 group-hover:bg-slate-200/75 group-hover:text-slate-800'
+              ? 'bg-blue-600/15 text-blue-700'
+              : 'bg-slate-200/40 text-slate-500 group-hover:bg-slate-200/75 group-hover:text-slate-800'
               }`}>
               {SectionIcon && <SectionIcon className="w-5 h-5 shrink-0" />}
             </div>
@@ -655,8 +757,62 @@ const Sidebar = () => {
               className="overflow-hidden pl-4 mt-2 flex flex-col gap-2 border-l border-slate-200/40 ml-7"
             >
               {(section.items ?? []).map((item) => {
-                const itemPath = typeof item.path === 'function' ? item.path(userRole) : item.path;
+                if (item.isSubGroup) {
+                  const isSubExpanded = expandedSubgroups[item.name];
+                  const hasActiveChild = item.subItems?.some(sub => {
+                    const subPath = typeof sub.path === 'function' ? sub.path(userRole) : sub.path;
+                    return location.pathname === subPath;
+                  });
 
+                  return (
+                    <div key={item.name} className="flex flex-col gap-1 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSubgroups(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
+                        className={`w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                          hasActiveChild
+                            ? 'bg-slate-100/80 text-blue-700 font-bold'
+                            : 'text-slate-600 hover:bg-slate-200/45 hover:text-slate-800'
+                        }`}
+                      >
+                        <span className="tracking-wide">{item.name}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isSubExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {isSubExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="pl-3 flex flex-col gap-1 border-l border-slate-200/50 ml-4 mt-1"
+                          >
+                            {item.subItems.map(sub => {
+                              const subPath = typeof sub.path === 'function' ? sub.path(userRole) : sub.path;
+                              return (
+                                <NavLink
+                                  key={sub.name}
+                                  to={subPath}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${isActive
+                                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow shadow-blue-500/10 text-white font-bold'
+                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/30'
+                                    }`
+                                  }
+                                >
+                                  {sub.name}
+                                </NavLink>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                }
+
+                const itemPath = typeof item.path === 'function' ? item.path(userRole) : item.path;
                 return (
                   <NavLink
                     key={item.name}

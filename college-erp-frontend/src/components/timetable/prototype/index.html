@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Timetable Portal - Prototype</title>
+
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js CDN for interactive analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Design Tokens */
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
+            --indigo-600: #4f46e5;
+            --indigo-50: #f5f3ff;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --success-dark: #065f46;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --warning-dark: #92400e;
+            --danger: #f43f5e;
+            --danger-light: #ffe4e6;
+            --danger-dark: #9f1239;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --card-shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Core Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--slate-50);
+            color: var(--slate-800);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            overflow-x: hidden;
+        }
+
+        button,
+        select,
+        input {
+            font-family: inherit;
+        }
+
+        /* Layout Styles */
+        .sidebar {
+            width: 280px;
+            background-color: var(--slate-900);
+            color: white;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            flex-shrink: 0;
+            border-right: 1px solid var(--slate-800);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 40;
+        }
+
+        .main-container {
+            flex: 1;
+            min-width: 0;
+            padding: 2.5rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Logo & Branding */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .brand-logo {
+            background-color: var(--primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .brand-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            display: block;
+            font-weight: 500;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            color: var(--slate-400);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active {
+            color: white;
+            background-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        /* Dashboard Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-title-wrapper h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title-wrapper p {
+            color: var(--slate-500);
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-container {
+            position: relative;
+            width: 280px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--slate-200);
+            background-color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--slate-800);
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--slate-400);
+            pointer-events: none;
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--slate-200);
+            color: var(--slate-700);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--slate-50);
+            border-color: var(--slate-300);
+        }
+
+        /* Tab Layout & Content Cards */
+        .tab-content {
+            background-color: white;
+            border-radius: 20px;
+            border: 1px solid var(--slate-200)/50;
+            box-shadow: var(--card-shadow);
+            min-height: 520px;
+            overflow: hidden;
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stat Cards (Overview Tab) */
+        .overview-stats {
+            display: grid;
+            grid-template-cols: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: 1.75rem;
+            border-radius: 16px;
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--slate-300);
+        }
+
+        .stat-card-icon-bg {
+            padding: 0.85rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-indigo {
+            background-color: var(--indigo-50);
+            color: var(--indigo-600);
+        }
+
+        .icon-emerald {
+            background-color: var(--success-light);
+            color: var(--success);
+        }
+
+        .icon-amber {
+            background-color: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .stat-card-content {
+            flex: 1;
+            z-index: 10;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--slate-500);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            line-height: 1.2;
+        }
+
+        .stat-subtitle {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-watermark {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            opacity: 0.04;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-watermark {
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        /* Overview Sections */
+        .overview-grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 2rem;
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .overview-grid {
+                grid-template-cols: 1fr;
+            }
+        }
+
+        .card-panel {
+            background-color: white;
+            border: 1px solid var(--slate-200);
+            border-radius: 18px;
+            padding: 1.75rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card-panel-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--slate-100);
+            padding-bottom: 1rem;
+        }
+
+        .insight-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+        }
+
+        .insight-indigo {
+            background-color: var(--indigo-50);
+            border-color: rgba(79, 70, 229, 0.15);
+        }
+
+        .insight-amber {
+            background-color: var(--warning-light);
+            border-color: rgba(245, 158, 11, 0.15);
+        }
+
+        .insight-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .insight-desc {
+            font-size: 0.8rem;
+            color: var(--slate-600);
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .action-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--slate-200);
+            background-color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--slate-700);
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+        }
+
+        .action-row:hover {
+            border-color: var(--primary);
+            background-color: var(--indigo-50);
+            color: var(--primary);
+        }
+
+        .action-row svg {
+            color: var(--slate-400);
+            transition: var(--transition);
+        }
+
+        .action-row:hover svg {
+            color: var(--primary);
+            transform: translateX(3px);
+        }
+
+        /* Filters Bar (Daily Timetable Tab) */
+        .filters-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            background-color: var(--slate-100)/50;
+            border-bottom: 1px solid var(--slate-200);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filters-select-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--slate-200);
+            outline: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--slate-700);
+            background-color: white;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .filter-info-label {
+            font-size: 0.875rem;
+            color: var(--slate-500);
+            font-weight: 600;
+        }
+
+        .filter-info-label strong {
+            color: var(--slate-800);
+            font-weight: 700;
+        }
+
+        /* Daily Timetable Grid Table */
+        .timetable-table-container {
+            overflow-x: auto;
+            padding: 2rem;
+        }
+
+        .timetable-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 900px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--slate-200);
+        }
+
+        .timetable-table th {
+            background-color: var(--slate-100);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--slate-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+            border-bottom: 1px solid var(--slate-200);
+            border-right: 1px solid var(--slate-200);
+            text-align: center;
+        }
+
+        .timetable-table th.break-column-header {
+            background-color: var(--warning-light);
+            color: var(--warning-dark);
+        }
+
+        .timetable-table th:last-child {
+            border-right: none;
+        }
+
+        .timetable-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--slate-200);
+            border-right: 1px solid var(--slate-200);
+            vertical-align: top;
+            height: 120px;
+            width: calc((100% - 120px) / 7);
+        }
+
+        .timetable-table td.day-cell {
+            background-color: var(--slate-50);
+            font-weight: 800;
+            color: var(--slate-900);
+            text-align: center;
+            vertical-align: middle;
+            width: 120px;
+            font-size: 0.9rem;
+        }
+
+        .timetable-table td.break-cell {
+            background-color: var(--slate-50);
+            text-align: center;
+            vertical-align: middle;
+            font-weight: 700;
+            color: var(--slate-400);
+            font-size: 0.75rem;
+            letter-spacing: 0.25em;
+            writing-mode: vertical-rl;
+            text-transform: uppercase;
+            transform: rotate(180deg);
+            user-select: none;
+        }
+
+        .timetable-table td.free-cell {
+            background-color: rgba(248, 250, 252, 0.4);
+            text-align: center;
+            vertical-align: middle;
+            color: var(--slate-400);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .timetable-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .timetable-table td:last-child {
+            border-right: none;
+        }
+
+        /* Class Cards */
+        .class-card {
+            padding: 0.85rem;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            position: relative;
+            transition: var(--transition);
+            cursor: pointer;
+            group: hover;
+        }
+
+        .class-card:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .card-status-scheduled {
+            background-color: rgba(79, 70, 229, 0.05);
+            border-color: rgba(79, 70, 229, 0.15);
+            color: var(--primary);
+        }
+
+        .card-status-scheduled:hover {
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+
+        .card-status-substitute {
+            background-color: var(--warning-light);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--warning-dark);
+        }
+
+        .card-status-cancelled {
+            background-color: var(--danger-light);
+            border-color: rgba(244, 63, 94, 0.3);
+            color: var(--danger-dark);
+            text-decoration: line-through;
+        }
+
+        .card-subject {
+            font-size: 0.85rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .card-instructor {
+            font-size: 0.75rem;
+            font-weight: 600;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .card-footer-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            opacity: 0.75;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .card-delete-btn {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: white;
+            border: 1px solid var(--slate-200);
+            color: var(--slate-500);
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .class-card:hover .card-delete-btn {
+            opacity: 1;
+        }
+
+        .card-delete-btn:hover {
+            color: var(--danger);
+            border-color: var(--danger-light);
+            background-color: var(--danger-light);
+        }
+
+        /* Staff Schedule View */
+        .staff-view-container {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .staff-selector-wrapper {
+            max-width: 480px;
+        }
+
+        .staff-dropdown {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--slate-200);
+            outline: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            background-color: white;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .staff-dropdown:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .staff-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            border: 2px dashed var(--slate-200);
+            border-radius: 18px;
+            color: var(--slate-400);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .staff-empty-state p {
+            font-weight: 600;
+            font-size: 0.95rem;
+            max-width: 320px;
+        }
+
+        .staff-details-grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .staff-details-grid {
+                grid-template-cols: 1fr;
+            }
+        }
+
+        .staff-stat-card {
+            padding: 1.25rem;
+            border-radius: 14px;
+            border: 1px solid transparent;
+        }
+
+        .staff-stat-indigo {
+            background-color: var(--indigo-50);
+            border-color: rgba(79, 70, 229, 0.1);
+            color: var(--slate-900);
+        }
+
+        .staff-stat-emerald {
+            background-color: var(--success-light);
+            border-color: rgba(16, 185, 129, 0.1);
+            color: var(--slate-900);
+        }
+
+        .staff-stat-blue {
+            background-color: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.1);
+            color: var(--slate-900);
+        }
+
+        .staff-stat-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.75;
+            margin-bottom: 0.25rem;
+        }
+
+        .staff-stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .staff-stat-val span {
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.6;
+        }
+
+        .staff-schedule-table-card {
+            border: 1px solid var(--slate-200);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .staff-schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .staff-schedule-table th {
+            background-color: var(--slate-50);
+            padding: 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .staff-schedule-table td {
+            padding: 1rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--slate-100);
+            color: var(--slate-700);
+        }
+
+        .staff-schedule-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .staff-schedule-table tr:hover {
+            background-color: var(--slate-50)/50;
+        }
+
+        .period-tag {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .period-time {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .class-meta {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        /* Analytics Charts View */
+        .analytics-container {
+            padding: 2rem;
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .analytics-container {
+                grid-template-cols: 1fr;
+            }
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Scheduling Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            width: 100%;
+            max-width: 720px;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--slate-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--slate-400);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close-btn:hover {
+            background-color: var(--slate-100);
+            color: var(--slate-700);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .modal-info-note {
+            background-color: var(--warning-light);
+            color: var(--warning-dark);
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-cols: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-cols: 1fr;
+            }
+        }
+
+        .form-col-span-3 {
+            grid-column: span 3;
+        }
+
+        @media (max-width: 640px) {
+            .form-col-span-3 {
+                grid-column: span 1;
+            }
+        }
+
+        .form-section-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--slate-800);
+            margin-top: 0.75rem;
+            border-bottom: 1px solid var(--slate-100);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--slate-700);
+        }
+
+        .form-control {
+            padding: 0.65rem 0.85rem;
+            border-radius: 10px;
+            border: 1px solid var(--slate-200);
+            outline: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            background-color: white;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--slate-100);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* Conflict Overlay Premium Warning Modal */
+        .conflict-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .conflict-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .conflict-card {
+            background-color: white;
+            border-radius: 24px;
+            border: 1px solid var(--danger-light);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+            width: 100%;
+            max-width: 440px;
+            padding: 1.75rem;
+            text-align: center;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .conflict-overlay.active .conflict-card {
+            transform: scale(1);
+        }
+
+        .conflict-icon-bg {
+            width: 64px;
+            height: 64px;
+            background-color: var(--danger-light);
+            border: 1px solid rgba(244, 63, 94, 0.1);
+            color: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem auto;
+            animation: pulse-rose 2s infinite;
+        }
+
+        @keyframes pulse-rose {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 8px rgba(244, 63, 94, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+            }
+        }
+
+        .conflict-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--slate-800);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .conflict-msg {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--slate-500);
+            margin-top: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .conflict-details-box {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: 14px;
+            padding: 1rem;
+            margin: 1.25rem 0;
+            text-align: left;
+        }
+
+        .conflict-details-header {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            letter-spacing: 0.075em;
+            margin-bottom: 0.5rem;
+        }
+
+        .conflict-details-grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .conflict-detail-item label {
+            color: var(--slate-400);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.1rem;
+        }
+
+        .conflict-detail-item span {
+            color: var(--slate-800);
+            font-weight: 800;
+        }
+
+        /* Toast System */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .toast {
+            background-color: white;
+            border: 1px solid var(--slate-200);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--slate-800);
+            transform: translateX(120%);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+            min-width: 250px;
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-success i {
+            color: var(--success);
+        }
+
+        .toast-danger {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast-danger i {
+            color: var(--danger);
+        }
+
+        .toast-warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast-warning i {
+            color: var(--warning);
+        }
+
+        /* Custom Scrollbar for modern feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--slate-50);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--slate-300);
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--slate-400);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar Nav -->
+    <aside class="sidebar">
+        <a href="#" class="brand">
+            <div class="brand-logo">
+                <i data-lucide="calendar" style="width: 20px; height: 20px; color: white;"></i>
+            </div>
+            <div>
+                <h2 class="brand-name">EduERP</h2>
+                <span class="brand-sub">Academic Planner</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <button class="nav-item" onclick="switchTab('overview')" id="nav-overview">
+                <i data-lucide="activity" style="width: 18px; height: 18px;"></i> Overview
+            </button>
+            <button class="nav-item active" onclick="switchTab('daily')" id="nav-daily">
+                <i data-lucide="calendar-range" style="width: 18px; height: 18px;"></i> Daily Timetable
+            </button>
+            <button class="nav-item" onclick="switchTab('staff')" id="nav-staff">
+                <i data-lucide="users" style="width: 18px; height: 18px;"></i> Staff Schedule
+            </button>
+            <button class="nav-item" onclick="switchTab('analytics')" id="nav-analytics">
+                <i data-lucide="bar-chart-3" style="width: 18px; height: 18px;"></i> Workload Analytics
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Main View Container -->
+    <main class="main-container">
+
+        <!-- Top Header -->
+        <header class="header">
+            <div class="header-title-wrapper">
+                <h1 id="page-title"><i data-lucide="calendar-range"
+                        style="width: 24px; height: 24px; color: var(--primary);"></i> Daily Timetable</h1>
+                <p>
+                    <span class="status-dot"></span>
+                    Smart academic scheduling and workload management
+                </p>
+            </div>
+
+            <div class="header-actions">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon" style="width: 18px; height: 18px;"></i>
+                    <input type="text" id="search-input" class="search-input"
+                        placeholder="Search subjects, staff, rooms..." oninput="handleSearch(this.value)">
+                </div>
+
+                <!-- Schedule Button -->
+                <button class="btn btn-primary" onclick="openScheduleModal()">
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Schedule Class
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab: Overview -->
+        <section class="tab-content" id="tab-overview">
+            <div class="overview-stats">
+
+                <!-- Total Classes Card -->
+                <div class="stat-card" onclick="switchTab('daily')">
+                    <div class="stat-card-icon-bg icon-indigo">
+                        <i data-lucide="calendar" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div class="stat-card-content">
+                        <p class="stat-title">Total Classes</p>
+                        <h3 class="stat-value" id="stat-total-classes">0</h3>
+                        <p class="stat-subtitle">Scheduled for the week</p>
+                    </div>
+                    <div class="stat-watermark">
+                        <i data-lucide="calendar" style="width: 110px; height: 110px; color: var(--slate-900);"></i>
+                    </div>
+                </div>
+
+                <!-- Active Staff Card -->
+                <div class="stat-card" onclick="switchTab('staff')">
+                    <div class="stat-card-icon-bg icon-emerald">
+                        <i data-lucide="users" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div class="stat-card-content">
+                        <p class="stat-title">Active Staff</p>
+                        <h3 class="stat-value" id="stat-active-staff">0</h3>
+                        <p class="stat-subtitle">Teaching this week</p>
+                    </div>
+                    <div class="stat-watermark">
+                        <i data-lucide="users" style="width: 110px; height: 110px; color: var(--slate-900);"></i>
+                    </div>
+                </div>
+
+                <!-- Substitutes Card -->
+                <div class="stat-card" onclick="switchTab('daily')">
+                    <div class="stat-card-icon-bg icon-amber">
+                        <i data-lucide="alert-triangle" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div class="stat-card-content">
+                        <p class="stat-title">Substitute Classes</p>
+                        <h3 class="stat-value" id="stat-substitute-classes">0</h3>
+                        <p class="stat-subtitle">Requires attention</p>
+                    </div>
+                    <div class="stat-watermark">
+                        <i data-lucide="alert-triangle"
+                            style="width: 110px; height: 110px; color: var(--slate-900);"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="overview-grid">
+                <!-- Smart Insights Card -->
+                <div class="card-panel">
+                    <h3 class="card-panel-title">
+                        <i data-lucide="lightbulb" style="width: 18px; height: 18px; color: var(--primary);"></i> Smart
+                        Insights
+                    </h3>
+
+                    <div class="insight-item insight-indigo">
+                        <i data-lucide="clock"
+                            style="width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; margin-top: 0.15rem;"></i>
+                        <div>
+                            <h4 class="insight-title">Balanced Workloads Checked</h4>
+                            <p class="insight-desc">Schedules are automatically monitored for excessive back-to-back
+                                lessons. Review staff workload allocations regularly in analytics.</p>
+                        </div>
+                    </div>
+
+                    <div class="insight-item insight-amber">
+                        <i data-lucide="database"
+                            style="width: 20px; height: 20px; color: var(--warning); flex-shrink: 0; margin-top: 0.15rem;"></i>
+                        <div>
+                            <h4 class="insight-title">Room Utilization: <span id="insight-room-pct">0</span>%</h4>
+                            <p class="insight-desc">Classrooms are actively managed. Total slot bookings are within
+                                acceptable limits. No immediate booking conflicts detected.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="card-panel">
+                    <h3 class="card-panel-title">
+                        <i data-lucide="zap" style="width: 18px; height: 18px; color: var(--success);"></i> Quick
+                        Actions
+                    </h3>
+
+                    <button class="action-row" onclick="switchTab('daily')">
+                        <span>View Department Schedules</span>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                    </button>
+
+                    <button class="action-row" onclick="openScheduleModal()">
+                        <span>Assign Substitute Staff</span>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Daily Timetable -->
+        <section class="tab-content active" id="tab-daily">
+            <!-- Filter Bar -->
+            <div class="filters-bar">
+                <div class="filters-select-group">
+                    <!-- Department Select -->
+                    <select id="filter-dept" class="filter-select" onchange="renderDailyView()">
+                        <option value="CSE">CSE</option>
+                        <option value="IT">IT</option>
+                        <option value="ECE">ECE</option>
+                        <option value="MECH">MECH</option>
+                        <option value="CIVIL">CIVIL</option>
+                    </select>
+
+                    <!-- Semester Select -->
+                    <select id="filter-sem" class="filter-select" onchange="renderDailyView()">
+                        <option value="1">Sem 1</option>
+                        <option value="2">Sem 2</option>
+                        <option value="3">Sem 3</option>
+                        <option value="4">Sem 4</option>
+                        <option value="5">Sem 5</option>
+                        <option value="6">Sem 6</option>
+                        <option value="7">Sem 7</option>
+                        <option value="8">Sem 8</option>
+                    </select>
+
+                    <!-- Section Select -->
+                    <select id="filter-sec" class="filter-select" onchange="renderDailyView()">
+                        <option value="A">Sec A</option>
+                        <option value="B">Sec B</option>
+                        <option value="C">Sec C</option>
+                    </select>
+                </div>
+
+                <div class="filter-info-label">
+                    Showing timetable for: <strong id="filter-label-text">CSE - Sem 1 - Sec A</strong>
+                </div>
+            </div>
+
+            <!-- Timetable Grid Table -->
+            <div class="timetable-table-container">
+                <table class="timetable-table" id="daily-timetable-grid">
+                    <!-- Populated dynamically via JS -->
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab: Staff Schedule -->
+        <section class="tab-content" id="tab-staff">
+            <div class="staff-view-container">
+                <div class="staff-selector-wrapper">
+                    <label class="form-label" style="display:block; margin-bottom: 0.5rem;">Select Staff Member</label>
+                    <select id="staff-select" class="staff-dropdown" onchange="handleStaffChange(this.value)">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Empty Selection State -->
+                <div id="staff-empty" class="staff-empty-state">
+                    <i data-lucide="users" style="width: 48px; height: 48px; color: var(--slate-300);"></i>
+                    <p>Choose a staff member from the dropdown list to inspect their weekly workload, handles subjects,
+                        and schedule.</p>
+                </div>
+
+                <!-- Staff Schedule Details (Hidden initially) -->
+                <div id="staff-details-wrapper" style="display: none; flex-direction: column; gap: 1.5rem;"
+                    class="fadeInUp">
+
+                    <!-- Stats Grid -->
+                    <div class="staff-details-grid">
+                        <div class="staff-stat-card staff-stat-indigo">
+                            <div class="staff-stat-label">Total Workload</div>
+                            <div class="staff-stat-val"><span id="staff-total-classes-val">0</span> <span>classes /
+                                    wk</span></div>
+                        </div>
+
+                        <div class="staff-stat-card staff-stat-emerald">
+                            <div class="staff-stat-label">Subjects Handled</div>
+                            <div class="staff-stat-val" id="staff-subjects-handled-val">0</div>
+                        </div>
+
+                        <div class="staff-stat-card staff-stat-blue">
+                            <div class="staff-stat-label">Classes Today</div>
+                            <div class="staff-stat-val" id="staff-classes-today-val">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Roster List Table -->
+                    <h3
+                        style="font-weight:800; font-size:1.15rem; color:var(--slate-900); display:flex; align-items:center; gap:0.5rem; margin-top: 1rem;">
+                        <i data-lucide="calendar" style="width: 20px; height: 20px; color: var(--primary);"></i> Weekly
+                        Roster
+                    </h3>
+
+                    <div class="staff-schedule-table-card">
+                        <table class="staff-schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Period & Time</th>
+                                    <th>Class & Subject</th>
+                                    <th>Room</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staff-schedule-roster-body">
+                                <!-- Roster Rows populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Workload Analytics -->
+        <section class="tab-content" id="tab-analytics">
+            <div class="analytics-container">
+
+                <!-- Department Workload Bar Chart -->
+                <div class="card-panel">
+                    <h3 class="card-panel-title">
+                        <i data-lucide="bar-chart-3" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                        Department Workload
+                    </h3>
+                    <div class="chart-wrapper">
+                        <canvas id="deptWorkloadChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Class Status Pie Chart -->
+                <div class="card-panel">
+                    <h3 class="card-panel-title">
+                        <i data-lucide="activity" style="width: 18px; height: 18px; color: var(--success);"></i> Class
+                        Status Breakdown
+                    </h3>
+                    <div class="chart-wrapper">
+                        <canvas id="classStatusChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scheduling Modal Overlay -->
+    <div class="modal-overlay" id="schedule-modal-overlay">
+        <div class="modal-card">
+
+            <!-- Conflict Warning dialog box -->
+            <div class="conflict-overlay" id="conflict-warning-overlay">
+                <div class="conflict-card">
+                    <div class="conflict-icon-bg">
+                        <i data-lucide="alert-triangle" style="width: 28px; height: 28px;"></i>
+                    </div>
+                    <h3 class="conflict-title" id="conflict-type-label">Staff Allocation Conflict</h3>
+                    <p class="conflict-msg" id="conflict-message-text">Faculty member is already scheduled for Period 1
+                        on Monday.</p>
+
+                    <div class="conflict-details-box">
+                        <div class="conflict-details-header">Conflicting Record Details</div>
+                        <div class="conflict-details-grid">
+                            <div class="conflict-detail-item">
+                                <label>Subject</label>
+                                <span id="conflict-detail-subject">CS301 - Data Structures</span>
+                            </div>
+                            <div class="conflict-detail-item">
+                                <label>Classroom</label>
+                                <span id="conflict-detail-room">A-101</span>
+                            </div>
+                            <div class="conflict-detail-item">
+                                <label>Class/Sec</label>
+                                <span id="conflict-detail-class">CSE • Sec A</span>
+                            </div>
+                            <div class="conflict-detail-item">
+                                <label>Timing</label>
+                                <span id="conflict-detail-time">Monday • Period 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary"
+                        style="width: 100%; justify-content: center; background-color: var(--slate-100);"
+                        onclick="closeConflictOverlay()">
+                        Adjust Schedule
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2>
+                    <div
+                        style="background-color: var(--indigo-50); padding: 0.5rem; border-radius: 8px; display:flex; align-items:center;">
+                        <i data-lucide="calendar-plus" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                    </div>
+                    Schedule Class
+                </h2>
+                <button class="modal-close-btn" onclick="closeScheduleModal()">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="schedule-class-form" onsubmit="handleFormSubmit(event)">
+                <div class="modal-body">
+                    <div class="modal-info-note">
+                        <i data-lucide="alert-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                        <span>Note: The system will automatically check for staff and classroom conflicts.</span>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Department -->
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <select name="department" class="form-control" required>
+                                <option value="CSE">CSE</option>
+                                <option value="IT">IT</option>
+                                <option value="ECE">ECE</option>
+                                <option value="MECH">MECH</option>
+                                <option value="CIVIL">CIVIL</option>
+                            </select>
+                        </div>
+
+                        <!-- Year -->
+                        <div class="form-group">
+                            <label class="form-label">Year</label>
+                            <select name="year" class="form-control" required>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+
+                        <!-- Semester & Section -->
+                        <div class="form-group">
+                            <label class="form-label">Semester & Section</label>
+                            <div class="form-row">
+                                <select name="semester" class="form-control" required style="width: 50%;">
+                                    <option value="1">Sem 1</option>
+                                    <option value="2">Sem 2</option>
+                                    <option value="3">Sem 3</option>
+                                    <option value="4">Sem 4</option>
+                                    <option value="5">Sem 5</option>
+                                    <option value="6">Sem 6</option>
+                                    <option value="7">Sem 7</option>
+                                    <option value="8">Sem 8</option>
+                                </select>
+                                <select name="section" class="form-control" required style="width: 50%;">
+                                    <option value="A">Sec A</option>
+                                    <option value="B">Sec B</option>
+                                    <option value="C">Sec C</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Title: Timing Details -->
+                        <div class="form-col-span-3">
+                            <h3 class="form-section-title">Timing Details</h3>
+                        </div>
+
+                        <!-- Day -->
+                        <div class="form-group">
+                            <label class="form-label">Day</label>
+                            <select name="day" class="form-control" required>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                            </select>
+                        </div>
+
+                        <!-- Period Number -->
+                        <div class="form-group">
+                            <label class="form-label">Period Number *</label>
+                            <select name="periodNumber" class="form-control" required
+                                onchange="updateDefaultPeriodTimes(this.value)">
+                                <option value="1">Period 1</option>
+                                <option value="2">Period 2</option>
+                                <option value="3">Period 3</option>
+                                <option value="5">Period 5</option>
+                                <option value="6">Period 6</option>
+                                <option value="7">Period 7</option>
+                                <option value="8">Period 8</option>
+                            </select>
+                        </div>
+
+                        <!-- Start & End Time -->
+                        <div class="form-group">
+                            <label class="form-label">Start & End Time</label>
+                            <div class="form-row">
+                                <input type="time" name="startTime" id="modal-startTime" class="form-control" required
+                                    value="09:00">
+                                <input type="time" name="endTime" id="modal-endTime" class="form-control" required
+                                    value="10:00">
+                            </div>
+                        </div>
+
+                        <!-- Title: Class Details -->
+                        <div class="form-col-span-3">
+                            <h3 class="form-section-title">Class Details</h3>
+                        </div>
+
+                        <!-- Subject Name -->
+                        <div class="form-group">
+                            <label class="form-label">Subject Name *</label>
+                            <select name="subject" class="form-control" required>
+                                <!-- Populated dynamically based on first load -->
+                            </select>
+                        </div>
+
+                        <!-- Classroom -->
+                        <div class="form-group">
+                            <label class="form-label">Classroom *</label>
+                            <select name="roomNumber" class="form-control" required>
+                                <option value="A-101">A-101</option>
+                                <option value="A-102">A-102</option>
+                                <option value="A-201">A-201</option>
+                                <option value="A-202">A-202</option>
+                                <option value="B-101">B-101</option>
+                                <option value="B-102">B-102</option>
+                                <option value="B-201">B-201</option>
+                                <option value="B-202">B-202</option>
+                                <option value="Lab-A">Lab-A</option>
+                                <option value="Lab-B">Lab-B</option>
+                                <option value="Seminar Hall">Seminar Hall</option>
+                            </select>
+                        </div>
+
+                        <!-- Staff ID -->
+                        <div class="form-group">
+                            <label class="form-label">Assign Staff *</label>
+                            <select name="staffId" class="form-control" required>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <!-- Status (hidden or default) -->
+                        <input type="hidden" name="status" value="Scheduled">
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Timetable
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Script implementation -->
+    <script>
+        // Config settings
+        const settings = {
+            workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            totalPeriods: 8,
+            breakAfterPeriod: 4, // Period 4 is lunch break
+            collegeStartTime: '09:00',
+            collegeEndTime: '16:00'
+        };
+
+        // Preset Lists
+        const staffList = [
+            { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101', department: 'CSE' },
+            { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102', department: 'CSE' },
+            { id: 'st3', fullName: 'Dr. Robert', staffId: 'ECE-201', department: 'ECE' },
+            { id: 'st4', fullName: 'Prof. Emily', staffId: 'IT-301', department: 'IT' },
+            { id: 'st5', fullName: 'Dr. Richard', staffId: 'ME-401', department: 'MECH' },
+            { id: 'st6', fullName: 'Dr. Sarah', staffId: 'CE-501', department: 'CIVIL' }
+        ];
+
+        const subjectsList = [
+            { code: 'CS301', name: 'Data Structures', department: 'CSE' },
+            { code: 'CS302', name: 'Operating Systems', department: 'CSE' },
+            { code: 'IT401', name: 'Cloud Computing', department: 'IT' },
+            { code: 'EC201', name: 'Circuit Theory', department: 'ECE' },
+            { code: 'CS501', name: 'Machine Learning', department: 'CSE' },
+            { code: 'ME101', name: 'Thermodynamics', department: 'MECH' },
+            { code: 'CE202', name: 'Fluid Mechanics', department: 'CIVIL' }
+        ];
+
+        // Main timetables state
+        let timetables = [
+            // CSE - Semester 1 - Section A
+            {
+                id: 't1',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                subject: 'CS301 - Data Structures',
+                roomNumber: 'A-101',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't2',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 2,
+                startTime: '10:00',
+                endTime: '11:00',
+                subject: 'CS302 - Operating Systems',
+                roomNumber: 'A-102',
+                staffId: 'st2',
+                staff: { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't3',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 3,
+                startTime: '11:00',
+                endTime: '12:00',
+                subject: 'IT401 - Cloud Computing',
+                roomNumber: 'A-101',
+                staffId: 'st4',
+                staff: { id: 'st4', fullName: 'Prof. Emily', staffId: 'IT-301' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't4',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'CS301 - Data Structures (Lab)',
+                roomNumber: 'Lab-A',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't5',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Tuesday',
+                periodNumber: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                subject: 'CS302 - Operating Systems',
+                roomNumber: 'A-102',
+                staffId: 'st2',
+                staff: { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102' },
+                status: 'Substitute'
+            },
+            {
+                id: 't6',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Tuesday',
+                periodNumber: 2,
+                startTime: '10:00',
+                endTime: '11:00',
+                subject: 'CS301 - Data Structures',
+                roomNumber: 'A-101',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Cancelled'
+            },
+            {
+                id: 't7',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Wednesday',
+                periodNumber: 3,
+                startTime: '11:00',
+                endTime: '12:00',
+                subject: 'CS302 - Operating Systems',
+                roomNumber: 'A-102',
+                staffId: 'st2',
+                staff: { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't8',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Thursday',
+                periodNumber: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                subject: 'CS301 - Data Structures',
+                roomNumber: 'A-101',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't9',
+                department: 'CSE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Friday',
+                periodNumber: 6,
+                startTime: '14:00',
+                endTime: '15:00',
+                subject: 'IT401 - Cloud Computing',
+                roomNumber: 'A-101',
+                staffId: 'st4',
+                staff: { id: 'st4', fullName: 'Prof. Emily', staffId: 'IT-301' },
+                status: 'Scheduled'
+            },
+            // CSE - Semester 2 - Section A
+            {
+                id: 't10',
+                department: 'CSE',
+                year: '1',
+                semester: '2',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                subject: 'CS302 - Operating Systems',
+                roomNumber: 'A-102',
+                staffId: 'st2',
+                staff: { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't11',
+                department: 'CSE',
+                year: '1',
+                semester: '2',
+                section: 'A',
+                day: 'Wednesday',
+                periodNumber: 2,
+                startTime: '10:00',
+                endTime: '11:00',
+                subject: 'CS301 - Data Structures',
+                roomNumber: 'A-101',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't12',
+                department: 'CSE',
+                year: '1',
+                semester: '2',
+                section: 'A',
+                day: 'Friday',
+                periodNumber: 3,
+                startTime: '11:00',
+                endTime: '12:00',
+                subject: 'EC201 - Circuit Theory',
+                roomNumber: 'B-101',
+                staffId: 'st3',
+                staff: { id: 'st3', fullName: 'Dr. Robert', staffId: 'ECE-201' },
+                status: 'Scheduled'
+            },
+            // IT - Semester 1 - Section A
+            {
+                id: 't13',
+                department: 'IT',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'IT401 - Cloud Computing',
+                roomNumber: 'B-102',
+                staffId: 'st4',
+                staff: { id: 'st4', fullName: 'Prof. Emily', staffId: 'IT-301' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't14',
+                department: 'IT',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Tuesday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'CS302 - Operating Systems',
+                roomNumber: 'A-102',
+                staffId: 'st2',
+                staff: { id: 'st2', fullName: 'Prof. Jane', staffId: 'CSE-102' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't15',
+                department: 'IT',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Thursday',
+                periodNumber: 2,
+                startTime: '10:00',
+                endTime: '11:00',
+                subject: 'IT401 - Cloud Computing',
+                roomNumber: 'B-102',
+                staffId: 'st4',
+                staff: { id: 'st4', fullName: 'Prof. Emily', staffId: 'IT-301' },
+                status: 'Scheduled'
+            },
+            // ECE - Semester 1 - Section A
+            {
+                id: 't16',
+                department: 'ECE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 2,
+                startTime: '10:00',
+                endTime: '11:00',
+                subject: 'EC201 - Circuit Theory',
+                roomNumber: 'B-101',
+                staffId: 'st3',
+                staff: { id: 'st3', fullName: 'Dr. Robert', staffId: 'ECE-201' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't17',
+                department: 'ECE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Wednesday',
+                periodNumber: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                subject: 'EC201 - Circuit Theory',
+                roomNumber: 'B-101',
+                staffId: 'st3',
+                staff: { id: 'st3', fullName: 'Dr. Robert', staffId: 'ECE-201' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't18',
+                department: 'ECE',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Friday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'CS301 - Data Structures',
+                roomNumber: 'A-101',
+                staffId: 'st1',
+                staff: { id: 'st1', fullName: 'Dr. Aris', staffId: 'CSE-101' },
+                status: 'Scheduled'
+            },
+            // MECH - Semester 1 - Section A
+            {
+                id: 't19',
+                department: 'MECH',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Tuesday',
+                periodNumber: 3,
+                startTime: '11:00',
+                endTime: '12:00',
+                subject: 'ME101 - Thermodynamics',
+                roomNumber: 'B-201',
+                staffId: 'st5',
+                staff: { id: 'st5', fullName: 'Dr. Richard', staffId: 'ME-401' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't20',
+                department: 'MECH',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Thursday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'ME101 - Thermodynamics',
+                roomNumber: 'B-201',
+                staffId: 'st5',
+                staff: { id: 'st5', fullName: 'Dr. Richard', staffId: 'ME-401' },
+                status: 'Scheduled'
+            },
+            // CIVIL - Semester 1 - Section A
+            {
+                id: 't21',
+                department: 'CIVIL',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Monday',
+                periodNumber: 6,
+                startTime: '14:00',
+                endTime: '15:00',
+                subject: 'CE202 - Fluid Mechanics',
+                roomNumber: 'B-202',
+                staffId: 'st6',
+                staff: { id: 'st6', fullName: 'Dr. Sarah', staffId: 'CE-501' },
+                status: 'Scheduled'
+            },
+            {
+                id: 't22',
+                department: 'CIVIL',
+                year: '1',
+                semester: '1',
+                section: 'A',
+                day: 'Wednesday',
+                periodNumber: 5,
+                startTime: '13:00',
+                endTime: '14:00',
+                subject: 'CE202 - Fluid Mechanics',
+                roomNumber: 'B-202',
+                staffId: 'st6',
+                staff: { id: 'st6', fullName: 'Dr. Sarah', staffId: 'CE-501' },
+                status: 'Scheduled'
+            }
+        ];
+
+        // Current view state
+        let activeTab = 'daily';
+        let searchQuery = '';
+
+        // Live Integration Mode status
+        let isLiveMode = false;
+
+        // Load live database data from running local server
+        async function loadLiveData() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log("No token in localStorage. Using mock prototype data.");
+                isLiveMode = false;
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                console.log("Token detected! Syncing with backend API http://localhost:5000/api ...");
+
+                // 1. Sync Timetable Settings
+                const settingsRes = await fetch('http://localhost:5000/api/timetable/settings', { headers });
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    if (settingsData) {
+                        if (settingsData.workingDays) {
+                            if (typeof settingsData.workingDays === 'string') {
+                                settings.workingDays = settingsData.workingDays.split(',');
+                            } else if (Array.isArray(settingsData.workingDays)) {
+                                settings.workingDays = settingsData.workingDays;
+                            } else if (typeof settingsData.workingDays === 'object') {
+                                settings.workingDays = Object.values(settingsData.workingDays);
+                            }
+                        }
+                        settings.totalPeriods = settingsData.totalPeriods || settingsData.periodsPerDay || settings.totalPeriods;
+                        settings.breakAfterPeriod = settingsData.breakAfterPeriod || 4;
+                        settings.collegeStartTime = settingsData.collegeStartTime || settings.collegeStartTime;
+                        settings.collegeEndTime = settingsData.collegeEndTime || settings.collegeEndTime;
+                    }
+                }
+
+                // 2. Sync Staff List
+                const staffRes = await fetch('http://localhost:5000/api/staff', { headers });
+                if (staffRes.ok) {
+                    const staffData = await staffRes.json();
+                    if (Array.isArray(staffData) && staffData.length > 0) {
+                        staffList.length = 0;
+                        staffData.forEach(s => {
+                            staffList.push({
+                                id: s.id,
+                                fullName: s.fullName,
+                                staffId: s.staffId,
+                                department: s.department
+                            });
+                        });
+                    }
+                }
+
+                // 3. Sync Subjects Master Record List
+                const subjectsRes = await fetch('http://localhost:5000/api/masters/subject', { headers });
+                if (subjectsRes.ok) {
+                    const subjectsData = await subjectsRes.json();
+                    if (Array.isArray(subjectsData) && subjectsData.length > 0) {
+                        subjectsList.length = 0;
+                        subjectsData.forEach(r => {
+                            subjectsList.push({
+                                code: r.data?.code || r.code || '',
+                                name: r.data?.name || r.name || '',
+                                department: r.data?.department || r.department || ''
+                            });
+                        });
+                    }
+                }
+
+                // 4. Sync Allocations (Timetables)
+                const timetablesRes = await fetch('http://localhost:5000/api/timetable', { headers });
+                if (timetablesRes.ok) {
+                    const timetablesData = await timetablesRes.json();
+                    if (Array.isArray(timetablesData)) {
+                        timetables.length = 0;
+                        timetablesData.forEach(t => {
+                            const cleanSem = t.semester?.toString().replace('Semester ', '').replace('Sem ', '') || '1';
+                            timetables.push({
+                                id: t.id,
+                                department: t.department,
+                                year: t.year || '1',
+                                semester: cleanSem,
+                                section: t.section || 'A',
+                                day: t.day,
+                                periodNumber: parseInt(t.periodNumber) || 1,
+                                startTime: t.startTime?.substring(0, 5) || '09:00',
+                                endTime: t.endTime?.substring(0, 5) || '10:00',
+                                subject: t.subject || t.subjectName || '',
+                                roomNumber: t.roomNumber || 'Not Assigned',
+                                staffId: t.staffId,
+                                staff: t.staff ? { id: t.staff.id, fullName: t.staff.fullName, staffId: t.staff.staffId } : { id: t.staffId, fullName: 'Staff Profile' },
+                                status: t.status || 'Scheduled'
+                            });
+                        });
+                    }
+                }
+
+                isLiveMode = true;
+                showToast("Connected to live MySQL database!", "success");
+            } catch (err) {
+                console.error("Failed to fetch live database values:", err);
+                isLiveMode = false;
+                showToast("API Offline. Running in Offline Mode.", "warning");
+            }
+        }
+
+        // Populate drop down options dynamically
+        function populateDropdownOptions() {
+            const filterDept = document.getElementById("filter-dept");
+            const modalDept = document.querySelector('select[name="department"]');
+            const filterSem = document.getElementById("filter-sem");
+            const modalSem = document.querySelector('select[name="semester"]');
+            const filterSec = document.getElementById("filter-sec");
+            const modalSec = document.querySelector('select[name="section"]');
+            const modalRoom = document.querySelector('select[name="roomNumber"]');
+
+            if (!filterDept) return;
+
+            const depts = new Set();
+            const sems = new Set();
+            const secs = new Set();
+            const rooms = new Set();
+
+            // Seed fallbacks / default ranges
+            ['1', '2', '3', '4', '5', '6', '7', '8'].forEach(s => sems.add(s));
+            ['A', 'B', 'C'].forEach(s => secs.add(s));
+            ['A-101', 'A-102', 'A-201', 'A-202', 'B-101', 'B-102', 'B-201', 'B-202', 'Lab-A', 'Lab-B', 'Seminar Hall'].forEach(r => rooms.add(r));
+            ['Computer Science', 'Information Technology', 'Electronics', 'Mechanical', 'Civil Engineering'].forEach(d => depts.add(d));
+
+            if (isLiveMode) {
+                depts.clear();
+                timetables.forEach(t => {
+                    if (t.department) depts.add(t.department);
+                    if (t.semester) sems.add(t.semester.toString());
+                    if (t.section) secs.add(t.section);
+                    if (t.roomNumber) rooms.add(t.roomNumber);
+                });
+
+                staffList.forEach(s => {
+                    if (s.department && s.department !== 'Administration' && s.department !== 'Registrar Office') {
+                        depts.add(s.department);
+                    }
+                });
+
+                subjectsList.forEach(s => {
+                    if (s.department) depts.add(s.department);
+                });
+            }
+
+            // Re-populate filter-dept and modalDept
+            const currentDeptVal = filterDept.value;
+            filterDept.innerHTML = '';
+            modalDept.innerHTML = '';
+            Array.from(depts).sort().forEach(d => {
+                let opt1 = document.createElement("option");
+                opt1.value = d;
+                opt1.textContent = d;
+                filterDept.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = d;
+                opt2.textContent = d;
+                modalDept.appendChild(opt2);
+            });
+            if (depts.has(currentDeptVal)) filterDept.value = currentDeptVal;
+
+            // Re-populate semesters
+            const currentSemVal = filterSem.value;
+            filterSem.innerHTML = '';
+            modalSem.innerHTML = '';
+            Array.from(sems).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach(s => {
+                let opt1 = document.createElement("option");
+                opt1.value = s;
+                opt1.textContent = `Sem ${s}`;
+                filterSem.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = s;
+                opt2.textContent = `Sem ${s}`;
+                modalSem.appendChild(opt2);
+            });
+            if (sems.has(currentSemVal)) filterSem.value = currentSemVal;
+
+            // Re-populate sections
+            const currentSecVal = filterSec.value;
+            filterSec.innerHTML = '';
+            modalSec.innerHTML = '';
+            Array.from(secs).sort().forEach(s => {
+                let opt1 = document.createElement("option");
+                opt1.value = s;
+                opt1.textContent = `Sec ${s}`;
+                filterSec.appendChild(opt1);
+
+                let opt2 = document.createElement("option");
+                opt2.value = s;
+                opt2.textContent = `Sec ${s}`;
+                modalSec.appendChild(opt2);
+            });
+            if (secs.has(currentSecVal)) filterSec.value = currentSecVal;
+
+            // Re-populate rooms
+            modalRoom.innerHTML = '';
+            Array.from(rooms).sort().forEach(r => {
+                let opt = document.createElement("option");
+                opt.value = r;
+                opt.textContent = r;
+                modalRoom.appendChild(opt);
+            });
+        }
+
+        // Initialize Page
+        document.addEventListener("DOMContentLoaded", async () => {
+            lucide.createIcons();
+
+            // Load Live API Data
+            await loadLiveData();
+
+            // Populate options
+            populateDropdownOptions();
+            populateModalDropdowns();
+            populateStaffSelect();
+
+            // Default filter selection match
+            const filterDept = document.getElementById("filter-dept");
+            if (filterDept && filterDept.options.length > 0) {
+                let csOpt = Array.from(filterDept.options).find(o => o.value.includes('Science') || o.value.includes('CSE'));
+                if (csOpt) filterDept.value = csOpt.value;
+            }
+
+            renderDashboard();
+        });
+
+        // Toast Functionality
+        function showToast(message, type = 'success') {
+            const container = document.getElementById("toast-container");
+
+            const toast = document.createElement("div");
+            toast.className = `toast toast-${type}`;
+
+            let icon = 'check-circle';
+            if (type === 'danger') icon = 'x-circle';
+            if (type === 'warning') icon = 'alert-triangle';
+
+            toast.innerHTML = `
+        <i data-lucide="${icon}" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+        <span>${message}</span>
+      `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add("active");
+            }, 50);
+
+            // Remove after 3.5s
+            setTimeout(() => {
+                toast.classList.remove("active");
+                setTimeout(() => {
+                    toast.remove();
+                }, 350);
+            }, 3500);
+        }
+
+        // Switch Tabs
+        function switchTab(tabId) {
+            // Remove active classes
+            document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+
+            // Set active
+            const navItem = document.getElementById(`nav-${tabId}`);
+            const tabContent = document.getElementById(`tab-${tabId}`);
+            if (navItem) navItem.classList.add("active");
+            if (tabContent) tabContent.classList.add("active");
+
+            activeTab = tabId;
+
+            // Update Header Title icon/text
+            const titleEl = document.getElementById("page-title");
+            if (titleEl) {
+                let titleHtml = '';
+                if (tabId === 'overview') {
+                    titleHtml = `<i data-lucide="activity" style="width: 24px; height: 24px; color: var(--primary);"></i> Portal Insights & Overview`;
+                } else if (tabId === 'daily') {
+                    titleHtml = `<i data-lucide="calendar-range" style="width: 24px; height: 24px; color: var(--primary);"></i> Daily Timetable`;
+                } else if (tabId === 'staff') {
+                    titleHtml = `<i data-lucide="users" style="width: 24px; height: 24px; color: var(--primary);"></i> Staff Scheduling & Workload`;
+                } else if (tabId === 'analytics') {
+                    titleHtml = `<i data-lucide="bar-chart-3" style="width: 24px; height: 24px; color: var(--primary);"></i> Workload Analytics`;
+                }
+                titleEl.innerHTML = titleHtml;
+                lucide.createIcons();
+            }
+
+            renderDashboard();
+        }
+
+        // Main render router
+        function renderDashboard() {
+            if (activeTab === 'overview') {
+                renderOverview();
+            } else if (activeTab === 'daily') {
+                renderDailyView();
+            } else if (activeTab === 'staff') {
+                renderStaffSchedule();
+            } else if (activeTab === 'analytics') {
+                renderAnalytics();
+            }
+        }
+
+        // 1. OVERVIEW VIEW
+        function renderOverview() {
+            const activeStaff = new Set(timetables.filter(t => t.status !== 'Cancelled').map(t => t.staffId)).size;
+            const substitutes = timetables.filter(t => t.status === 'Substitute').length;
+
+            document.getElementById("stat-total-classes").textContent = timetables.filter(t => t.status !== 'Cancelled').length;
+            document.getElementById("stat-active-staff").textContent = activeStaff;
+            document.getElementById("stat-substitute-classes").textContent = substitutes;
+
+            // Room Utilization calculation
+            const totalRooms = 11;
+            const totalDays = settings.workingDays.length;
+            const activePeriods = settings.totalPeriods - 1; // 7 periods excluding lunch
+            const totalAvailableSlots = totalRooms * totalDays * activePeriods;
+            const scheduledClassesCount = timetables.filter(t => t.status !== 'Cancelled').length;
+            const usagePct = Math.round((scheduledClassesCount / totalAvailableSlots) * 100);
+            document.getElementById("insight-room-pct").textContent = usagePct;
+        }
+
+        // 2. DAILY TIMETABLE VIEW
+        function renderDailyView() {
+            const dept = document.getElementById("filter-dept").value;
+            const sem = document.getElementById("filter-sem").value;
+            const sec = document.getElementById("filter-sec").value;
+
+            document.getElementById("filter-label-text").textContent = `${dept} - Sem ${sem} - Sec ${sec}`;
+
+            const grid = document.getElementById("daily-timetable-grid");
+            grid.innerHTML = "";
+
+            // Construct grid headers
+            let thead = document.createElement("thead");
+            let headerRow = document.createElement("tr");
+
+            // Corner Header
+            let cornerTh = document.createElement("th");
+            cornerTh.textContent = "Day / Period";
+            headerRow.appendChild(cornerTh);
+
+            // Period headers
+            for (let p = 1; p <= settings.totalPeriods; p++) {
+                let th = document.createElement("th");
+                if (p === settings.breakAfterPeriod) {
+                    th.className = "break-column-header";
+                    th.textContent = "LUNCH BREAK";
+                } else {
+                    th.textContent = `Period ${p}`;
+                }
+                headerRow.appendChild(th);
+            }
+            thead.appendChild(headerRow);
+            grid.appendChild(thead);
+
+            // Construct rows
+            let tbody = document.createElement("tbody");
+
+            settings.workingDays.forEach(day => {
+                let tr = document.createElement("tr");
+
+                // Day Label Cell
+                let dayTd = document.createElement("td");
+                dayTd.className = "day-cell";
+                dayTd.textContent = day;
+                tr.appendChild(dayTd);
+
+                // Period cells
+                for (let p = 1; p <= settings.totalPeriods; p++) {
+                    if (p === settings.breakAfterPeriod) {
+                        // Lunch break cell
+                        let breakTd = document.createElement("td");
+                        breakTd.className = "break-cell";
+                        breakTd.textContent = "LUNCH";
+                        tr.appendChild(breakTd);
+                        continue;
+                    }
+
+                    // Search and filter class
+                    let classItem = timetables.find(t => {
+                        const matchDay = t.day === day;
+                        const matchPeriod = t.periodNumber === p;
+
+                        if (searchQuery) {
+                            const sq = searchQuery.toLowerCase();
+                            const matchSearch = t.subject?.toLowerCase().includes(sq) ||
+                                t.staff?.fullName?.toLowerCase().includes(sq) ||
+                                t.roomNumber?.toLowerCase().includes(sq);
+                            return matchDay && matchPeriod && matchSearch;
+                        }
+
+                        const matchDept = t.department === dept;
+                        const matchSem = t.semester === sem;
+                        const matchSec = t.section === sec;
+                        return matchDay && matchPeriod && matchDept && matchSem && matchSec;
+                    });
+
+                    let cellTd = document.createElement("td");
+                    if (!classItem) {
+                        cellTd.className = "free-cell";
+                        cellTd.textContent = "Free";
+                    } else {
+                        let statusClass = "card-status-scheduled";
+                        if (classItem.status === "Substitute") statusClass = "card-status-substitute";
+                        if (classItem.status === "Cancelled") statusClass = "card-status-cancelled";
+
+                        cellTd.innerHTML = `
+              <div class="class-card ${statusClass}">
+                <button class="card-delete-btn" onclick="event.stopPropagation(); deleteClassAllocation('${classItem.id}')" title="Delete class">
+                  <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+                </button>
+                <div>
+                  <div class="card-subject">${classItem.subject}</div>
+                  <div class="card-instructor">
+                    <i data-lucide="user" style="width: 10px; height: 10px;"></i>
+                    ${classItem.staff?.fullName || 'No Staff Assigned'}
+                  </div>
+                </div>
+                <div class="card-footer-info">
+                  <span>${classItem.roomNumber}</span>
+                  <span>${classItem.startTime}</span>
+                </div>
+              </div>
+            `;
+                    }
+                    tr.appendChild(cellTd);
+                }
+                tbody.appendChild(tr);
+            });
+            grid.appendChild(tbody);
+            lucide.createIcons();
+        }
+
+        // 3. STAFF SCHEDULE VIEW
+        function populateStaffSelect() {
+            const select = document.getElementById("staff-select");
+            select.innerHTML = '<option value="">-- Choose a staff member to view schedule --</option>';
+
+            staffList.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = `${s.fullName} (${s.staffId} - ${s.department})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleStaffChange(staffId) {
+            const emptyState = document.getElementById("staff-empty");
+            const wrapper = document.getElementById("staff-details-wrapper");
+
+            if (!staffId) {
+                emptyState.style.display = "flex";
+                wrapper.style.display = "none";
+                return;
+            }
+
+            emptyState.style.display = "none";
+            wrapper.style.display = "flex";
+
+            renderStaffSchedule();
+        }
+
+        function renderStaffSchedule() {
+            const staffId = document.getElementById("staff-select").value;
+            if (!staffId) return;
+
+            const schedule = timetables.filter(t => t.staffId === staffId && t.status !== 'Cancelled');
+
+            // 1. Calculate stats
+            const totalClasses = schedule.length;
+
+            const uniqueSubjectsSet = new Set(schedule.map(t => {
+                const parts = t.subject.split('-');
+                return parts[0]?.trim();
+            }));
+            const subjectsCount = uniqueSubjectsSet.size;
+
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            const todayClasses = schedule.filter(t => t.day === today).length;
+
+            document.getElementById("staff-total-classes-val").textContent = totalClasses;
+            document.getElementById("staff-subjects-handled-val").textContent = subjectsCount;
+            document.getElementById("staff-classes-today-val").textContent = todayClasses;
+
+            // 2. Render Roster Table
+            const rosterBody = document.getElementById("staff-schedule-roster-body");
+            rosterBody.innerHTML = "";
+
+            if (schedule.length === 0) {
+                rosterBody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--slate-400); font-weight: 600;">
+              <i data-lucide="check-circle" style="width: 28px; height: 28px; color: var(--success); margin: 0 auto 0.5rem auto; display:block;"></i>
+              No active classes scheduled for this staff.
+            </td>
+          </tr>
+        `;
+                lucide.createIcons();
+                return;
+            }
+
+            // Sort by Day and Period
+            const dayOrder = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5 };
+            const sortedSchedule = [...schedule].sort((a, b) => {
+                if (dayOrder[a.day] !== dayOrder[b.day]) {
+                    return dayOrder[a.day] - dayOrder[b.day];
+                }
+                return a.periodNumber - b.periodNumber;
+            });
+
+            sortedSchedule.forEach(t => {
+                let tr = document.createElement("tr");
+
+                tr.innerHTML = `
+          <td style="font-weight: 800; color: var(--slate-900);">${t.day}</td>
+          <td>
+            <div class="period-tag">Period ${t.periodNumber}</div>
+            <div class="period-time">
+              <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
+              ${t.startTime} - ${t.endTime}
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 800; color: var(--slate-900);">${t.subject}</div>
+            <div class="class-meta">${t.department} • Year ${t.year} • Sem ${t.semester} • Sec ${t.section}</div>
+          </td>
+          <td style="font-weight: 700; color: var(--slate-700);">${t.roomNumber || 'Not Assigned'}</td>
+        `;
+                rosterBody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // 4. ANALYTICS VIEW
+        let deptChartInstance = null;
+        let statusChartInstance = null;
+
+        function renderAnalytics() {
+            const ctxDept = document.getElementById('deptWorkloadChart')?.getContext('2d');
+            const ctxStatus = document.getElementById('classStatusChart')?.getContext('2d');
+
+            if (!ctxDept || !ctxStatus) return;
+
+            // Reset data
+            const deptCounts = { CSE: 0, IT: 0, ECE: 0, MECH: 0, CIVIL: 0 };
+            const statusCounts = { Scheduled: 0, Cancelled: 0, Substitute: 0 };
+
+            timetables.forEach(t => {
+                if (deptCounts[t.department] !== undefined) {
+                    deptCounts[t.department]++;
+                }
+                if (statusCounts[t.status] !== undefined) {
+                    statusCounts[t.status]++;
+                }
+            });
+
+            const deptLabels = Object.keys(deptCounts);
+            const deptData = Object.values(deptCounts);
+
+            const statusLabels = Object.keys(statusCounts).filter(k => statusCounts[k] > 0);
+            const statusData = Object.values(statusCounts).filter(v => v > 0);
+
+            // Colors
+            const deptColors = ['rgba(79, 70, 229, 0.85)', 'rgba(59, 130, 246, 0.85)', 'rgba(16, 185, 129, 0.85)', 'rgba(245, 158, 11, 0.85)', 'rgba(236, 72, 153, 0.85)'];
+            const statusColors = [];
+            Object.keys(statusCounts).forEach(k => {
+                if (statusCounts[k] > 0) {
+                    if (k === 'Scheduled') statusColors.push('#4f46e5');
+                    if (k === 'Cancelled') statusColors.push('#f43f5e');
+                    if (k === 'Substitute') statusColors.push('#f59e0b');
+                }
+            });
+
+            // Destroy previous charts to avoid canvas reuse issues
+            if (deptChartInstance) deptChartInstance.destroy();
+            if (statusChartInstance) statusChartInstance.destroy();
+
+            deptChartInstance = new Chart(ctxDept, {
+                type: 'bar',
+                data: {
+                    labels: deptLabels,
+                    datasets: [{
+                        label: 'Classes Scheduled',
+                        data: deptData,
+                        backgroundColor: deptColors,
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13 },
+                            bodyFont: { family: 'Outfit', size: 12 },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Outfit', size: 12 }, color: '#64748b' }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Outfit', size: 12 }, color: '#64748b', stepSize: 1 },
+                            border: { dash: [4, 4] }
+                        }
+                    }
+                }
+            });
+
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: statusColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Outfit', size: 12 }, color: '#475569', boxWidth: 12, padding: 15 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13 },
+                            bodyFont: { family: 'Outfit', size: 12 },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        // Modal Dropdown Populators
+        function populateModalDropdowns() {
+            const subjectSelect = document.querySelector('select[name="subject"]');
+            const staffSelect = document.querySelector('select[name="staffId"]');
+
+            subjectSelect.innerHTML = "";
+            subjectsList.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = `${s.code} - ${s.name}`;
+                opt.textContent = `${s.code} – ${s.name} (${s.department})`;
+                subjectSelect.appendChild(opt);
+            });
+
+            staffSelect.innerHTML = '<option value="">-- Select Staff --</option>';
+            staffList.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = `${s.fullName} (${s.staffId} - ${s.department})`;
+                staffSelect.appendChild(opt);
+            });
+
+            // Trigger timing defaults
+            updateDefaultPeriodTimes(1);
+        }
+
+        function updateDefaultPeriodTimes(periodNum) {
+            const timings = {
+                '1': { start: '09:00', end: '10:00' },
+                '2': { start: '10:00', end: '11:00' },
+                '3': { start: '11:00', end: '12:00' },
+                '5': { start: '13:00', end: '14:00' },
+                '6': { start: '14:00', end: '15:00' },
+                '7': { start: '15:00', end: '16:00' },
+                '8': { start: '16:00', end: '17:00' }
+            };
+
+            const defaultTime = timings[periodNum.toString()];
+            if (defaultTime) {
+                document.getElementById("modal-startTime").value = defaultTime.start;
+                document.getElementById("modal-endTime").value = defaultTime.end;
+            }
+        }
+
+        // Modal Control functions
+        function openScheduleModal() {
+            document.getElementById("schedule-modal-overlay").classList.add("active");
+        }
+
+        function closeScheduleModal() {
+            document.getElementById("schedule-class-form").reset();
+            document.getElementById("schedule-modal-overlay").classList.remove("active");
+            closeConflictOverlay();
+        }
+
+        function openConflictOverlay(conflict) {
+            document.getElementById("conflict-type-label").textContent = conflict.type;
+            document.getElementById("conflict-message-text").textContent = conflict.message;
+
+            document.getElementById("conflict-detail-subject").textContent = conflict.details.subject;
+            document.getElementById("conflict-detail-room").textContent = conflict.details.roomNumber || 'Not Assigned';
+            document.getElementById("conflict-detail-class").textContent = `${conflict.details.department} • Year ${conflict.details.year} • Sec ${conflict.details.section}`;
+            document.getElementById("conflict-detail-time").textContent = `${conflict.details.day} • Period ${conflict.details.periodNumber}`;
+
+            document.getElementById("conflict-warning-overlay").classList.add("active");
+        }
+
+        function closeConflictOverlay() {
+            document.getElementById("conflict-warning-overlay").classList.remove("active");
+        }
+
+        // Dynamic Conflict Checking Logic
+        function checkConflicts(data) {
+            const pNumber = parseInt(data.periodNumber);
+            const day = data.day;
+            const room = data.roomNumber?.trim().toLowerCase();
+            const staffId = data.staffId;
+            const dept = data.department;
+            const year = data.year;
+            const sem = data.semester;
+            const sec = data.section;
+
+            for (const t of timetables) {
+                // Skip check if the record is cancelled
+                if (t.day === day && parseInt(t.periodNumber) === pNumber && t.status !== 'Cancelled') {
+
+                    // 1. Staff Conflict
+                    if (t.staffId === staffId) {
+                        const staffObj = staffList.find(s => s.id === staffId);
+                        return {
+                            type: 'Staff Allocation Conflict',
+                            message: `Faculty member ${staffObj?.fullName || 'Selected Staff'} is already scheduled for Period ${pNumber} on ${day} in classroom ${t.roomNumber || 'N/A'}.`,
+                            details: t
+                        };
+                    }
+
+                    // 2. Room Conflict
+                    if (room && t.roomNumber?.trim().toLowerCase() === room) {
+                        return {
+                            type: 'Classroom Booking Conflict',
+                            message: `Classroom ${t.roomNumber} is already occupied for Period ${pNumber} on ${day} by ${t.subject || 'another class'} (${t.department} Sem ${t.semester} Sec ${t.section}).`,
+                            details: t
+                        };
+                    }
+
+                    // 3. Section/Duplicate Period Conflict
+                    if (t.department === dept && t.year === year && t.semester === sem && t.section === sec) {
+                        return {
+                            type: 'Duplicate Period Conflict',
+                            message: `Section ${sec} of ${dept} Semester ${sem} already has class ${t.subject || 'scheduled'} for Period ${pNumber} on ${day}.`,
+                            details: t
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Handle Form Submit (Add New Class)
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const formDataObj = {};
+            const formData = new FormData(e.target);
+            formData.forEach((value, key) => {
+                formDataObj[key] = value;
+            });
+
+            // Parse and attach items
+            formDataObj.periodNumber = parseInt(formDataObj.periodNumber);
+
+            const staffObj = staffList.find(s => s.id === formDataObj.staffId);
+            formDataObj.staff = staffObj ? { id: staffObj.id, fullName: staffObj.fullName, staffId: staffObj.staffId } : null;
+
+            // Run conflict check
+            const detectedConflict = checkConflicts(formDataObj);
+            if (detectedConflict) {
+                openConflictOverlay(detectedConflict);
+                showToast("Conflict Detected! Creation Stopped.", "danger");
+                return;
+            }
+
+            if (isLiveMode) {
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                try {
+                    const response = await fetch('http://localhost:5000/api/timetable', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(formDataObj)
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        const newTimetable = result.data;
+                        const cleanSem = newTimetable.semester?.toString().replace('Semester ', '').replace('Sem ', '') || '1';
+                        timetables.push({
+                            id: newTimetable.id,
+                            department: newTimetable.department,
+                            year: newTimetable.year || '1',
+                            semester: cleanSem,
+                            section: newTimetable.section || 'A',
+                            day: newTimetable.day,
+                            periodNumber: parseInt(newTimetable.periodNumber) || 1,
+                            startTime: newTimetable.startTime?.substring(0, 5) || '09:00',
+                            endTime: newTimetable.endTime?.substring(0, 5) || '10:00',
+                            subject: newTimetable.subject || newTimetable.subjectName || '',
+                            roomNumber: newTimetable.roomNumber || 'Not Assigned',
+                            staffId: newTimetable.staffId,
+                            staff: staffObj ? { id: staffObj.id, fullName: staffObj.fullName, staffId: staffObj.staffId } : { id: newTimetable.staffId, fullName: 'Staff Profile' },
+                            status: newTimetable.status || 'Scheduled'
+                        });
+                        showToast(`Class "${formDataObj.subject}" scheduled successfully to database!`);
+                    } else {
+                        showToast(result.message || "Failed to schedule class in database.", "danger");
+                        return;
+                    }
+                } catch (err) {
+                    console.error("API error while creating class allocation:", err);
+                    showToast("Network error. Failed to connect to server.", "danger");
+                    return;
+                }
+            } else {
+                // Add unique ID
+                formDataObj.id = 't_' + Date.now();
+                // Add to timetable state
+                timetables.push(formDataObj);
+                // Feedback
+                showToast(`Class "${formDataObj.subject}" scheduled successfully (Offline Mode)!`);
+            }
+
+            // Close modal
+            closeScheduleModal();
+
+            // Refresh Dashboard
+            renderDashboard();
+        }
+
+        // Delete Class Allocation
+        async function deleteClassAllocation(id) {
+            // Prompt confirm deletion
+            const confirmText = "Are you sure you want to delete this scheduled class?";
+            if (window.confirm(confirmText)) {
+                if (isLiveMode) {
+                    const token = localStorage.getItem('token');
+                    const headers = {
+                        'Authorization': `Bearer ${token}`
+                    };
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/timetable/${id}`, {
+                            method: 'DELETE',
+                            headers: headers
+                        });
+                        if (response.ok) {
+                            timetables = timetables.filter(t => t.id !== id);
+                            showToast("Deleted successfully from database", "success");
+                        } else {
+                            const resData = await response.json().catch(() => ({}));
+                            showToast(resData.message || "Failed to delete from database", "danger");
+                        }
+                    } catch (err) {
+                        console.error("API error while deleting class allocation:", err);
+                        showToast("Network error. Failed to connect to server.", "danger");
+                    }
+                } else {
+                    timetables = timetables.filter(t => t.id !== id);
+                    showToast("Deleted successfully (Offline Mode)", "success");
+                }
+                renderDashboard();
+            }
+        }
+
+        // Handle search input
+        function handleSearch(val) {
+            searchQuery = val;
+            if (activeTab === 'daily') {
+                renderDailyView();
+            }
+        }
+    </script>
+</body>
+
+</html>

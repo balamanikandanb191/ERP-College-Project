@@ -3,7 +3,7 @@ import { X, Save, Calendar, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
-const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) => {
+const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables, inline = false }) => {
   const [formData, setFormData] = useState({
     department: 'CSE',
     year: '1',
@@ -20,22 +20,63 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
     status: 'Scheduled'
   });
   const [staffList, setStaffList] = useState([]);
+  const [subjectsList, setSubjectsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conflict, setConflict] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      const fetchStaff = async () => {
+      const fetchData = async () => {
         try {
-          const { data } = await api.get('/staff');
-          setStaffList(Array.isArray(data) ? data : []);
-        } catch (e) { console.error('Error fetching staff:', e); }
+          const [staffRes, subjectsRes] = await Promise.all([
+            api.get('/staff').catch(() => ({ data: [] })),
+            api.get('/masters/subject').catch(() => ({ data: [] }))
+          ]);
+
+          const staffs = Array.isArray(staffRes.data) ? staffRes.data : [];
+          setStaffList(staffs);
+
+          const subs = Array.isArray(subjectsRes.data) && subjectsRes.data.length > 0
+            ? subjectsRes.data.map(r => ({
+              code: r.data?.code || r.code || '',
+              name: r.data?.name || r.name || ''
+            }))
+            : [
+              { code: 'CS301', name: 'Data Structures' },
+              { code: 'CS302', name: 'Operating Systems' },
+              { code: 'IT401', name: 'Cloud Computing' },
+              { code: 'EC201', name: 'Circuit Theory' },
+              { code: 'CS501', name: 'Machine Learning' }
+            ];
+
+          setSubjectsList(subs);
+
+          setFormData(prev => ({
+            ...prev,
+            subject: subs[0] ? `${subs[0].code} - ${subs[0].name}` : '',
+            staffId: staffs[0]?.id || ''
+          }));
+        } catch (e) {
+          console.error('Error fetching modal dependencies:', e);
+        }
       };
-      fetchStaff();
+
+      fetchData();
+
       setFormData({
-        department: 'CSE', year: '1', semester: '1', section: 'A', day: 'Monday', periodNumber: '1',
+        department: 'CSE',
+        year: '1',
+        semester: '1',
+        section: 'A',
+        day: 'Monday',
+        periodNumber: '1',
         startTime: settings?.collegeStartTime?.substring(0, 5) || '09:00',
-        endTime: '10:00', subject: '', roomNumber: '', staffId: '', academicYear: '2025-2026', status: 'Scheduled'
+        endTime: '10:00',
+        subject: '',
+        roomNumber: 'A-101',
+        staffId: '',
+        academicYear: '2025-2026',
+        status: 'Scheduled'
       });
       setConflict(null);
     }
@@ -89,7 +130,7 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Check conflicts client-side first
     const detectedConflict = checkConflicts(formData);
     if (detectedConflict) {
@@ -112,10 +153,10 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto py-10">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden animate-fade-in-up relative">
-        
+  if (inline) {
+    return (
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 w-full overflow-hidden relative animate-fade-in">
+
         {/* Conflict Warning Premium Dialog Box Overlay */}
         {conflict && (
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -125,7 +166,7 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
               </div>
               <h3 className="text-lg font-black text-slate-800 uppercase tracking-wide">{conflict.type}</h3>
               <p className="text-slate-500 text-xs font-semibold mt-2 leading-relaxed">{conflict.message}</p>
-              
+
               {conflict.details && (
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 my-4 text-left text-xs space-y-1">
                   <p className="font-bold text-slate-700 uppercase tracking-widest text-[9px]">Conflicting Record Details</p>
@@ -149,10 +190,156 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
                   </div>
                 </div>
               )}
-              
+
               <div className="mt-6">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
+                  onClick={() => setConflict(null)}
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors text-xs uppercase tracking-wider"
+                >
+                  Adjust Schedule
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><div className="bg-indigo-50 p-2 rounded-lg"><Calendar className="text-indigo-600" size={20} /></div>Schedule Class</h2>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="bg-amber-50 text-amber-800 p-3 rounded-xl mb-6 text-sm flex items-center gap-2 border border-amber-200">
+            <AlertTriangle size={16} className="shrink-0" /> Note: The system will automatically check for staff and classroom conflicts.
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Department</label>
+              <select name="department" value={formData.department} onChange={handleChange} className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                <option value="CSE">CSE</option><option value="IT">IT</option><option value="ECE">ECE</option><option value="MECH">MECH</option><option value="CIVIL">CIVIL</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Year</label>
+              <select name="year" value={formData.year} onChange={handleChange} className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                <option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Semester & Section</label>
+              <div className="flex gap-2">
+                <select name="semester" value={formData.semester} onChange={handleChange} required className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                  {['1', '2', '3', '4', '5', '6', '7', '8'].map(s => (
+                    <option key={s} value={s}>Sem {s}</option>
+                  ))}
+                </select>
+                <select name="section" value={formData.section} onChange={handleChange} required className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                  {['A', 'B', 'C', 'D'].map(sec => (
+                    <option key={sec} value={sec}>Sec {sec}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="col-span-1 md:col-span-3 border-t border-gray-100 my-2 pt-4"><h3 className="font-semibold text-gray-800">Timing Details</h3></div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Day</label>
+              <select name="day" value={formData.day} onChange={handleChange} className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {settings?.workingDays ? settings.workingDays.map(d => <option key={d} value={d}>{d}</option>) : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Period Number *</label>
+              <select name="periodNumber" value={formData.periodNumber} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {Array.from({ length: settings?.totalPeriods || 8 }, (_, i) => i + 1).map(p => (
+                  <option key={p} value={p}>Period {p}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Start & End Time</label>
+              <div className="flex gap-2">
+                <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required className="w-1/2 px-2 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" />
+                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required className="w-1/2 px-2 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" />
+              </div>
+            </div>
+
+            <div className="col-span-1 md:col-span-3 border-t border-gray-100 my-2 pt-4"><h3 className="font-semibold text-gray-800">Class Details</h3></div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Subject Name *</label>
+              <select name="subject" value={formData.subject} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {subjectsList.map(s => (
+                  <option key={s.code} value={`${s.code} - ${s.name}`}>{s.code} – {s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Classroom *</label>
+              <select name="roomNumber" value={formData.roomNumber} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {['A-101', 'A-102', 'A-201', 'A-202', 'B-101', 'B-102', 'B-201', 'B-202', 'Lab-A', 'Lab-B', 'Seminar Hall'].map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Assign Staff *</label>
+              <select name="staffId" value={formData.staffId} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                <option value="">-- Select Staff --</option>
+                {staffList.map(s => <option key={s.id} value={s.id}>{s.fullName} ({s.staffId} - {s.department})</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-750 font-semibold hover:bg-gray-50 rounded-xl transition-colors">Cancel</button>
+            <button type="submit" disabled={loading} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl flex items-center gap-2"><Save size={18} /> {loading ? 'Saving...' : 'Save Timetable'}</button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto py-10">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden animate-fade-in-up relative">
+
+        {/* Conflict Warning Premium Dialog Box Overlay */}
+        {conflict && (
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl border border-rose-100 shadow-2xl w-full max-w-md overflow-hidden p-6 text-center animate-scale-up">
+              <div className="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 uppercase tracking-wide">{conflict.type}</h3>
+              <p className="text-slate-500 text-xs font-semibold mt-2 leading-relaxed">{conflict.message}</p>
+
+              {conflict.details && (
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 my-4 text-left text-xs space-y-1">
+                  <p className="font-bold text-slate-700 uppercase tracking-widest text-[9px]">Conflicting Record Details</p>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div>
+                      <span className="text-slate-400 font-medium">Subject:</span>
+                      <p className="font-bold text-slate-800">{conflict.details.subject || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium">Classroom:</span>
+                      <p className="font-bold text-slate-800">{conflict.details.roomNumber ?? 'Not Assigned'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium">Department:</span>
+                      <p className="font-bold text-slate-800">{conflict.details.department} • Sec {conflict.details.section}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium">Timing:</span>
+                      <p className="font-bold text-slate-800">{conflict.details.day} • Period {conflict.details.periodNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6">
+                <button
+                  type="button"
                   onClick={() => setConflict(null)}
                   className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors text-xs uppercase tracking-wider"
                 >
@@ -187,13 +374,21 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Semester & Section</label>
               <div className="flex gap-2">
-                <input type="text" name="semester" value={formData.semester} onChange={handleChange} className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="Sem" required />
-                <input type="text" name="section" value={formData.section} onChange={handleChange} className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="Sec (A)" required />
+                <select name="semester" value={formData.semester} onChange={handleChange} required className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                  {['1', '2', '3', '4', '5', '6', '7', '8'].map(s => (
+                    <option key={s} value={s}>Sem {s}</option>
+                  ))}
+                </select>
+                <select name="section" value={formData.section} onChange={handleChange} required className="w-1/2 px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                  {['A', 'B', 'C', 'D'].map(sec => (
+                    <option key={sec} value={sec}>Sec {sec}</option>
+                  ))}
+                </select>
               </div>
             </div>
-            
+
             <div className="col-span-1 md:col-span-3 border-t border-gray-100 my-2 pt-4"><h3 className="font-semibold text-gray-800">Timing Details</h3></div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Day</label>
               <select name="day" value={formData.day} onChange={handleChange} className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
@@ -202,7 +397,11 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Period Number *</label>
-              <input type="number" name="periodNumber" value={formData.periodNumber} onChange={handleChange} min="1" max={settings?.totalPeriods || 8} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" />
+              <select name="periodNumber" value={formData.periodNumber} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {Array.from({ length: settings?.totalPeriods || 8 }, (_, i) => i + 1).map(p => (
+                  <option key={p} value={p}>Period {p}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Start & End Time</label>
@@ -214,8 +413,22 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
 
             <div className="col-span-1 md:col-span-3 border-t border-gray-100 my-2 pt-4"><h3 className="font-semibold text-gray-800">Class Details</h3></div>
 
-            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Subject Name *</label><input type="text" name="subject" value={formData.subject} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="e.g. Data Structures" /></div>
-            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Classroom *</label><input type="text" name="roomNumber" value={formData.roomNumber} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="e.g. A-204" /></div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Subject Name *</label>
+              <select name="subject" value={formData.subject} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {subjectsList.map(s => (
+                  <option key={s.code} value={`${s.code} - ${s.name}`}>{s.code} – {s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Classroom *</label>
+              <select name="roomNumber" value={formData.roomNumber} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                {['A-101', 'A-102', 'A-201', 'A-202', 'B-101', 'B-102', 'B-201', 'B-202', 'Lab-A', 'Lab-B', 'Seminar Hall'].map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Assign Staff *</label>
               <select name="staffId" value={formData.staffId} onChange={handleChange} required className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
@@ -225,7 +438,7 @@ const TimetableModal = ({ isOpen, onClose, onSuccess, settings, timetables }) =>
             </div>
           </div>
           <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-700 font-semibold hover:bg-gray-50 rounded-xl transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-750 font-semibold hover:bg-gray-50 rounded-xl transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl flex items-center gap-2"><Save size={18} /> {loading ? 'Saving...' : 'Save Timetable'}</button>
           </div>
         </form>

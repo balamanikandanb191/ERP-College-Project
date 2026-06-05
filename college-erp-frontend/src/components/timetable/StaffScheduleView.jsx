@@ -17,7 +17,7 @@ const StaffScheduleView = ({ timetables, loading }) => {
   });
 
   const staffSchedule = timetables.filter(t => t.staffId === selectedStaff);
-  
+
   // Quick Workload analytics for selected staff
   const totalClasses = staffSchedule.length;
   const uniqueSubjects = new Set(staffSchedule.map(t => t.subjectName)).size;
@@ -41,9 +41,9 @@ const StaffScheduleView = ({ timetables, loading }) => {
     <div className="p-6">
       <div className="max-w-xl mb-8">
         <label className="block text-sm font-semibold text-gray-700 mb-2">Select Staff Member</label>
-        <select 
-          value={selectedStaff} 
-          onChange={e => setSelectedStaff(e.target.value)} 
+        <select
+          value={selectedStaff}
+          onChange={e => setSelectedStaff(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white font-medium shadow-sm"
         >
           <option value="">-- Choose a staff member to view schedule --</option>
@@ -85,8 +85,8 @@ const StaffScheduleView = ({ timetables, loading }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {staffSchedule.length > 0 ? staffSchedule.sort((a,b) => {
-                  const days = {Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6};
+                {staffSchedule.length > 0 ? staffSchedule.sort((a, b) => {
+                  const days = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
                   return days[a.day] - days[b.day] || a.periodNumber - b.periodNumber;
                 }).map(t => (
                   <tr key={t.id} className="hover:bg-gray-50">

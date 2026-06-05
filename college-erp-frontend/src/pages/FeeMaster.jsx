@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import { confirmDelete } from '../utils/confirmToast';
 
 const SEED = [
   { id: 'fm1', feeType: 'Tuition Fee', year: 'I', dept: 'Computer Science', amount: 85000, dueDate: '2026-06-30', term: 'Annual', active: true },
@@ -23,27 +24,81 @@ const FeeMaster = () => {
   const submit = async (e) => {
     e.preventDefault();
     if (!form.amount || !form.dueDate) { toast.error('Amount and due date required'); return; }
-    
-    const res = editing 
-      ? await updateRecord(editing.id, form) 
+
+    const res = editing
+      ? await updateRecord(editing.id, form)
       : await addRecord(form);
-      
+
     if (res.success) {
       toast.success(editing ? 'Fee structure updated!' : 'Fee structure added!');
-      setShowModal(false); 
+      setShowModal(false);
       setEditing(null);
     } else {
       toast.error('Operation failed');
     }
   };
-  const del = async (id) => { 
-    if (!window.confirm('Delete fee structure?')) return; 
-    const res = await deleteRecord(id);
-    if (res.success) toast.success('Deleted');
-    else toast.error('Failed to delete');
+  const del = async (id) => {
+    confirmDelete(async () => {
+      const res = await deleteRecord(id);
+      if (res.success) toast.success('Deleted');
+      else toast.error('Failed to delete');
+    }, 'Are you sure you want to delete this fee structure record?');
   };
   const openEdit = r => { setEditing(r); setForm({ feeType: r.feeType, year: r.year, dept: r.dept, amount: r.amount, dueDate: r.dueDate, term: r.term, active: r.active }); setShowModal(true); };
   const total = records.filter(r => r.active).reduce((s, r) => s + Number(r.amount), 0);
+
+  if (showModal) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto pb-12 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => { setShowModal(false); setEditing(null); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 cursor-pointer shadow-sm"
+          >
+            ← Back to List
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-slide-in">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Fee Structure' : 'Add Fee Structure'}</h3>
+            <button onClick={() => { setShowModal(false); setEditing(null); }} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button>
+          </div>
+          <form onSubmit={submit} className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Fee Type</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" value={form.feeType} onChange={e => setForm({ ...form, feeType: e.target.value })}>{FEE_TYPES.map(f => <option key={f}>{f}</option>)}</select>
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Year</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })}>{YEARS.map(y => <option key={y}>{y}</option>)}</select>
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Department</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })}>{DEPTS.map(d => <option key={d}>{d}</option>)}</select>
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Amount (₹)</label>
+                <input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Due Date</label>
+                <input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Term</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.term} onChange={e => setForm({ ...form, term: e.target.value })}><option>Annual</option><option>Semester</option><option>One-time</option><option>Monthly</option></select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => { setShowModal(false); setEditing(null); }} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -87,28 +142,6 @@ const FeeMaster = () => {
           </table>
         </div>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between"><h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Fee' : 'Add Fee Structure'}</h3><button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button></div>
-            <form onSubmit={submit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Fee Type</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" value={form.feeType} onChange={e => setForm({ ...form, feeType: e.target.value })}>{FEE_TYPES.map(f => <option key={f}>{f}</option>)}</select></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Year</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })}>{YEARS.map(y => <option key={y}>{y}</option>)}</select></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Department</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })}>{DEPTS.map(d => <option key={d}>{d}</option>)}</select></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Amount (₹)</label><input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Due Date</label><input type="date" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Term</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.term} onChange={e => setForm({ ...form, term: e.target.value })}><option>Annual</option><option>Semester</option><option>One-time</option><option>Monthly</option></select></div>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

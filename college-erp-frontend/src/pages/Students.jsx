@@ -6,6 +6,7 @@ import StudentTable from '../components/StudentTable';
 import StudentModal from '../components/StudentModal';
 import ProfileDrawer from '../components/profile/ProfileDrawer';
 import StudentEnterpriseProfile from '../components/students/StudentEnterpriseProfile';
+import { confirmDelete } from '../utils/confirmToast';
 
 const StatCard = ({ title, value, icon: Icon, colorClass }) => (
   <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -70,7 +71,7 @@ const Students = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this student?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/students/${id}`);
         setStudents(students.filter(s => s.id !== id));
@@ -78,7 +79,7 @@ const Students = () => {
       } catch (error) {
         toast.error('Failed to delete student');
       }
-    }
+    }, 'Are you sure you want to delete this student?');
   };
 
   const handleSave = async (data) => {
@@ -155,6 +156,28 @@ const Students = () => {
         student={activeProfileStudent} 
         onClose={() => setActiveProfileStudent(null)} 
       />
+    );
+  }
+
+  if (isModalOpen) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => { setIsModalOpen(false); setSelectedStudent(null); }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 cursor-pointer shadow-sm animate-fade-in"
+          >
+            ← Back to List
+          </button>
+        </div>
+        <StudentModal 
+          isOpen={isModalOpen} 
+          onClose={() => { setIsModalOpen(false); setSelectedStudent(null); }} 
+          student={selectedStudent}
+          onSave={handleSave}
+          inline={true}
+        />
+      </div>
     );
   }
 
@@ -279,16 +302,6 @@ const Students = () => {
           </div>
         )}
       </div>
-
-      {isModalOpen && (
-        <StudentModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          student={selectedStudent}
-          onSave={handleSave}
-        />
-      )}
-
       <ProfileDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 

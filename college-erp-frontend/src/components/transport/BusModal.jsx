@@ -86,8 +86,16 @@ const BusModal = ({ isOpen, onClose, onSuccess, initialData = null }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-fade-in-up">
+    <div 
+      className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex justify-end items-start p-4 animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-2xl max-h-[calc(100vh-6rem)] mt-16 mr-2 rounded-3xl shadow-2xl flex flex-col overflow-y-auto animate-slide-in"
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <div className="bg-blue-50 p-2 rounded-lg">

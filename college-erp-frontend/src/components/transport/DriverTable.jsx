@@ -3,6 +3,7 @@ import { Users, Edit2, Trash2, Plus, PhoneCall, Star, Bus } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DriverModal from './DriverModal';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const DriverTable = () => {
   const [drivers, setDrivers] = useState([]);
@@ -27,7 +28,7 @@ const DriverTable = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this driver?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/transport/drivers/${id}`);
         toast.success('Driver deleted successfully');
@@ -35,7 +36,7 @@ const DriverTable = () => {
       } catch (error) {
         toast.error('Failed to delete driver');
       }
-    }
+    }, 'Are you sure you want to delete this driver?');
   };
 
   const openAddModal = () => {

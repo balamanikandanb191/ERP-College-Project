@@ -49,11 +49,9 @@ const Staff = sequelize.define('Staff', {
   },
   aadhaarNumber: {
     type: DataTypes.STRING,
-    unique: true,
   },
   panNumber: {
     type: DataTypes.STRING,
-    unique: true,
   },
   religion: {
     type: DataTypes.STRING,

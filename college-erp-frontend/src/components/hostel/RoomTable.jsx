@@ -41,7 +41,7 @@ const RoomTable = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Available': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'Full': return 'bg-rose-100 text-rose-700 border-rose-200';
       case 'Maintenance': return 'bg-amber-100 text-amber-700 border-amber-200';

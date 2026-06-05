@@ -51,15 +51,14 @@ exports.createStaff = async (req, res) => {
 
     // Auto-generate staffId if missing or marked as AUTO
     if (!payload.staffId || payload.staffId === 'AUTO') {
-      const year = new Date().getFullYear().toString();
       const count = await Staff.count() + 1;
-      payload.staffId = `EMP${year}${count.toString().padStart(4, '0')}`;
+      payload.staffId = `STAFF-${count.toString().padStart(3, '0')}`;
     }
 
-    const { staffId, email, officialEmail, aadhaarNumber, panNumber, username } = payload;
+    const { staffId, email, officialEmail, username } = payload;
 
     // Check for duplicates
-    const checkFields = { staffId, email, officialEmail, aadhaarNumber, panNumber, username };
+    const checkFields = { staffId, email, officialEmail, username };
     for (const [key, value] of Object.entries(checkFields)) {
       if (value) {
         const existing = await Staff.findOne({ where: { [key]: value } });
@@ -109,7 +108,7 @@ exports.updateStaff = async (req, res) => {
     }
 
     // Check for duplicates if updating unique fields
-    const uniqueFields = ['staffId', 'email', 'officialEmail', 'aadhaarNumber', 'panNumber', 'username'];
+    const uniqueFields = ['staffId', 'email', 'officialEmail', 'username'];
     for (const field of uniqueFields) {
       if (payload[field] && payload[field] !== staff[field]) {
         const existing = await Staff.findOne({ where: { [field]: payload[field] } });

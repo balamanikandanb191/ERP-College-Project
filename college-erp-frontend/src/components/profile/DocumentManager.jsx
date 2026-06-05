@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, File, Trash2, Download, Eye, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const DocumentManager = ({ type, data }) => {
   const [documents, setDocuments] = useState([]);
@@ -80,15 +81,15 @@ const DocumentManager = ({ type, data }) => {
   };
 
   const handleDelete = async (docId) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
-    
-    try {
-      await api.delete(`/uploads/document/${endpointType}/${docId}`);
-      setDocuments(prev => prev.filter(d => d.id !== docId));
-      toast.success('Document deleted');
-    } catch (error) {
-      toast.error('Failed to delete document');
-    }
+    confirmDelete(async () => {
+      try {
+        await api.delete(`/uploads/document/${endpointType}/${docId}`);
+        setDocuments(prev => prev.filter(d => d.id !== docId));
+        toast.success('Document deleted');
+      } catch (error) {
+        toast.error('Failed to delete document');
+      }
+    }, 'Are you sure you want to delete this document?');
   };
 
   const handleDownload = async (doc) => {

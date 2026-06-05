@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Shield, 
-  User, 
-  Users, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
-  Edit2, 
-  Check, 
-  X, 
-  KeyRound, 
-  LayoutDashboard, 
-  Database, 
-  GraduationCap, 
-  Building2, 
-  Lock, 
-  List, 
-  UserCheck, 
-  AlertCircle, 
+import {
+  Plus,
+  Search,
+  Shield,
+  User,
+  Users,
+  Eye,
+  EyeOff,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  KeyRound,
+  LayoutDashboard,
+  Database,
+  GraduationCap,
+  Building2,
+  Lock,
+  List,
+  UserCheck,
+  AlertCircle,
   ChevronDown,
   Info,
   CheckSquare,
@@ -28,6 +28,7 @@ import {
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
 import api from '../services/api';
+import { confirmDelete } from '../utils/confirmToast';
 
 const DEFAULT_ROLES = ['Admin', 'Super Admin', 'Staff', 'Teacher', 'Student', 'Parent'];
 const ROLE_COLORS = {
@@ -66,7 +67,7 @@ const MODULE_GROUPS = [
     iconName: 'Database',
     modules: [
       { name: 'Academic Calendar', key: 'academic_AcademicCalendar', desc: 'academic_AcademicCalendar' },
-      { name: 'Standard', key: 'academic_Standard', desc: 'academic_Standard' },
+      { name: 'Department', key: 'academic_Standard', desc: 'academic_Standard' },
       { name: 'Subject', key: 'academic_Subject', desc: 'academic_Subject' },
       { name: 'Class Allocation', key: 'academic_Class_Allocation', desc: 'academic_Class_Allocation' },
       { name: 'Subject Allocation', key: 'academic_Subject_Allocation', desc: 'academic_Subject_Allocation' },
@@ -190,20 +191,20 @@ const renderIcon = (name, size = 18, className = "") => {
 
 const UserCreation = () => {
   const { records: users, addRecord, updateRecord, deleteRecord } = useMasterData('user_creation', SEED_USERS);
-  
+
   // App views
   const [viewMode, setViewMode] = useState('form'); // 'form' or 'list'
-  
+
   // Dropdown lists
   const [customRoles, setCustomRoles] = useState(DEFAULT_ROLES);
   const [staffList, setStaffList] = useState(SEED_STAFF);
-  
+
   // Form states
   const [form, setForm] = useState(emptyForm);
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [editing, setEditing] = useState(null);
-  
+
   // Search state for list view
   const [search, setSearch] = useState('');
 
@@ -221,8 +222,8 @@ const UserCreation = () => {
     const fetchStaff = async () => {
       try {
         const response = await api.get('/staff');
-        const data = Array.isArray(response.data) ? response.data : 
-                     (response.data?.staff ? response.data.staff : []);
+        const data = Array.isArray(response.data) ? response.data :
+          (response.data?.staff ? response.data.staff : []);
         if (data && data.length > 0) {
           setStaffList(data);
         }
@@ -268,7 +269,7 @@ const UserCreation = () => {
   const applyDefaultRoleModules = (role) => {
     let defaults = [];
     const allNames = MODULE_GROUPS.flatMap(g => g.modules.map(m => m.name));
-    
+
     if (role === 'Admin' || role === 'Super Admin') {
       defaults = allNames;
     } else if (role === 'Staff') {
@@ -335,7 +336,7 @@ const UserCreation = () => {
 
     const selectedStaffObj = staffList.find(s => s.fullName === form.staffName);
     const email = selectedStaffObj?.email || selectedStaffObj?.officialEmail || `${form.userId || form.staffId || 'user'}@college-erp.edu.in`;
-    
+
     const userPayload = {
       name: form.staffName,
       email,
@@ -369,9 +370,10 @@ const UserCreation = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this user permanently?')) return;
-    const res = await deleteRecord(id);
-    if (res.success) toast.success('User removed.');
+    confirmDelete(async () => {
+      const res = await deleteRecord(id);
+      if (res.success) toast.success('User removed.');
+    }, 'Are you sure you want to permanently delete this user account?');
   };
 
   const toggleStatus = async (id) => {
@@ -382,8 +384,8 @@ const UserCreation = () => {
     if (res.success) toast.success('Status updated!');
   };
 
-  const openEdit = (user) => { 
-    setEditing(user); 
+  const openEdit = (user) => {
+    setEditing(user);
     setForm({
       role: user.role || 'Staff',
       staffName: user.name || '',
@@ -392,7 +394,7 @@ const UserCreation = () => {
       password: '',
       confirmPassword: '',
       allowedModules: user.allowedModules || []
-    }); 
+    });
     setViewMode('form');
   };
 
@@ -405,7 +407,7 @@ const UserCreation = () => {
       toast.error('Role already exists');
       return;
     }
-    
+
     try {
       await api.post('/auth/roles', { name: trimmed });
       setCustomRoles([...customRoles, trimmed]);
@@ -433,7 +435,7 @@ const UserCreation = () => {
       employeeStatus: 'Active',
       allowLogin: true
     };
-    
+
     let savedStaff = payload;
     try {
       const response = await api.post('/staff', payload);
@@ -443,7 +445,7 @@ const UserCreation = () => {
     } catch (apiErr) {
       console.warn("Could not save staff to database, adding locally:", apiErr);
     }
-    
+
     setStaffList([savedStaff, ...staffList]);
     setForm(prev => ({
       ...prev,
@@ -451,7 +453,7 @@ const UserCreation = () => {
       staffId: savedStaff.staffId,
       userId: savedStaff.staffId
     }));
-    
+
     setShowStaffModal(false);
     setNewStaff({ fullName: '', staffId: '', department: 'Administration', email: '' });
     toast.success('Staff onboarding complete!');
@@ -470,16 +472,16 @@ const UserCreation = () => {
     }
   };
 
-  const filtered = users.filter(u => 
-    (u.name || '').toLowerCase().includes(search.toLowerCase()) || 
-    (u.email || '').toLowerCase().includes(search.toLowerCase()) || 
+  const filtered = users.filter(u =>
+    (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (u.email || '').toLowerCase().includes(search.toLowerCase()) ||
     (u.role || '').toLowerCase().includes(search.toLowerCase()) ||
     (u.staffId || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6 w-full pb-12">
-      
+
       {/* Dynamic View Header */}
       {viewMode === 'form' ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -490,7 +492,7 @@ const UserCreation = () => {
               <span className="text-xs text-slate-500 font-medium">Fill all the fields below to add user information</span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => { setViewMode('list'); setEditing(null); setForm(emptyForm); }}
             className="px-4 py-2 border border-blue-200 text-blue-600 bg-blue-50/50 hover:bg-blue-100/70 font-semibold rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm"
           >
@@ -506,7 +508,7 @@ const UserCreation = () => {
               <span className="text-xs text-slate-500 font-medium">View and manage all system users and their access permissions</span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setViewMode('form')}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center gap-2 shadow-md shadow-indigo-500/20 transition-all"
           >
@@ -518,21 +520,21 @@ const UserCreation = () => {
       {/* Form Workspace Mode */}
       {viewMode === 'form' && (
         <form onSubmit={handleSubmit} className="space-y-6">
-          
+
           {/* User Information Card */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-slate-100 bg-slate-50/40">
               <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase">User Information</h2>
             </div>
-            
+
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-              
+
               {/* User Role */}
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">User Role <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <select 
+                    <select
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer appearance-none"
                       value={form.role}
                       onChange={e => handleRoleChange(e.target.value)}
@@ -541,8 +543,8 @@ const UserCreation = () => {
                     </select>
                     <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowRoleModal(true)}
                     className="p-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-xl transition-colors shadow-sm"
                     title="Add Custom Role"
@@ -557,7 +559,7 @@ const UserCreation = () => {
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Staff Name <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <select 
+                    <select
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer appearance-none"
                       value={form.staffName}
                       onChange={e => handleStaffChange(e.target.value)}
@@ -567,8 +569,8 @@ const UserCreation = () => {
                     </select>
                     <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowStaffModal(true)}
                     className="p-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-xl transition-colors shadow-sm"
                     title="Onboard New Staff"
@@ -581,8 +583,8 @@ const UserCreation = () => {
               {/* Staff ID */}
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Staff ID</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   disabled
                   placeholder="Auto-filled from staff selection"
                   className="w-full border border-slate-100 bg-slate-50 text-slate-500 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none"
@@ -593,8 +595,8 @@ const UserCreation = () => {
               {/* User ID */}
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">User ID <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Default: Staff ID"
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   value={form.userId}
@@ -606,14 +608,14 @@ const UserCreation = () => {
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Password <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showPwd ? 'text' : 'password'}
                     placeholder="Enter password"
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     value={form.password}
                     onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPwd(!showPwd)}
                     className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors"
@@ -627,14 +629,14 @@ const UserCreation = () => {
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Confirm Password <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showConfirmPwd ? 'text' : 'password'}
                     placeholder="Re-enter password"
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     value={form.confirmPassword}
                     onChange={e => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowConfirmPwd(!showConfirmPwd)}
                     className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors"
@@ -657,15 +659,15 @@ const UserCreation = () => {
                 <p className="text-xs text-slate-400 font-semibold mt-0.5">Select modules to grant access permissions</p>
               </div>
               <div className="flex gap-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleSelectAllAll}
                   className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-600 font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm transition-colors"
                 >
                   <CheckSquare size={13} /> Select All
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleClearAllAll}
                   className="px-3 py-1.5 bg-red-50 hover:bg-red-100/85 border border-red-200 text-red-500 font-bold rounded-xl text-xs flex items-center gap-1 shadow-sm transition-colors"
                 >
@@ -679,10 +681,10 @@ const UserCreation = () => {
               {MODULE_GROUPS.map((group) => {
                 const isSelected = group.modules.every(m => form.allowedModules?.includes(m.name));
                 const totalModulesCount = group.modules.length;
-                
+
                 return (
                   <div key={group.id} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
-                    
+
                     {/* Category Header */}
                     <div className={`p-4 bg-gradient-to-r ${group.gradient} text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
                       <div className="flex items-center gap-3">
@@ -697,14 +699,14 @@ const UserCreation = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => handleSelectCategory(group.modules)}
                           className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg flex items-center gap-1 transition-all"
                         >
                           <Check size={10} /> Select All
                         </button>
-                        <button 
+                        <button
                           type="button"
                           onClick={() => handleClearCategory(group.modules)}
                           className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg flex items-center gap-1 transition-all"
@@ -719,12 +721,11 @@ const UserCreation = () => {
                       {group.modules.map((module) => {
                         const isChecked = form.allowedModules?.includes(module.name);
                         return (
-                          <div 
-                            key={module.name} 
+                          <div
+                            key={module.name}
                             onClick={() => handleToggleModule(module.name)}
-                            className={`p-3.5 bg-white border rounded-xl flex items-center justify-between gap-3 shadow-sm hover:shadow transition-all cursor-pointer select-none ${
-                              isChecked ? 'border-indigo-100 ring-2 ring-indigo-500/5' : 'border-slate-100'
-                            }`}
+                            className={`p-3.5 bg-white border rounded-xl flex items-center justify-between gap-3 shadow-sm hover:shadow transition-all cursor-pointer select-none ${isChecked ? 'border-indigo-100 ring-2 ring-indigo-500/5' : 'border-slate-100'
+                              }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-400 shrink-0">
@@ -735,19 +736,17 @@ const UserCreation = () => {
                                 <p className="text-[10px] font-medium text-slate-400 truncate mt-0.5">{module.key}</p>
                               </div>
                             </div>
-                            
+
                             {/* Premium Custom Switch Toggle */}
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); handleToggleModule(module.name); }}
-                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 outline-none ${
-                                isChecked ? getCategoryToggleColor(group.id) : 'bg-slate-200'
-                              }`}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 outline-none ${isChecked ? getCategoryToggleColor(group.id) : 'bg-slate-200'
+                                }`}
                             >
                               <span
-                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
-                                  isChecked ? 'translate-x-5' : 'translate-x-0.5'
-                                }`}
+                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${isChecked ? 'translate-x-5' : 'translate-x-0.5'
+                                  }`}
                               />
                             </button>
                           </div>
@@ -762,14 +761,14 @@ const UserCreation = () => {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => { setViewMode('list'); setEditing(null); setForm(emptyForm); }}
               className="px-6 py-3 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-xl text-sm transition-colors shadow-sm"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm shadow-md shadow-violet-500/20 transition-all"
             >
@@ -783,16 +782,16 @@ const UserCreation = () => {
       {/* User Directory Table Mode */}
       {viewMode === 'list' && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          
+
           {/* Table Header toolbar */}
           <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="relative max-w-sm w-full">
               <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
-              <input 
+              <input
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 font-medium transition-colors"
-                placeholder="Search by name, email, or role..." 
-                value={search} 
-                onChange={e => setSearch(e.target.value)} 
+                placeholder="Search by name, email, or role..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
               />
             </div>
             <span className="text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl">
@@ -842,13 +841,12 @@ const UserCreation = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <button 
+                      <button
                         onClick={() => toggleStatus(user.id)}
-                        className={`flex items-center gap-1.5 text-[11px] font-black px-2.5 py-1 rounded-full border transition-colors shadow-sm ${
-                          user.status === 'Active' 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-250 hover:bg-emerald-100/80' 
+                        className={`flex items-center gap-1.5 text-[11px] font-black px-2.5 py-1 rounded-full border transition-colors shadow-sm ${user.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-250 hover:bg-emerald-100/80'
                             : 'bg-rose-50 text-rose-700 border-rose-250 hover:bg-rose-100/80'
-                        }`}
+                          }`}
                       >
                         {user.status === 'Active' ? <Check size={11} /> : <X size={11} />} {user.status}
                       </button>
@@ -856,23 +854,23 @@ const UserCreation = () => {
                     <td className="px-6 py-4 text-xs text-slate-400 font-semibold">{user.lastLogin}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => { toast.success(`Password reset link sent to ${user.email}`); }} 
-                          className="p-2 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded-xl transition-all shadow-sm" 
+                        <button
+                          onClick={() => { toast.success(`Password reset link sent to ${user.email}`); }}
+                          className="p-2 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded-xl transition-all shadow-sm"
                           title="Reset Password"
                         >
                           <KeyRound size={14} />
                         </button>
-                        <button 
-                          onClick={() => openEdit(user)} 
-                          className="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all shadow-sm" 
+                        <button
+                          onClick={() => openEdit(user)}
+                          className="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all shadow-sm"
                           title="Edit Settings"
                         >
                           <Edit2 size={14} />
                         </button>
-                        <button 
-                          onClick={() => handleDelete(user.id)} 
-                          className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all shadow-sm" 
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all shadow-sm"
                           title="Delete User"
                         >
                           <Trash2 size={14} />
@@ -896,22 +894,22 @@ const UserCreation = () => {
 
       {/* QUICK ADD CUSTOM ROLE MODAL */}
       {showRoleModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-800">Add Custom Role</h3>
-              <button 
-                type="button" 
-                onClick={() => setShowRoleModal(false)} 
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors"
+        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs flex justify-end items-start z-50 p-4" onClick={() => setShowRoleModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mt-16 mr-2 max-h-[calc(100vh-6rem)] overflow-y-auto animate-slide-in p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h3 className="text-lg font-black text-slate-800">Add Custom Role</h3>
+              <button
+                type="button"
+                onClick={() => setShowRoleModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleAddRoleSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleAddRoleSubmit} className="space-y-4 mt-4">
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Role Title</label>
-                <input 
+                <input
                   type="text"
                   required
                   placeholder="e.g. Accounts Manager"
@@ -921,14 +919,14 @@ const UserCreation = () => {
                 />
               </div>
               <div className="flex justify-end gap-2.5 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowRoleModal(false)}
                   className="px-4 py-2.5 border border-slate-205 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow shadow-blue-500/20 transition-all"
                 >
@@ -942,22 +940,22 @@ const UserCreation = () => {
 
       {/* QUICK ADD NEW STAFF MODAL */}
       {showStaffModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-105 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-800">Quick Onboard Staff</h3>
-              <button 
-                type="button" 
-                onClick={() => setShowStaffModal(false)} 
+        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs flex justify-end items-start z-50 p-4" onClick={() => setShowStaffModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mt-16 mr-2 max-h-[calc(100vh-6rem)] overflow-y-auto animate-slide-in p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h3 className="text-lg font-black text-slate-800">Quick Onboard Staff</h3>
+              <button
+                type="button"
+                onClick={() => setShowStaffModal(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-650 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleAddStaffSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleAddStaffSubmit} className="space-y-4 mt-4">
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Full Name <span className="text-red-500">*</span></label>
-                <input 
+                <input
                   type="text"
                   required
                   placeholder="Dr. John Smith"
@@ -969,7 +967,7 @@ const UserCreation = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-600 block mb-1">Staff ID <span className="text-red-500">*</span></label>
-                  <input 
+                  <input
                     type="text"
                     required
                     placeholder="STF101"
@@ -980,7 +978,7 @@ const UserCreation = () => {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-600 block mb-1">Department</label>
-                  <select 
+                  <select
                     className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white"
                     value={newStaff.department}
                     onChange={e => setNewStaff(prev => ({ ...prev, department: e.target.value }))}
@@ -995,7 +993,7 @@ const UserCreation = () => {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1">Email (Optional)</label>
-                <input 
+                <input
                   type="email"
                   placeholder="john.smith@college.edu.in"
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
@@ -1004,14 +1002,14 @@ const UserCreation = () => {
                 />
               </div>
               <div className="flex justify-end gap-2.5 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowStaffModal(false)}
                   className="px-4 py-2.5 border border-slate-205 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow shadow-blue-500/20 transition-all"
                 >

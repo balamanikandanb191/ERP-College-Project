@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  GraduationCap, 
-  BookOpen, 
-  Bus, 
-  Home, 
-  CreditCard, 
-  Briefcase, 
-  Award, 
-  Users, 
-  ChevronRight, 
-  Sparkles, 
+import {
+  GraduationCap,
+  BookOpen,
+  Bus,
+  Home,
+  CreditCard,
+  Briefcase,
+  Award,
+  Users,
+  ChevronRight,
+  Sparkles,
   ArrowRight,
   TrendingUp,
   Clock,
@@ -52,7 +52,7 @@ const LandingPage = () => {
       { text: 'System backup transaction completed successfully', type: 'system' },
       { text: 'Staff generated 12 Bonafide Certificates', type: 'academic' }
     ];
-    
+
     const interval = setInterval(() => {
       const randomEvent = events[Math.floor(Math.random() * events.length)];
       setTickerLogs(prev => [
@@ -279,7 +279,7 @@ const LandingPage = () => {
                 <p className="text-[10px] text-slate-400 font-bold">Academic Fee (Semester IV)</p>
                 <p className="text-base font-black text-slate-900 mt-0.5">$1,850.00</p>
               </div>
-              <button 
+              <button
                 onClick={() => handlePortalLaunch('Parent')}
                 className="px-3.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl text-[10px] font-bold cursor-pointer transition-colors shadow-sm"
               >
@@ -294,7 +294,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50/20 text-slate-800 overflow-x-hidden font-sans relative">
-      
+
       {/* Decorative Orbs */}
       <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-3xl pointer-events-none animate-pulse-subtle"></div>
       <div className="absolute top-[80vh] left-1/4 w-[600px] h-[600px] bg-indigo-100/40 rounded-full blur-3xl pointer-events-none animate-pulse-subtle" style={{ animationDelay: '2s' }}></div>
@@ -328,7 +328,7 @@ const LandingPage = () => {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <button 
+              <button
                 onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-extrabold rounded-full text-xs flex items-center gap-1.5 shadow-md shadow-primary/10 transition-all cursor-pointer"
               >
@@ -337,13 +337,13 @@ const LandingPage = () => {
               </button>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => navigate('/login')}
                   className="px-4 py-2 text-slate-600 hover:text-slate-950 font-extrabold text-xs transition-colors cursor-pointer"
                 >
                   Log In
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     const el = document.getElementById('portals');
                     el?.scrollIntoView({ behavior: 'smooth' });
@@ -360,7 +360,7 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center z-10">
-        
+
         {/* Left Side Content */}
         <div className="lg:col-span-7 space-y-6 text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black uppercase tracking-wider text-primary shadow-sm">
@@ -380,14 +380,14 @@ const LandingPage = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2">
-            <button 
+            <button
               onClick={() => navigate('/login')}
               className="px-7 py-3.5 bg-primary hover:bg-primary-dark text-white font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all text-sm cursor-pointer"
             >
               Sign In to Portals
               <ArrowRight size={16} />
             </button>
-            <button 
+            <button
               onClick={() => {
                 const el = document.getElementById('portals');
                 el?.scrollIntoView({ behavior: 'smooth' });
@@ -417,10 +417,10 @@ const LandingPage = () => {
 
         {/* Right Side Concentric Orbit Ring System & Live Operations Log */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-6 relative min-h-[460px]">
-          
+
           {/* Circular Orbiting System Container */}
           <div className="relative w-80 h-80 flex items-center justify-center bg-gradient-to-tr from-slate-100/50 to-white rounded-full border border-slate-200/60 shadow-inner">
-            
+
             {/* Outer Circular Orbit Ring (Slow rotation) */}
             <div className="absolute inset-4 rounded-full border border-dashed border-slate-200/80 animate-spin-slow">
               {/* Orbiting Icons */}
@@ -465,11 +465,11 @@ const LandingPage = () => {
               </span>
               <span className="text-[9px] font-mono text-slate-500 font-bold">LIVE SOCKET</span>
             </div>
-            
+
             <div className="space-y-1.5 min-h-[90px] flex flex-col justify-end">
               <AnimatePresence>
                 {tickerLogs.slice(0, 3).map((log, lIdx) => (
-                  <motion.div 
+                  <motion.div
                     key={log.text}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -525,12 +525,12 @@ const LandingPage = () => {
           </p>
         </div>
 
-        <motion.div 
+        <motion.div
           layout
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {modules.map((mod, idx) => (
-            <motion.div 
+            <motion.div
               key={idx}
               whileHover={{ y: -5 }}
               className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col h-full group"
@@ -573,7 +573,7 @@ const LandingPage = () => {
 
           {/* Sandbox Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            
+
             {/* Left selector panel */}
             <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
               <div className="space-y-2.5">
@@ -584,11 +584,10 @@ const LandingPage = () => {
                     <button
                       key={key}
                       onClick={() => setActiveSandboxTab(key)}
-                      className={`w-full text-left p-4.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                        isSelected 
-                          ? 'bg-primary/5 border-primary/20 text-slate-900 shadow-sm font-bold' 
+                      className={`w-full text-left p-4.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${isSelected
+                          ? 'bg-primary/5 border-primary/20 text-slate-900 shadow-sm font-bold'
                           : 'bg-white border-slate-200 text-slate-500 hover:border-slate-350'
-                      }`}
+                        }`}
                     >
                       <div>
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${item.badgeColor}`}>
@@ -602,7 +601,7 @@ const LandingPage = () => {
                 })}
               </div>
 
-              <button 
+              <button
                 onClick={() => handlePortalLaunch(activeSandboxTab)}
                 className={`w-full py-4 bg-primary text-white hover:bg-primary-dark font-extrabold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 text-sm cursor-pointer mt-4`}
               >
@@ -613,7 +612,7 @@ const LandingPage = () => {
 
             {/* Right Desktop Dashboard mockup viewport */}
             <div className="lg:col-span-7 bg-slate-50 border border-slate-200 rounded-3xl p-5 flex flex-col justify-between relative overflow-hidden shadow-inner">
-              
+
               {/* Fake Window bar */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4 px-1 text-xs text-slate-400 font-bold select-none">
                 <div className="flex gap-1.5">
@@ -770,7 +769,7 @@ const LandingPage = () => {
             Access the sandbox portal immediately by utilizing the pre-filled logins corresponding to your university profile.
           </p>
           <div className="mt-8 flex justify-center">
-            <button 
+            <button
               onClick={() => navigate('/login')}
               className="px-8 py-3.5 bg-primary hover:bg-primary-dark text-white font-extrabold rounded-xl flex items-center gap-2 shadow-lg shadow-primary/10 transition-all text-sm cursor-pointer animate-pulse"
             >

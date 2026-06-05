@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import IDCardPreview from './idcard/IDCardPreview';
+import { useMasterData } from '../hooks/useMasterData';
 
-const StudentModal = ({ isOpen, student, onClose, onSave }) => {
+const StudentModal = ({ isOpen, student, onClose, onSave, inline = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
@@ -88,6 +89,28 @@ const StudentModal = ({ isOpen, student, onClose, onSave }) => {
     ...(student || {}) 
   }));
   const [isAutoReg, setIsAutoReg] = useState(!student?.registerNumber);
+
+  const { records: classes } = useMasterData('class_master');
+  const { records: academicYears } = useMasterData('acad_year');
+
+  const departments = React.useMemo(() => {
+    const set = new Set();
+    classes.forEach(c => {
+      if (c.depts) {
+        const list = typeof c.depts === 'string' ? c.depts.split(',') : c.depts;
+        if (Array.isArray(list)) {
+          list.forEach(d => {
+            const trimmed = d.trim();
+            if (trimmed) set.add(trimmed);
+          });
+        }
+      }
+    });
+    if (set.size === 0) {
+      return ['Computer Science', 'Information Technology', 'Electronics', 'Mechanical', 'Civil'];
+    }
+    return Array.from(set);
+  }, [classes]);
 
   // ESC key handler
   useEffect(() => {
@@ -280,7 +303,9 @@ const StudentModal = ({ isOpen, student, onClose, onSave }) => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Department *</label>
                   <select name="department" required value={formData.department} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
                     <option value="">Select Department</option>
-                    <option>Computer Science</option><option>Information Technology</option><option>Electronics</option><option>Mechanical</option><option>Civil</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -290,7 +315,12 @@ const StudentModal = ({ isOpen, student, onClose, onSave }) => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Academic Year</label>
-                    <input type="text" name="academicYear" value={formData.academicYear} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                    <select name="academicYear" value={formData.academicYear} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                      <option value="">Select Year</option>
+                      {academicYears.map(ay => (
+                        <option key={ay.id} value={ay.year}>{ay.year}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -547,15 +577,112 @@ const StudentModal = ({ isOpen, student, onClose, onSave }) => {
     }
   };
 
+  if (inline) {
+    return (
+      <div 
+        className="bg-white w-full rounded-3xl shadow-sm border border-slate-100 flex flex-col overflow-hidden animate-slide-in"
+      >
+        
+        {/* Header */}
+        <div className="px-8 pt-8 pb-6 bg-white shrink-0">
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="p-2.5 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100">
+                  <GraduationCap size={24} />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                  {student ? 'Edit Profile' : 'Student Admission'}
+                </h2>
+              </div>
+              <p className="text-slate-500 font-medium ml-1">Complete the enrollment process with ease</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex flex-col items-end">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Progress</span>
+                  <span className="text-sm font-black text-indigo-600">{calculateCompletion()}%</span>
+                </div>
+                <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-indigo-600 transition-all duration-700 ease-out"
+                    style={{ width: `${calculateCompletion()}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stepper */}
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto hide-scrollbar pb-2">
+            {steps.map((step, idx) => (
+              <React.Fragment key={step.id}>
+                <div 
+                  className={`flex items-center gap-2 cursor-pointer transition-all shrink-0 ${currentStep === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                  onClick={() => setCurrentStep(idx)}
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${currentStep === idx ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-110' : 'bg-slate-100 text-slate-500'}`}>
+                    {step.icon}
+                  </div>
+                  <span className={`text-xs font-bold uppercase tracking-wider hidden lg:block ${currentStep === idx ? 'text-indigo-600' : 'text-slate-500'}`}>
+                    {step.title}
+                  </span>
+                </div>
+                {idx < steps.length - 1 && <div className="h-0.5 w-4 md:w-8 bg-slate-100 shrink-0"></div>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="flex-1 px-8 py-6">
+          {renderStepContent()}
+        </form>
+
+        {/* Footer */}
+        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
+          <button 
+            type="button" 
+            onClick={prevStep}
+            disabled={currentStep === 0}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all disabled:opacity-0"
+          >
+            <ChevronLeft size={18} /> Previous
+          </button>
+          
+          <div className="flex gap-3">
+            {currentStep < steps.length - 1 ? (
+              <button 
+                type="button" 
+                onClick={nextStep}
+                className="flex items-center gap-2 px-8 py-3 rounded-2xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all"
+              >
+                Continue <ChevronRight size={18} />
+              </button>
+            ) : (
+              <button 
+                type="submit"
+                className="flex items-center gap-2 px-10 py-3 rounded-2xl text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all scale-105 active:scale-100"
+              >
+                <Save size={18} /> {student ? 'Update Profile' : 'Finalize Admission'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex justify-end items-start p-4 animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[40px] shadow-2xl flex flex-col overflow-hidden animate-scale-in"
+        className="bg-white w-full max-w-5xl max-h-[calc(100vh-6rem)] mt-16 mr-2 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-in"
         onClick={(e) => e.stopPropagation()}
       >
         

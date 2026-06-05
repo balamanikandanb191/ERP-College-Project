@@ -52,6 +52,7 @@ import {
 } from 'recharts';
 import toast from 'react-hot-toast';
 import CalendarDrilldownModal from '../components/calendar/CalendarDrilldownModal';
+import { confirmDelete, confirmWarning } from '../utils/confirmToast';
 
 // Seed initial default events matching the centralized schema
 const SEED_EVENTS = [
@@ -674,12 +675,12 @@ const AcademicCalendar = () => {
 
   // --- Delete Event Handler ---
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
+    confirmDelete(() => {
       const filtered = (events ?? []).filter(e => e.id !== id);
       saveEvents(filtered);
       setSelectedEventId(null);
       toast.success('Event removed successfully.');
-    }
+    }, 'Are you sure you want to delete this event?');
   };
 
   // --- Save / Create Event Handler ---
@@ -693,11 +694,16 @@ const AcademicCalendar = () => {
     const clashes = detectClashes(editorData, editingEvent?.id);
     if (clashes.length > 0) {
       const warningText = clashes.map(c => `• ${c.type}: ${c.message}`).join('\n');
-      if (!window.confirm(`AI Clash Engine Warning:\n\n${warningText}\n\nDo you want to override and save anyway?`)) {
-        return;
-      }
+      confirmWarning(() => {
+        executeSaveEvent();
+      }, warningText, 'AI Clash Engine Warning', 'Save Anyway');
+      return;
     }
 
+    executeSaveEvent();
+  };
+
+  const executeSaveEvent = () => {
     let updatedList = [];
     if (editingEvent) {
       // Modify
@@ -1605,7 +1611,7 @@ const AcademicCalendar = () => {
         <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
           <div
             onClick={() => setSelectedEventId(null)}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            className="absolute inset-0 bg-slate-900/30 backdrop-blur-xs"
           ></div>
           
           <div className="relative w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col justify-between z-10 animate-slide-left p-6">
@@ -1747,10 +1753,11 @@ const AcademicCalendar = () => {
 
       {/* 7. ADD / EDIT DIALOG MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex justify-end items-start p-4 bg-slate-900/30 backdrop-blur-xs animate-fade-in" onClick={() => setShowAddModal(false)}>
           <form
             onSubmit={handleSaveEvent}
-            className="w-full max-w-lg bg-white border border-slate-100 rounded-[32px] shadow-2xl overflow-hidden flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-white border border-slate-100 rounded-3xl mt-16 mr-2 max-h-[calc(100vh-6rem)] overflow-y-auto shadow-2xl flex flex-col justify-between animate-slide-in"
           >
             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <div>

@@ -75,7 +75,7 @@ const BookTable = () => {
             <Filter size={16} />
             Filters
           </button>
-          <button 
+          <button
             onClick={() => handleOpenModal()}
             className="flex items-center justify-center gap-2 text-white bg-primary hover:bg-primary-dark transition-colors text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm w-full lg:w-auto"
           >
@@ -153,14 +153,14 @@ const BookTable = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
                         onClick={() => handleOpenModal(book)}
                         className="p-2 text-text-muted hover:text-primary bg-white hover:bg-primary/10 rounded-lg transition-colors border border-transparent hover:border-primary/20 shadow-sm"
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(book.id)}
                         className="p-2 text-text-muted hover:text-danger bg-white hover:bg-danger/10 rounded-lg transition-colors border border-transparent hover:border-danger/20 shadow-sm"
                         title="Delete"
@@ -177,7 +177,7 @@ const BookTable = () => {
       </div>
 
       {isModalOpen && (
-        <BookModal 
+        <BookModal
           isOpen={isModalOpen}
           onClose={() => { setIsModalOpen(false); setBookToEdit(null); }}
           bookData={bookToEdit}

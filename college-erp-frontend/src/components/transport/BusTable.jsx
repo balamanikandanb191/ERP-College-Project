@@ -3,6 +3,7 @@ import { Bus, Edit2, Trash2, Plus, Info } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import BusModal from './BusModal';
+import { confirmDelete } from '../../utils/confirmToast';
 
 const BusTable = () => {
   const [buses, setBuses] = useState([]);
@@ -27,7 +28,7 @@ const BusTable = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this bus?')) {
+    confirmDelete(async () => {
       try {
         await api.delete(`/transport/buses/${id}`);
         toast.success('Bus deleted successfully');
@@ -35,7 +36,7 @@ const BusTable = () => {
       } catch (error) {
         toast.error('Failed to delete bus');
       }
-    }
+    }, 'Are you sure you want to delete this bus?');
   };
 
   const openAddModal = () => {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useMasterData } from '../hooks/useMasterData';
+import { confirmDelete } from '../utils/confirmToast';
 
 const SEED = [
   { id: 'em1', name: 'Internal Assessment 1', shortName: 'IA1', type: 'Internal', maxMarks: 50, passMark: 20, month: 'August', year: '2026', gpaWeight: 20, active: true },
@@ -37,15 +38,73 @@ const ExamMaster = () => {
     }
   };
   const del = async (id) => { 
-    if (!window.confirm('Delete exam type?')) return; 
-    const res = await deleteRecord(id);
-    if (res.success) toast.success('Deleted');
-    else toast.error('Failed to delete');
+    confirmDelete(async () => {
+      const res = await deleteRecord(id);
+      if (res.success) toast.success('Deleted');
+      else toast.error('Failed to delete');
+    }, 'Are you sure you want to delete this exam master record?');
   };
   const openEdit = r => { setEditing(r); setForm({ name: r.name, shortName: r.shortName, type: r.type, maxMarks: r.maxMarks, passMark: r.passMark, month: r.month, year: r.year, gpaWeight: r.gpaWeight, active: r.active }); setShowModal(true); };
   const totalWeight = records.reduce((s, r) => s + Number(r.gpaWeight), 0);
 
   const TYPE_COLORS = { 'Internal': 'bg-blue-50 text-blue-700 border-blue-200', 'External': 'bg-violet-50 text-violet-700 border-violet-200', 'Practical': 'bg-emerald-50 text-emerald-700 border-emerald-200', 'Assignment': 'bg-amber-50 text-amber-700 border-amber-200' };
+
+  if (showModal) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto pb-12 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => { setShowModal(false); setEditing(null); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 cursor-pointer shadow-sm"
+          >
+            ← Back to List
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-slide-in">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Exam Type' : 'Add Exam Type'}</h3>
+            <button onClick={() => { setShowModal(false); setEditing(null); }} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button>
+          </div>
+          <form onSubmit={submit} className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Exam Name *</label>
+                <input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="End Semester Exam" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Short Name</label>
+                <input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" placeholder="ESE" value={form.shortName} onChange={e => setForm({ ...form, shortName: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Type</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>{TYPES.map(t => <option key={t}>{t}</option>)}</select>
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Max Marks</label>
+                <input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.maxMarks} onChange={e => setForm({ ...form, maxMarks: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Pass Mark</label>
+                <input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.passMark} onChange={e => setForm({ ...form, passMark: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Month</label>
+                <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.month} onChange={e => setForm({ ...form, month: e.target.value })}>{MONTHS.map(m => <option key={m}>{m}</option>)}</select>
+              </div>
+              <div>
+                <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">GPA Weight %</label>
+                <input type="number" min={0} max={100} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.gpaWeight} onChange={e => setForm({ ...form, gpaWeight: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => { setShowModal(false); setEditing(null); }} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -90,29 +149,6 @@ const ExamMaster = () => {
           </div>
         ))}
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between"><h3 className="text-lg font-black text-slate-800">{editing ? 'Edit Exam' : 'Add Exam Type'}</h3><button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={18} /></button></div>
-            <form onSubmit={submit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Exam Name *</label><input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="End Semester Exam" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Short Name</label><input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" placeholder="ESE" value={form.shortName} onChange={e => setForm({ ...form, shortName: e.target.value })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Type</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>{TYPES.map(t => <option key={t}>{t}</option>)}</select></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Max Marks</label><input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.maxMarks} onChange={e => setForm({ ...form, maxMarks: Number(e.target.value) })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Pass Mark</label><input type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.passMark} onChange={e => setForm({ ...form, passMark: Number(e.target.value) })} /></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Month</label><select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.month} onChange={e => setForm({ ...form, month: e.target.value })}>{MONTHS.map(m => <option key={m}>{m}</option>)}</select></div>
-                <div><label className="text-[11px] font-black text-slate-500 uppercase block mb-1">GPA Weight %</label><input type="number" min={0} max={100} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={form.gpaWeight} onChange={e => setForm({ ...form, gpaWeight: Number(e.target.value) })} /></div>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm">{editing ? 'Update' : 'Add'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

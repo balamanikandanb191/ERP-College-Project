@@ -7,6 +7,11 @@ const Book = sequelize.define('Book', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  customBookId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
   bookName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -24,6 +29,36 @@ const Book = sequelize.define('Book', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  language: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  publisher: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  edition: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  publicationYear: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  pages: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  price: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0,
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'Available',
+  },
   quantity: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -34,12 +69,11 @@ const Book = sequelize.define('Book', {
     allowNull: false,
     defaultValue: 1,
   },
-  price: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-    defaultValue: 0,
+  rack: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
-  publisher: {
+  position: {
     type: DataTypes.STRING,
     allowNull: true,
   },
