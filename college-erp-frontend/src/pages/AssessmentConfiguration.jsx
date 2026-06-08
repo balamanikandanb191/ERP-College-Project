@@ -17,7 +17,12 @@ const ASSESSMENT_TYPES = [
   'Project Review'
 ];
 
-const COURSES = [
+const DEFAULT_COURSES = [
+  'Computer Science',
+  'Information Technology',
+  'Electronics',
+  'Mechanical',
+  'Civil',
   'B.Sc Computer Science',
   'B.Sc Mathematics',
   'B.Com',
@@ -41,6 +46,7 @@ const emptyForm = {
   academic_year: '',
   course: '',
   semester: '',
+  section: '',
   subject_name: '',
   subject_code: '',
   assessment_type: '',
@@ -59,6 +65,7 @@ const AssessmentConfigurationPage = () => {
   const [perPage, setPerPage] = useState(10);
   const [staffList, setStaffList] = useState([]);
   const [subjectList, setSubjectList] = useState([]);
+  const [courseList, setCourseList] = useState(DEFAULT_COURSES);
   const [academicYears, setAcademicYears] = useState([]);
 
   const fetchConfigs = useCallback(async () => {
@@ -75,19 +82,36 @@ const AssessmentConfigurationPage = () => {
     fetchConfigs();
     const loadMasters = async () => {
       try {
-        const [staffRes, subjRes, yearRes] = await Promise.allSettled([
-          api.get('/masters/staff_master'),
+        const [staffRes, subjRes, yearRes, classRes] = await Promise.allSettled([
+          api.get('/staff'),
           api.get('/masters/subject'),
-          api.get('/masters/acad_year')
+          api.get('/masters/acad_year'),
+          api.get('/masters/class_master')
         ]);
         if (staffRes.status === 'fulfilled') {
-          setStaffList(staffRes.value.data.map(r => ({ id: r.id, ...r.data })));
+          setStaffList(Array.isArray(staffRes.value.data) ? staffRes.value.data : []);
         }
         if (subjRes.status === 'fulfilled') {
           setSubjectList(subjRes.value.data.map(r => ({ id: r.id, ...r.data })));
         }
         if (yearRes.status === 'fulfilled') {
           setAcademicYears(yearRes.value.data.map(r => r.data?.year || r.data?.name).filter(Boolean));
+        }
+        if (classRes.status === 'fulfilled' && Array.isArray(classRes.value.data)) {
+          const set = new Set(DEFAULT_COURSES);
+          classRes.value.data.forEach(r => {
+            const c = r.data || r;
+            if (c.depts) {
+              const list = typeof c.depts === 'string' ? c.depts.split(',') : c.depts;
+              if (Array.isArray(list)) {
+                list.forEach(d => {
+                  const trimmed = d.trim();
+                  if (trimmed) set.add(trimmed);
+                });
+              }
+            }
+          });
+          setCourseList(Array.from(set));
         }
       } catch { /* ignore */ }
     };
@@ -100,36 +124,54 @@ const AssessmentConfigurationPage = () => {
     return match ? match[0] : '';
   };
 
-  const getDeptFromCourse = (courseName) => {
-    if (!courseName) return '';
-    const lower = courseName.toLowerCase();
-    if (lower.includes('computer science') || lower.includes('bca') || lower.includes('mca') || lower.includes('computer')) {
-      return 'Computer Science';
+  useEffect(() => {
+    if (form.subject_name) {
+      const semNum = getSemNum(form.semester);
+      const typeLower = form.assessment_type ? form.assessment_type.toLowerCase() : '';
+      const isAssessmentPractical = typeLower && (
+        typeLower.includes('practical') || 
+        typeLower.includes('record') || 
+        typeLower.includes('viva')
+      );
+      
+      const isValid = subjectList.some(s => {
+        if (semNum && String(s.sem) !== String(semNum)) return false;
+        
+        if (form.assessment_type) {
+          const subjectHasPractical = s.type === 'Practical' || s.type === 'Theory + Practical';
+          const subjectHasTheory = s.type === 'Theory' || s.type === 'Theory + Practical';
+          if (isAssessmentPractical ? !subjectHasPractical : !subjectHasTheory) return false;
+        }
+        
+        return s.name === form.subject_name || `${s.code} - ${s.name}` === form.subject_name;
+      });
+
+      if (!isValid) {
+        setForm(prev => ({ ...prev, subject_name: '', subject_code: '' }));
+      }
     }
-    if (lower.includes('it') || lower.includes('information technology') || lower.includes('tech it')) {
-      return 'Information Technology';
-    }
-    if (lower.includes('electronics') || lower.includes('ece')) {
-      return 'Electronics';
-    }
-    if (lower.includes('mechanical') || lower.includes('mech')) {
-      return 'Mechanical';
-    }
-    if (lower.includes('civil')) {
-      return 'Civil';
-    }
-    if (lower.includes('math') || lower.includes('physics') || lower.includes('chemistry') || lower.includes('science & humanities')) {
-      return 'Science & Humanities';
-    }
-    return '';
-  };
+  }, [form.semester, form.assessment_type, subjectList]);
 
   const filteredSubjects = subjectList.filter(s => {
     const semNum = getSemNum(form.semester);
-    const dept = getDeptFromCourse(form.course);
-    if (!semNum && !dept) return true;
     if (semNum && String(s.sem) !== String(semNum)) return false;
-    if (dept && s.dept && s.dept.toLowerCase() !== dept.toLowerCase()) return false;
+
+    // Filter by Assessment Type (Practical vs Theory)
+    if (form.assessment_type) {
+      const typeLower = form.assessment_type.toLowerCase();
+      const isAssessmentPractical = typeLower.includes('practical') || 
+                                    typeLower.includes('record') || 
+                                    typeLower.includes('viva');
+      const subjectHasPractical = s.type === 'Practical' || s.type === 'Theory + Practical';
+      const subjectHasTheory = s.type === 'Theory' || s.type === 'Theory + Practical';
+
+      if (isAssessmentPractical) {
+        if (!subjectHasPractical) return false;
+      } else {
+        if (!subjectHasTheory) return false;
+      }
+    }
+
     return true;
   });
 
@@ -149,7 +191,7 @@ const AssessmentConfigurationPage = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.academic_year || !form.course || !form.semester || !form.subject_name || !form.assessment_type || !form.max_marks) {
+    if (!form.academic_year || !form.course || !form.semester || !form.section || !form.subject_name || !form.assessment_type || !form.max_marks) {
       toast.error('Please fill all required fields.');
       return;
     }
@@ -187,16 +229,16 @@ const AssessmentConfigurationPage = () => {
   const isPractical = ['Practical', 'Record Work', 'Viva Voce'].includes(form.assessment_type);
 
   const filtered = configs.filter(c =>
-    !search || [c.course, c.semester, c.subject_name, c.assessment_type, c.academic_year]
+    !search || [c.course, c.semester, c.section, c.subject_name, c.assessment_type, c.academic_year]
       .some(v => v?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const paginated = filtered.slice(0, perPage);
 
   const exportCSV = () => {
-    const headers = ['S.No', 'Academic Year', 'Course', 'Semester', 'Subject Name', 'Subject Code', 'Assessment Type', 'Assessment Date', 'Max Marks', 'Test No', 'Experiment Count'];
+    const headers = ['S.No', 'Academic Year', 'Course', 'Semester', 'Section', 'Subject Name', 'Subject Code', 'Assessment Type', 'Assessment Date', 'Max Marks', 'Test No', 'Experiment Count'];
     const rows = configs.map((c, i) => [
-      i + 1, c.academic_year, c.course, c.semester, c.subject_name, c.subject_code,
+      i + 1, c.academic_year, c.course, c.semester, c.section || 'All', c.subject_name, c.subject_code,
       c.assessment_type, c.assessment_date || '-', c.max_marks, c.assessment_number, c.experiment_count || '-'
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
@@ -258,19 +300,31 @@ const AssessmentConfigurationPage = () => {
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 font-semibold text-slate-700"
                 value={form.course} onChange={e => handleChange('course', e.target.value)}>
                 <option value="">Select Course</option>
-                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+                {courseList.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
             {/* Semester */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">
-                <BookOpen size={11} className="text-indigo-500" /> Semester / Year / Section <span className="text-red-500">*</span>
+                <BookOpen size={11} className="text-indigo-500" /> Semester / Year <span className="text-red-500">*</span>
               </label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 font-semibold text-slate-700"
                 value={form.semester} onChange={e => handleChange('semester', e.target.value)}>
                 <option value="">Select Semester</option>
                 {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            {/* Section */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">
+                <Hash size={11} className="text-indigo-500" /> Section <span className="text-red-500">*</span>
+              </label>
+              <select className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 font-semibold text-slate-700"
+                value={form.section} onChange={e => handleChange('section', e.target.value)}>
+                <option value="">Select Section</option>
+                {['A', 'B', 'C', 'D'].map(sec => <option key={sec} value={sec}>{sec}</option>)}
               </select>
             </div>
 
@@ -295,13 +349,15 @@ const AssessmentConfigurationPage = () => {
                 value={form.subject_name} onChange={e => handleChange('subject_name', e.target.value)}>
                 <option value="">Select Subject</option>
                 {filteredSubjects.length > 0 ? (
-                  filteredSubjects.map(s => (
-                    <option key={s.id} value={s.name}>{s.code ? `${s.code} - ${s.name}` : s.name}</option>
+                  filteredSubjects.map((s, idx) => (
+                    <option key={s.id || `${s.code}-${s.name}-${idx}`} value={s.name}>{s.code ? `${s.code} - ${s.name}` : s.name}</option>
                   ))
-                ) : (
+                ) : subjectList.length === 0 ? (
                   ['Software Engineering', 'Database Systems', 'Computer Networks', 'Theory of Computation', 'Web Technology', 'Data Structures'].map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))
+                ) : (
+                  <option value="" disabled>No subjects found for this selection</option>
                 )}
               </select>
             </div>
@@ -420,6 +476,7 @@ const AssessmentConfigurationPage = () => {
                 <th className="px-4 py-3.5">Academic Year</th>
                 <th className="px-4 py-3.5">Course</th>
                 <th className="px-4 py-3.5">Semester</th>
+                <th className="px-4 py-3.5">Section</th>
                 <th className="px-4 py-3.5">Subject Name</th>
                 <th className="px-4 py-3.5">Subject Code</th>
                 <th className="px-4 py-3.5">Assessment Type</th>
@@ -432,13 +489,14 @@ const AssessmentConfigurationPage = () => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {paginated.length === 0 ? (
-                <tr><td colSpan={12} className="px-4 py-10 text-center text-slate-400 text-xs font-semibold">No configurations found. Add one above.</td></tr>
+                <tr><td colSpan={13} className="px-4 py-10 text-center text-slate-400 text-xs font-semibold">No configurations found. Add one above.</td></tr>
               ) : paginated.map((c, i) => (
                 <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-3 text-slate-500 font-bold text-xs">{i + 1}</td>
                   <td className="px-4 py-3 font-semibold text-xs text-slate-700">{c.academic_year}</td>
                   <td className="px-4 py-3 font-semibold text-xs text-indigo-700">{c.course}</td>
                   <td className="px-4 py-3 text-xs text-slate-700">{c.semester}</td>
+                  <td className="px-4 py-3 font-bold text-xs text-indigo-600">{c.section || 'All'}</td>
                   <td className="px-4 py-3 font-bold text-xs text-slate-800">{c.subject_name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.subject_code || '-'}</td>
                   <td className="px-4 py-3">

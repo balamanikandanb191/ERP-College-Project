@@ -27,7 +27,7 @@ const AdmittedStudent = () => {
         bloodGroup: student.bloodGroup,
         department: student.course || student.interestedCourse || 'Computer Science',
         course: student.course || student.interestedCourse || 'Computer Science',
-        semester: 'Semester 1',
+        semester: student.semester || 'Semester 1',
         section: student.section || 'A',
         fatherName: student.fatherName || student.parentName,
         fatherPhone: student.fatherPhone || student.parentPhone,

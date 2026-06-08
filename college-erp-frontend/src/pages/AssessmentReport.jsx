@@ -3,7 +3,12 @@ import { FileText, Search, Download, Printer, TrendingUp, Users, Award, AlertTri
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
-const COURSES = [
+const DEFAULT_COURSES = [
+  'Computer Science',
+  'Information Technology',
+  'Electronics',
+  'Mechanical',
+  'Civil',
   'B.Sc Computer Science',
   'B.Sc Mathematics',
   'B.Com',
@@ -41,11 +46,13 @@ const AssessmentReport = () => {
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [course, setCourse] = useState('');
   const [semester, setSemester] = useState('');
+  const [section, setSection] = useState('');
   const [subject, setSubject] = useState('');
   const [assessmentType, setAssessmentType] = useState('');
   
   const [academicYears, setAcademicYears] = useState([]);
   const [subjectList, setSubjectList] = useState([]);
+  const [courseList, setCourseList] = useState(DEFAULT_COURSES);
   const [availableConfigs, setAvailableConfigs] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -55,15 +62,32 @@ const AssessmentReport = () => {
   useEffect(() => {
     const loadMasters = async () => {
       try {
-        const [yearRes, configRes] = await Promise.allSettled([
+        const [yearRes, configRes, classRes] = await Promise.allSettled([
           api.get('/masters/acad_year'),
-          api.get('/assessment/config')
+          api.get('/assessment/config'),
+          api.get('/masters/class_master')
         ]);
         if (yearRes.status === 'fulfilled') {
           setAcademicYears(yearRes.value.data.map(r => r.data?.year || r.data?.name).filter(Boolean));
         }
         if (configRes.status === 'fulfilled') {
           setAvailableConfigs(configRes.value.data);
+        }
+        if (classRes.status === 'fulfilled' && Array.isArray(classRes.value.data)) {
+          const set = new Set(DEFAULT_COURSES);
+          classRes.value.data.forEach(r => {
+            const c = r.data || r;
+            if (c.depts) {
+              const list = typeof c.depts === 'string' ? c.depts.split(',') : c.depts;
+              if (Array.isArray(list)) {
+                list.forEach(d => {
+                  const trimmed = d.trim();
+                  if (trimmed) set.add(trimmed);
+                });
+              }
+            }
+          });
+          setCourseList(Array.from(set));
         }
       } catch (e) {
         console.error('Error loading master data:', e);
@@ -95,6 +119,7 @@ const AssessmentReport = () => {
     setLoading(true);
     try {
       let url = `/assessment/report?academic_year=${academicYear}&course=${encodeURIComponent(course)}&semester=${encodeURIComponent(semester)}`;
+      if (section) url += `&section=${encodeURIComponent(section)}`;
       if (subject) url += `&subject_name=${encodeURIComponent(subject)}`;
       if (assessmentType) url += `&assessment_type=${encodeURIComponent(assessmentType)}`;
       url += `&reportType=${reportType}`;
@@ -174,7 +199,7 @@ const AssessmentReport = () => {
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             {/* Academic Year */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Academic Year</label>
@@ -192,7 +217,7 @@ const AssessmentReport = () => {
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={course} onChange={e => setCourse(e.target.value)}>
                 <option value="">Select Course</option>
-                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+                {courseList.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
@@ -203,6 +228,16 @@ const AssessmentReport = () => {
                 value={semester} onChange={e => setSemester(e.target.value)}>
                 <option value="">Select Semester</option>
                 {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            {/* Section */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Section</label>
+              <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={section} onChange={e => setSection(e.target.value)}>
+                <option value="">All Sections</option>
+                {['A', 'B', 'C', 'D'].map(sec => <option key={sec} value={sec}>{sec}</option>)}
               </select>
             </div>
 
@@ -218,10 +253,10 @@ const AssessmentReport = () => {
 
             {/* Assessment Type */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assessment Type (Optional)</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assessment (Optional)</label>
               <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={assessmentType} onChange={e => setAssessmentType(e.target.value)}>
-                <option value="">All Assessment Types</option>
+                <option value="">All Types</option>
                 {ASSESSMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>

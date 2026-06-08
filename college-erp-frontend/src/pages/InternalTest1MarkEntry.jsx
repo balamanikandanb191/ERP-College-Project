@@ -104,8 +104,8 @@ const StaffSearchDropdown = ({ staffList, value, onSelect }) => {
   );
 };
 
-const AssignmentMarkEntry = () => {
-  const assessmentType = 'Assignment';
+const InternalTest1MarkEntry = () => {
+  const assessmentType = 'Internal Test 1';
   // Selection criteria
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [course, setCourse] = useState('');
@@ -748,4 +748,4 @@ const AssignmentMarkEntry = () => {
   );
 };
 
-export default AssignmentMarkEntry;
+export default InternalTest1MarkEntry;

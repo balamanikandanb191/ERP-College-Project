@@ -573,7 +573,7 @@ const ApplicationIssue = () => {
 
       {/* Footer Branding */}
       <footer className="w-full px-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-slate-200/40 pt-6 text-[10px] font-bold text-slate-400 tracking-wider">
-        <div>© 2026 SMS. All Rights Reserved.</div>
+        <div>© 2026 CMS. All Rights Reserved.</div>
         <div className="flex items-center gap-1">
           <span>Made by</span>
           <a href="#" className="text-indigo-600 hover:underline">Search First Technology</a>
@@ -604,7 +604,7 @@ const ApplicationIssue = () => {
               {/* Institution Header */}
               <div className="text-center border-b-2 border-dashed border-slate-200 pb-5">
                 <h4 className="text-lg font-black text-slate-800 tracking-wide">
-                  SCHOOL MANAGEMENT SYSTEM
+                  COLLEGE MANAGEMENT SYSTEM
                 </h4>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
                   Prospectus Application Sale Receipt
@@ -756,13 +756,13 @@ const ApplicationIssue = () => {
                     </div>
                     <div>
                       <h2 className="text-xl font-black tracking-wide">
-                        SCHOOL MANAGEMENT SYSTEM
+                        COLLEGE MANAGEMENT SYSTEM
                       </h2>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
                         Affiliated to State Board of Education • Erode Division
                       </p>
                       <p className="text-[9px] font-semibold text-slate-400 mt-0.5">
-                        Erode, Tamil Nadu, India • contact@schoolerp.com
+                        Erode, Tamil Nadu, India • contact@collegeerp.com
                       </p>
                     </div>
                   </div>

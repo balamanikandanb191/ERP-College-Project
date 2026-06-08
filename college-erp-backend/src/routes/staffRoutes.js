@@ -6,16 +6,13 @@ const { authenticateToken, requireRole } = require('../middleware/authMiddleware
 // Protect all routes
 router.use(authenticateToken);
 
-// For staff, restrict everything to Admin and Super Admin for now
-router.use(requireRole(['Super Admin', 'Admin']));
-
 router.route('/')
-  .get(staffController.getAllStaff)
-  .post(staffController.createStaff);
+  .get(requireRole(['Super Admin', 'Admin', 'Staff', 'Teacher']), staffController.getAllStaff)
+  .post(requireRole(['Super Admin', 'Admin']), staffController.createStaff);
 
 router.route('/:id')
-  .get(staffController.getStaffById)
-  .put(staffController.updateStaff)
-  .delete(staffController.deleteStaff);
+  .get(requireRole(['Super Admin', 'Admin', 'Staff', 'Teacher']), staffController.getStaffById)
+  .put(requireRole(['Super Admin', 'Admin']), staffController.updateStaff)
+  .delete(requireRole(['Super Admin', 'Admin']), staffController.deleteStaff);
 
 module.exports = router;

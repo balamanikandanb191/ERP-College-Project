@@ -19,6 +19,10 @@ const AssessmentConfig = sequelize.define('AssessmentConfig', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  section: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   subject_name: {
     type: DataTypes.STRING,
     allowNull: false

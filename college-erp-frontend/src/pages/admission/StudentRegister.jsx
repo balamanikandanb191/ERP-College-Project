@@ -115,6 +115,7 @@ const StudentRegister = () => {
     admissionType: 'Regular',
     admissionDate: new Date().toISOString().split('T')[0],
     section: 'A',
+    semester: 'Semester 1',
     rollNumber: '',
     registerNumber: '',
     reference: 'Direct',
@@ -253,6 +254,7 @@ const StudentRegister = () => {
       admissionType: 'Regular',
       admissionDate: new Date().toISOString().split('T')[0],
       section: 'A',
+      semester: 'Semester 1',
       rollNumber: '',
       registerNumber: '',
       reference: 'Direct',
@@ -859,6 +861,21 @@ const StudentRegister = () => {
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">
+                      SEMESTER *
+                    </label>
+                    <select 
+                      value={form.semester} 
+                      onChange={(e) => setForm(prev => ({ ...prev, semester: e.target.value }))} 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none text-slate-700"
+                      required
+                    >
+                      {['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8', 'Year 1', 'Year 2', 'Year 3'].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">
                       ACADEMIC YEAR *
                     </label>
                     <select 
@@ -1085,7 +1102,10 @@ const StudentRegister = () => {
                       <div className="font-semibold">{r.dob}</div>
                       <div className="text-[10px] text-slate-400 font-bold">Age: {r.age || calculateAge(r.dob)}</div>
                     </td>
-                    <td className="px-6 py-4 font-bold text-slate-600">{r.course || r.interestedCourse}</td>
+                    <td className="px-6 py-4 font-bold text-slate-600">
+                      <div>{r.course || r.interestedCourse}</div>
+                      {r.semester && <div className="text-[10px] text-slate-400 font-bold">{r.semester}</div>}
+                    </td>
                     <td className="px-6 py-4 font-semibold text-slate-500">{r.academicYear || '2025-2026'}</td>
                     <td className="px-6 py-4">
                       <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${

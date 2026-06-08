@@ -74,7 +74,7 @@ const ROLE_PRESETS = {
     password: 'Parent@123',
     name: 'Student Parent',
     icon: Heart,
-    desc: 'Monitor children\'s weekly performance graphs, submit leave notifications, and pay school fee ledgers.',
+    desc: 'Monitor student\'s weekly performance graphs, submit leave notifications, and pay college fee ledgers.',
     badgeStyle: 'bg-white/10 text-white/95 border-white/15',
     gradientStyle: 'linear-gradient(135deg, rgba(126, 34, 206, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%)', // Muted Plum/Violet
     primaryColor: 'text-purple-600',

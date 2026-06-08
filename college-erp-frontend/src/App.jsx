@@ -62,6 +62,15 @@ import AssignmentMarkEntry from './pages/AssignmentMarkEntry';
 import UnitTestMarkEntry from './pages/UnitTestMarkEntry';
 import PracticalMark from './pages/PracticalMark';
 import AssessmentReport from './pages/AssessmentReport';
+import InternalTest1MarkEntry from './pages/InternalTest1MarkEntry';
+import InternalTest2MarkEntry from './pages/InternalTest2MarkEntry';
+import InternalTest3MarkEntry from './pages/InternalTest3MarkEntry';
+import ModelExamMarkEntry from './pages/ModelExamMarkEntry';
+import SeminarMarkEntry from './pages/SeminarMarkEntry';
+import PresentationMarkEntry from './pages/PresentationMarkEntry';
+import RecordWorkMarkEntry from './pages/RecordWorkMarkEntry';
+import VivaVoceMarkEntry from './pages/VivaVoceMarkEntry';
+import ProjectReviewMarkEntry from './pages/ProjectReviewMarkEntry';
 
 // Library Sub-routes Imports
 import AddBook from './pages/library/AddBook';
@@ -179,15 +188,31 @@ function App() {
               <Route path="marked-attendance" element={<MarkedAttendance />} />
               <Route path="assessment-configuration" element={<AssessmentConfiguration />} />
               <Route path="assignment-mark-entry" element={<AssignmentMarkEntry />} />
-              <Route path="unit-test-mark-entry" element={<UnitTestMarkEntry />} />
+              <Route path="internal-test-1-mark-entry" element={<InternalTest1MarkEntry />} />
+              <Route path="internal-test-2-mark-entry" element={<InternalTest2MarkEntry />} />
+              <Route path="internal-test-3-mark-entry" element={<InternalTest3MarkEntry />} />
+              <Route path="model-exam-mark-entry" element={<ModelExamMarkEntry />} />
+              <Route path="seminar-mark-entry" element={<SeminarMarkEntry />} />
+              <Route path="presentation-mark-entry" element={<PresentationMarkEntry />} />
               <Route path="practical-mark-entry" element={<PracticalMark />} />
+              <Route path="record-work-mark-entry" element={<RecordWorkMarkEntry />} />
+              <Route path="viva-voce-mark-entry" element={<VivaVoceMarkEntry />} />
+              <Route path="project-review-mark-entry" element={<ProjectReviewMarkEntry />} />
               <Route path="assessment-report" element={<AssessmentReport />} />
 
               {/* Support exact paths from screenshots */}
               <Route path="academic/assessment/AssessmentConfiguration" element={<AssessmentConfiguration />} />
               <Route path="academic/assessment/AssignmentMarkEntry" element={<AssignmentMarkEntry />} />
-              <Route path="academic/assessment/UnitTestMarkEntry" element={<UnitTestMarkEntry />} />
+              <Route path="academic/assessment/InternalTest1MarkEntry" element={<InternalTest1MarkEntry />} />
+              <Route path="academic/assessment/InternalTest2MarkEntry" element={<InternalTest2MarkEntry />} />
+              <Route path="academic/assessment/InternalTest3MarkEntry" element={<InternalTest3MarkEntry />} />
+              <Route path="academic/assessment/ModelExamMarkEntry" element={<ModelExamMarkEntry />} />
+              <Route path="academic/assessment/SeminarMarkEntry" element={<SeminarMarkEntry />} />
+              <Route path="academic/assessment/PresentationMarkEntry" element={<PresentationMarkEntry />} />
               <Route path="academic/assessment/PracticalMark" element={<PracticalMark />} />
+              <Route path="academic/assessment/RecordWorkMarkEntry" element={<RecordWorkMarkEntry />} />
+              <Route path="academic/assessment/VivaVoceMarkEntry" element={<VivaVoceMarkEntry />} />
+              <Route path="academic/assessment/ProjectReviewMarkEntry" element={<ProjectReviewMarkEntry />} />
               <Route path="academic/assessment/AssessmentReport" element={<AssessmentReport />} />
 
               {/* Fallback Sub-routes for Grouped Sidebar */}

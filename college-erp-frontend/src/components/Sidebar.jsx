@@ -317,13 +317,53 @@ const menuSections = [
         roles: ['Admin', 'Super Admin']
       },
       {
-        name: 'Unit Test Mark Entry',
-        path: '/admin/academic/assessment/UnitTestMarkEntry',
+        name: 'Internal Test 1 Mark Entry',
+        path: '/admin/academic/assessment/InternalTest1MarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Internal Test 2 Mark Entry',
+        path: '/admin/academic/assessment/InternalTest2MarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Internal Test 3 Mark Entry',
+        path: '/admin/academic/assessment/InternalTest3MarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Model Exam Mark Entry',
+        path: '/admin/academic/assessment/ModelExamMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Seminar Mark Entry',
+        path: '/admin/academic/assessment/SeminarMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Presentation Mark Entry',
+        path: '/admin/academic/assessment/PresentationMarkEntry',
         roles: ['Admin', 'Super Admin']
       },
       {
         name: 'Practical Mark Entry',
         path: '/admin/academic/assessment/PracticalMark',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Record Work Mark Entry',
+        path: '/admin/academic/assessment/RecordWorkMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Viva Voce Mark Entry',
+        path: '/admin/academic/assessment/VivaVoceMarkEntry',
+        roles: ['Admin', 'Super Admin']
+      },
+      {
+        name: 'Project Review Mark Entry',
+        path: '/admin/academic/assessment/ProjectReviewMarkEntry',
         roles: ['Admin', 'Super Admin']
       },
       {
@@ -922,7 +962,7 @@ const Sidebar = () => {
           </div>
           <div>
             <h1 className="text-[11px] font-black text-violet-700 tracking-wider uppercase leading-tight">
-              SCHOOL MANAGEMENT SYSTEM
+              COLLEGE MANAGEMENT SYSTEM
             </h1>
           </div>
         </div>

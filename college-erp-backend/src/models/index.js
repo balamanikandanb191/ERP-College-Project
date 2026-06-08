@@ -170,6 +170,9 @@ AnnouncementRead.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Announcement, { foreignKey: 'authorId', as: 'authoredAnnouncements' });
 Announcement.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 
+Student.hasMany(AssessmentMark, { foreignKey: 'student_id' });
+AssessmentMark.belongsTo(Student, { foreignKey: 'student_id' });
+
 module.exports = {
   sequelize,
   Role,

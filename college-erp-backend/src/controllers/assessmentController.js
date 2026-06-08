@@ -5,21 +5,24 @@ const { Op } = require('sequelize');
 
 exports.createConfig = async (req, res) => {
   try {
-    const { academic_year, course, semester, subject_name, subject_code,
+    const { academic_year, course, semester, section, subject_name, subject_code,
       assessment_type, assessment_date, max_marks, staff_id, staff_name, experiment_count } = req.body;
 
     if (!academic_year || !course || !semester || !subject_name || !assessment_type || !max_marks) {
       return res.status(400).json({ message: 'Missing required fields: academic_year, course, semester, subject_name, assessment_type, max_marks' });
     }
 
-    // Auto-generate assessment number per type, course, semester, subject, year
+    // Auto-generate assessment number per type, course, semester, section, subject, year
+    const countWhere = { academic_year, course, semester, subject_name, assessment_type };
+    if (section) countWhere.section = section;
+    
     const countExisting = await AssessmentConfig.count({
-      where: { academic_year, course, semester, subject_name, assessment_type }
+      where: countWhere
     });
     const assessment_number = countExisting + 1;
 
     const config = await AssessmentConfig.create({
-      academic_year, course, semester, subject_name, subject_code: subject_code || '',
+      academic_year, course, semester, section: section || null, subject_name, subject_code: subject_code || '',
       assessment_type, assessment_date: assessment_date || null,
       max_marks: Number(max_marks), assessment_number, staff_id: staff_id || null,
       staff_name: staff_name || null, experiment_count: experiment_count ? Number(experiment_count) : null
@@ -34,11 +37,12 @@ exports.createConfig = async (req, res) => {
 
 exports.getConfigs = async (req, res) => {
   try {
-    const { academic_year, course, semester, subject_name, assessment_type } = req.query;
+    const { academic_year, course, semester, section, subject_name, assessment_type } = req.query;
     const where = {};
     if (academic_year) where.academic_year = academic_year;
     if (course) where.course = course;
     if (semester) where.semester = semester;
+    if (section) where.section = section;
     if (subject_name) where.subject_name = subject_name;
     if (assessment_type) where.assessment_type = assessment_type;
 
@@ -153,7 +157,7 @@ exports.saveMarks = async (req, res) => {
 
 exports.getMarks = async (req, res) => {
   try {
-    const { academic_year, course, semester, subject_name, assessment_type, assessment_number, student_id } = req.query;
+    const { academic_year, course, semester, subject_name, assessment_type, assessment_number, student_id, section } = req.query;
     const where = {};
     if (academic_year) where.academic_year = academic_year;
     if (course) where.course = course;
@@ -163,7 +167,17 @@ exports.getMarks = async (req, res) => {
     if (assessment_number) where.assessment_number = Number(assessment_number);
     if (student_id) where.student_id = student_id;
 
-    const marks = await AssessmentMark.findAll({ where, order: [['created_at', 'DESC']] });
+    const include = [];
+    if (section) {
+      const { Student } = require('../models');
+      include.push({
+        model: Student,
+        where: { section },
+        required: true
+      });
+    }
+
+    const marks = await AssessmentMark.findAll({ where, include, order: [['created_at', 'DESC']] });
     res.json(marks);
   } catch (error) {
     res.status(500).json({ message: 'Server error: ' + error.message });
@@ -196,7 +210,7 @@ exports.deleteMark = async (req, res) => {
 
 exports.getReport = async (req, res) => {
   try {
-    const { reportType, academic_year, course, semester, subject_name, assessment_type } = req.query;
+    const { reportType, academic_year, course, semester, subject_name, assessment_type, section } = req.query;
     const where = {};
     if (academic_year) where.academic_year = academic_year;
     if (course) where.course = course;
@@ -204,7 +218,17 @@ exports.getReport = async (req, res) => {
     if (subject_name) where.subject_name = subject_name;
     if (assessment_type) where.assessment_type = assessment_type;
 
-    const marks = await AssessmentMark.findAll({ where, order: [['student_name', 'ASC']] });
+    const include = [];
+    if (section) {
+      const { Student } = require('../models');
+      include.push({
+        model: Student,
+        where: { section },
+        required: true
+      });
+    }
+
+    const marks = await AssessmentMark.findAll({ where, include, order: [['student_name', 'ASC']] });
 
     // Group and compute summary stats
     const summary = {
@@ -232,7 +256,7 @@ exports.getReport = async (req, res) => {
 
 exports.getStudentsByCourse = async (req, res) => {
   try {
-    const { course, semester, academic_year } = req.query;
+    const { course, semester, academic_year, section } = req.query;
     if (!course) return res.status(400).json({ message: 'course is required' });
 
     const where = {};
@@ -240,6 +264,7 @@ exports.getStudentsByCourse = async (req, res) => {
     where.course = { [Op.like]: `%${course}%` };
     if (semester) where.semester = semester;
     if (academic_year) where.academicYear = academic_year;
+    if (section) where.section = section;
 
     const students = await Student.findAll({
       where,

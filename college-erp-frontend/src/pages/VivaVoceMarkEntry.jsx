@@ -104,8 +104,8 @@ const StaffSearchDropdown = ({ staffList, value, onSelect }) => {
   );
 };
 
-const AssignmentMarkEntry = () => {
-  const assessmentType = 'Assignment';
+const VivaVoceMarkEntry = () => {
+  const assessmentType = 'Viva Voce';
   // Selection criteria
   const [academicYear, setAcademicYear] = useState('2025-2026');
   const [course, setCourse] = useState('');
@@ -748,4 +748,4 @@ const AssignmentMarkEntry = () => {
   );
 };
 
-export default AssignmentMarkEntry;
+export default VivaVoceMarkEntry;
