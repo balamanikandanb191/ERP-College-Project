@@ -350,7 +350,7 @@ const AssessmentConfigurationPage = () => {
                 <option value="">Select Subject</option>
                 {filteredSubjects.length > 0 ? (
                   filteredSubjects.map((s, idx) => (
-                    <option key={s.id || `${s.code}-${s.name}-${idx}`} value={s.name}>{s.code ? `${s.code} - ${s.name}` : s.name}</option>
+                    <option key={`${s.id || s.code || 'subj'}-${idx}`} value={s.name}>{s.code ? `${s.code} - ${s.name}` : s.name}</option>
                   ))
                 ) : subjectList.length === 0 ? (
                   ['Software Engineering', 'Database Systems', 'Computer Networks', 'Theory of Computation', 'Web Technology', 'Data Structures'].map(s => (
