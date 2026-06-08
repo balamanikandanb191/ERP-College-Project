@@ -51,7 +51,7 @@ const seedInitialData = async () => {
 // Start Server
 const startServer = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('Database connected and synced.');
     
     await seedInitialData();

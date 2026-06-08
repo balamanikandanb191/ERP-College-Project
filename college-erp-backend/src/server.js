@@ -81,7 +81,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     try {
         // Only create/alter tables — never drop data
-        await sequelize.sync({ alter: true });
+        await sequelize.sync();
         console.log('Database synced successfully');
 
         // Only seed if the users table is empty (first run only)

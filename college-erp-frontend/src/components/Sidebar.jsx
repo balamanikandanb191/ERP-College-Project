@@ -374,6 +374,58 @@ const menuSections = [
     ]
   },
   {
+    id: 'examination',
+    title: 'Examination',
+    icon: Award,
+    noSort: true,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      {
+        name: 'Data submission',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Hall Details', path: '/admin/examination/data-submission/hall-details' },
+          { name: 'Time Table', path: '/admin/examination/data-submission/timetable' },
+          { name: 'Strength List', path: '/admin/examination/data-submission/strength-list' }
+        ]
+      },
+      {
+        name: 'Exam process',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Exam Generation', path: '/admin/examination/exam-process/generation' },
+          { name: 'Hall Chart', path: '/admin/examination/exam-process/hall-chart' },
+          { name: 'Seat Allocation', path: '/admin/examination/exam-process/seat-allocation' },
+          { name: 'Daywar Statement', path: '/admin/examination/exam-process/daywar-statement' },
+          { name: 'Digital Numbering', path: '/admin/examination/exam-process/digital-numbering' },
+          { name: 'Theory NameList', path: '/admin/examination/exam-process/theory-namelist' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'practical_model',
+    title: 'Practical/model',
+    icon: Layers,
+    noSort: true,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      { name: 'Practical Time Table', path: '/admin/practical/timetable' },
+      { name: 'Practical Name List', path: '/admin/practical/namelist' }
+    ]
+  },
+  {
+    id: 'exam_forms',
+    title: 'Exam forms',
+    icon: FileText,
+    noSort: true,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      { name: 'Absentees Entry', path: '/admin/exam-forms/absentees-entry' },
+      { name: 'Exam Attendance Report', path: '/admin/exam-forms/attendance-report' }
+    ]
+  },
+  {
     id: 'campus',
     title: 'Campus',
     icon: Building2,
@@ -684,6 +736,9 @@ const Sidebar = () => {
       'idcard',
       'attendance',
       'assessment',
+      'examination',
+      'practical_model',
+      'exam_forms',
       'campus',
       'library',
       'placements'
@@ -1014,6 +1069,12 @@ const Sidebar = () => {
             elements.push(
               <div key="category-campus" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
                 Academic
+              </div>
+            );
+          } else if (section.id === 'examination') {
+            elements.push(
+              <div key="category-examination" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Examination
               </div>
             );
           }

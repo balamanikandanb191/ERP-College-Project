@@ -72,6 +72,21 @@ import RecordWorkMarkEntry from './pages/RecordWorkMarkEntry';
 import VivaVoceMarkEntry from './pages/VivaVoceMarkEntry';
 import ProjectReviewMarkEntry from './pages/ProjectReviewMarkEntry';
 
+// Examination Module Imports
+import HallDetails from './pages/examination/HallDetails';
+import ExamTimetable from './pages/examination/ExamTimetable';
+import StrengthList from './pages/examination/StrengthList';
+import ExamGeneration from './pages/examination/ExamGeneration';
+import HallChart from './pages/examination/HallChart';
+import SeatAllocation from './pages/examination/SeatAllocation';
+import DaywarStatement from './pages/examination/DaywarStatement';
+import DigitalNumbering from './pages/examination/DigitalNumbering';
+import TheoryNameList from './pages/examination/TheoryNameList';
+import PracticalTimetable from './pages/examination/PracticalTimetable';
+import PracticalNameList from './pages/examination/PracticalNameList';
+import AbsenteesEntry from './pages/examination/AbsenteesEntry';
+import ExamAttendanceReport from './pages/examination/ExamAttendanceReport';
+
 // Library Sub-routes Imports
 import AddBook from './pages/library/AddBook';
 import AddBorrower from './pages/library/AddBorrower';
@@ -199,6 +214,25 @@ function App() {
               <Route path="viva-voce-mark-entry" element={<VivaVoceMarkEntry />} />
               <Route path="project-review-mark-entry" element={<ProjectReviewMarkEntry />} />
               <Route path="assessment-report" element={<AssessmentReport />} />
+
+              {/* Examination Module Routes */}
+              <Route path="examination/data-submission/hall-details" element={<HallDetails />} />
+              <Route path="examination/data-submission/timetable" element={<ExamTimetable />} />
+              <Route path="examination/data-submission/strength-list" element={<StrengthList />} />
+              <Route path="examination/exam-process/generation" element={<ExamGeneration />} />
+              <Route path="examination/exam-process/hall-chart" element={<HallChart />} />
+              <Route path="examination/exam-process/seat-allocation" element={<SeatAllocation />} />
+              <Route path="examination/exam-process/daywar-statement" element={<DaywarStatement />} />
+              <Route path="examination/exam-process/digital-numbering" element={<DigitalNumbering />} />
+              <Route path="examination/exam-process/theory-namelist" element={<TheoryNameList />} />
+              
+              {/* Practical/Model Routes */}
+              <Route path="practical/timetable" element={<PracticalTimetable />} />
+              <Route path="practical/namelist" element={<PracticalNameList />} />
+              
+              {/* Exam Forms Routes */}
+              <Route path="exam-forms/absentees-entry" element={<AbsenteesEntry />} />
+              <Route path="exam-forms/attendance-report" element={<ExamAttendanceReport />} />
 
               {/* Support exact paths from screenshots */}
               <Route path="academic/assessment/AssessmentConfiguration" element={<AssessmentConfiguration />} />
