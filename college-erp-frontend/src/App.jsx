@@ -87,6 +87,17 @@ import PracticalNameList from './pages/examination/PracticalNameList';
 import AbsenteesEntry from './pages/examination/AbsenteesEntry';
 import ExamAttendanceReport from './pages/examination/ExamAttendanceReport';
 
+// Administrator Module Imports
+import StudentFeesEntry from './pages/administrator/StudentFeesEntry';
+import PurchaseEntry from './pages/administrator/PurchaseEntry';
+import AssetEntry from './pages/administrator/AssetEntry';
+import SendLetter from './pages/administrator/SendLetter';
+import ReceiveLetter from './pages/administrator/ReceiveLetter';
+import IncomeExpenditure from './pages/administrator/IncomeExpenditure';
+import FeesCollectionReport from './pages/administrator/FeesCollectionReport';
+import ConsolidateReport from './pages/administrator/ConsolidateReport';
+import BudgetReport from './pages/administrator/BudgetReport';
+
 // Library Sub-routes Imports
 import AddBook from './pages/library/AddBook';
 import AddBorrower from './pages/library/AddBorrower';
@@ -233,6 +244,17 @@ function App() {
               {/* Exam Forms Routes */}
               <Route path="exam-forms/absentees-entry" element={<AbsenteesEntry />} />
               <Route path="exam-forms/attendance-report" element={<ExamAttendanceReport />} />
+
+              {/* Administrator Module Routes - Each page is SEPARATE */}
+              <Route path="administrator/student-fees" element={<StudentFeesEntry />} />
+              <Route path="administrator/purchase-entry" element={<PurchaseEntry />} />
+              <Route path="administrator/asset-entry" element={<AssetEntry />} />
+              <Route path="administrator/send-letter" element={<SendLetter />} />
+              <Route path="administrator/receive-letter" element={<ReceiveLetter />} />
+              <Route path="administrator/income-expenditure" element={<IncomeExpenditure />} />
+              <Route path="administrator/fees-collection-report" element={<FeesCollectionReport />} />
+              <Route path="administrator/consolidate-report" element={<ConsolidateReport />} />
+              <Route path="administrator/budget-report" element={<BudgetReport />} />
 
               {/* Support exact paths from screenshots */}
               <Route path="academic/assessment/AssessmentConfiguration" element={<AssessmentConfiguration />} />

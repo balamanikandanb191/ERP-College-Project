@@ -2,26 +2,125 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard,
-  GraduationCap,
-  Users,
-  ClipboardCheck,
-  Library,
-  Wallet,
-  Briefcase,
-  Megaphone,
-  Building2,
-  Settings,
-  ChevronDown,
-  Search,
-  FileText,
-  HelpCircle,
-  Award,
-  Clock,
-  Layers
+  LayoutDashboard, GraduationCap, Users, ClipboardCheck, Library,
+  Wallet, Briefcase, Building2, Settings, ChevronDown, Search,
+  FileText, HelpCircle, Award, Clock, Layers, Shield,
+  UserPlus, ScrollText, CalendarDays, BookOpen, LayoutGrid,
+  BookMarked, CalendarClock, DollarSign, School, FileCheck,
+  CreditCard, CalendarRange, BadgeCheck, BarChart3, PhoneCall,
+  Phone, TrendingUp, FilePlus, UserCheck, UserCircle, Files,
+  FileEdit, Calculator, ClipboardList, FileCheck2, Settings2,
+  CalendarCheck, CheckSquare, PenLine, Package, ShoppingCart,
+  Receipt, Send, Inbox, TrendingDown, Building, BookUser,
+  MapPin, Truck, Home, Tag, Printer, UserX, PieChart,
+  ClipboardSignature, BookCopy, Microscope, Monitor, Wrench,
+  MailOpen, Coins, Circle, Mail
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
+
+const getIconByName = (name) => {
+  const map = {
+    'User Creation': UserPlus,
+    'Log Details': ScrollText,
+    'Academic Calendar': CalendarDays,
+    'Department': Building,
+    'Subject': BookOpen,
+    'Class Allocation': LayoutGrid,
+    'Subject Allocation': BookMarked,
+    'Time Table': CalendarClock,
+    'Staff Details': Users,
+    'Fee Details': DollarSign,
+    'Class Master': School,
+    'Exam Master': FileCheck,
+    'Fee Master': CreditCard,
+    'Academic Year Master': CalendarRange,
+    'Designation Master': BadgeCheck,
+    'Enquiry Dashboard': LayoutDashboard,
+    'Student Enquiry': BookUser,
+    'Assign Call': PhoneCall,
+    'Caller Details': Phone,
+    'Lead Management': TrendingUp,
+    'Enquiry Report': BarChart3,
+    'Application Issue': FilePlus,
+    'Student Register': UserPlus,
+    'Admitted Student': UserCheck,
+    'Student Profile': UserCircle,
+    'General Forms': ClipboardList,
+    'App Issue Consolidate': Files,
+    'EditTC': FileEdit,
+    'TC': FileText,
+    'Fees Estimation': Calculator,
+    'Course Completion': GraduationCap,
+    'Conduct': ClipboardSignature,
+    'Bonafide': FileCheck2,
+    'Id Card Generator': CreditCard,
+    'Attendance Configuration': Settings2,
+    'Daily Attendance': CalendarCheck,
+    'Marked Attendance': CheckSquare,
+    'Assessment Configuration': Settings2,
+    'Assignment Mark Entry': PenLine,
+    'Internal Test 1 Mark Entry': ClipboardList,
+    'Internal Test 2 Mark Entry': ClipboardList,
+    'Internal Test 3 Mark Entry': ClipboardList,
+    'Model Exam Mark Entry': FileCheck,
+    'Seminar Mark Entry': Monitor,
+    'Presentation Mark Entry': PieChart,
+    'Practical Mark Entry': Microscope,
+    'Record Work Mark Entry': BookCopy,
+    'Viva Voce Mark Entry': UserX,
+    'Project Review Mark Entry': Wrench,
+    'Assessment Reports': BarChart3,
+    'Hall Details': Building2,
+    'Strength List': Users,
+    'Exam Generation': FileCheck,
+    'Hall Chart': LayoutGrid,
+    'Seat Allocation': MapPin,
+    'Daywar Statement': CalendarDays,
+    'Digital Numbering': Tag,
+    'Theory NameList': ClipboardList,
+    'Practical Time Table': CalendarClock,
+    'Practical Name List': ClipboardList,
+    'Absentees Entry': UserX,
+    'Exam Attendance Report': Printer,
+    'Student Fees Entry': Receipt,
+    'Purchase Entry & Report': ShoppingCart,
+    'Asset Entry & Report': Package,
+    'Send Letter': Send,
+    'Receive Letter': Inbox,
+    'Income & Expenditure': Coins,
+    'Fees Collection Report': TrendingUp,
+    'Consolidate Report': BarChart3,
+    'Budget Report': TrendingDown,
+    'Hostel': Home,
+    'Transport': Truck,
+    'Library': Library,
+    'Add Book': BookOpen,
+    'Add Borrower': UserPlus,
+    'Available Books': BookMarked,
+    'Book Issue': ClipboardCheck,
+    'Book History': ScrollText,
+    'Fine Report': DollarSign,
+    'No Due Certificate': FileCheck2,
+    'Placement': Briefcase,
+    'Placement Analytics': BarChart3,
+    'Companies': Building2,
+    'Student Timeline': TrendingUp,
+    'System Settings': Settings2,
+    'Roles & Permissions': Shield,
+    'Profile Settings': UserCircle,
+    'Backup & Security': FileCheck,
+    'Data submission': ClipboardList,
+    'Exam process': Layers,
+    'Management': Settings2,
+    'Circulation': Layers,
+    'Reports': BarChart3,
+    'Office': Building,
+    'Correspondence': Mail,
+    'Office report': FileText
+  };
+  return map[name] || Circle;
+};
 
 // Unified menu sections configuration matching the exact School ERP screenshots and requirements
 const menuSections = [
@@ -426,6 +525,42 @@ const menuSections = [
     ]
   },
   {
+    id: 'administrator',
+    title: 'Administrator',
+    icon: Shield,
+    noSort: true,
+    roles: ['Admin', 'Super Admin'],
+    items: [
+      {
+        name: 'Office',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Student Fees Entry', path: '/admin/administrator/student-fees' },
+          { name: 'Purchase Entry & Report', path: '/admin/administrator/purchase-entry' },
+          { name: 'Asset Entry & Report', path: '/admin/administrator/asset-entry' }
+        ]
+      },
+      {
+        name: 'Correspondence',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Send Letter', path: '/admin/administrator/send-letter' },
+          { name: 'Receive Letter', path: '/admin/administrator/receive-letter' }
+        ]
+      },
+      {
+        name: 'Office report',
+        isSubGroup: true,
+        subItems: [
+          { name: 'Income & Expenditure', path: '/admin/administrator/income-expenditure' },
+          { name: 'Fees Collection Report', path: '/admin/administrator/fees-collection-report' },
+          { name: 'Consolidate Report', path: '/admin/administrator/consolidate-report' },
+          { name: 'Budget Report', path: '/admin/administrator/budget-report' }
+        ]
+      }
+    ]
+  },
+  {
     id: 'campus',
     title: 'Campus',
     icon: Building2,
@@ -739,6 +874,7 @@ const Sidebar = () => {
       'examination',
       'practical_model',
       'exam_forms',
+      'administrator',
       'campus',
       'library',
       'placements'
@@ -809,7 +945,7 @@ const Sidebar = () => {
   useEffect(() => {
     const currentPath = location.pathname;
     const allSections = [dashboardSection, ...normalSections, settingsSection].filter(Boolean);
-    
+
     allSections.forEach(section => {
       section.items?.forEach(item => {
         if (item.isSubGroup) {
@@ -937,13 +1073,18 @@ const Sidebar = () => {
                       <button
                         type="button"
                         onClick={() => setExpandedSubgroups(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
-                        className={`w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                          hasActiveChild
+                        className={`w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${hasActiveChild
                             ? 'bg-slate-100/80 text-blue-700 font-bold'
                             : 'text-slate-600 hover:bg-slate-200/45 hover:text-slate-800'
-                        }`}
+                          }`}
                       >
-                        <span className="tracking-wide">{item.name}</span>
+                        <div className="flex items-center gap-2.5">
+                          {(() => {
+                            const SubGroupIcon = getIconByName(item.name);
+                            return <SubGroupIcon className={`w-4 h-4 shrink-0 transition-colors ${hasActiveChild ? 'text-blue-700' : 'text-slate-400 group-hover:text-slate-600'}`} />;
+                          })()}
+                          <span className="tracking-wide">{item.name}</span>
+                        </div>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isSubExpanded ? 'rotate-180' : ''}`} />
                       </button>
 
@@ -958,19 +1099,22 @@ const Sidebar = () => {
                           >
                             {item.subItems.map(sub => {
                               const subPath = typeof sub.path === 'function' ? sub.path(userRole) : sub.path;
+                              const SubIcon = getIconByName(sub.name);
+                              const isSubActive = location.pathname === subPath;
                               return (
                                 <NavLink
                                   key={sub.name}
                                   to={subPath}
-                                  data-sidebar-active={location.pathname === subPath}
+                                  data-sidebar-active={isSubActive}
                                   className={({ isActive }) =>
-                                    `flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${isActive
+                                    `flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${isActive
                                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow shadow-blue-500/10 text-white font-bold'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/30'
                                     }`
                                   }
                                 >
-                                  {sub.name}
+                                  <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                                  <span>{sub.name}</span>
                                 </NavLink>
                               );
                             })}
@@ -982,20 +1126,23 @@ const Sidebar = () => {
                 }
 
                 const itemPath = typeof item.path === 'function' ? item.path(userRole) : item.path;
+                const ItemIcon = getIconByName(item.name);
+                const isItemActive = location.pathname === itemPath;
                 return (
                   <NavLink
                     key={item.name}
                     to={itemPath}
                     end={itemPath === '/admin' || itemPath === '/staff' || itemPath === '/student'}
-                    data-sidebar-active={location.pathname === itemPath}
+                    data-sidebar-active={isItemActive}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                      `flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-white border-l-4 border-cyan-300 font-bold'
                         : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-800'
                       }`
                     }
                   >
-                    {item.name}
+                    <ItemIcon className={`w-4 h-4 shrink-0 ${isItemActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                    <span>{item.name}</span>
                   </NavLink>
                 );
               })}
@@ -1038,7 +1185,7 @@ const Sidebar = () => {
       </div>
 
       {/* Menu List Area */}
-      <div 
+      <div
         ref={sidebarScrollRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1.5 scrollbar-thin"
@@ -1075,6 +1222,12 @@ const Sidebar = () => {
             elements.push(
               <div key="category-examination" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
                 Examination
+              </div>
+            );
+          } else if (section.id === 'administrator') {
+            elements.push(
+              <div key="category-administrator" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Administrator
               </div>
             );
           }

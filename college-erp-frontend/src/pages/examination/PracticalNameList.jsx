@@ -52,7 +52,7 @@ const PracticalNameList = () => {
 
   // Filter practical subjects for selected department/semester
   const filteredSubjects = subjects.filter(s =>
-    s.dept === selectedDept && s.sem.toString() === selectedSem.toString() && s.type !== 'Theory'
+    s.dept === selectedDept && (s.sem || '').toString() === selectedSem.toString() && s.type !== 'Theory'
   );
 
   useEffect(() => {

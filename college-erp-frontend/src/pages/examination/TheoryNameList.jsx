@@ -29,7 +29,7 @@ const TheoryNameList = () => {
 
       // Fetch exam timetable
       const resTimetables = await api.get('/masters/exam_timetable');
-      if (resTimetables.data) setTimetables(resTimetables.data.map(r => ({ ...r.data, id: r.id })));
+      if (resTimetables.data) setTimetable(resTimetables.data.map(r => ({ ...r.data, id: r.id })));
     } catch (err) {
       console.error(err);
       const cachedSt = localStorage.getItem('erp_students');
@@ -39,7 +39,7 @@ const TheoryNameList = () => {
       if (cachedSub) setSubjects(JSON.parse(cachedSub));
 
       const cachedTime = localStorage.getItem('erp_exam_timetable');
-      if (cachedTime) setTimetables(JSON.parse(cachedTime));
+      if (cachedTime) setTimetable(JSON.parse(cachedTime));
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const TheoryNameList = () => {
 
   // Filter subjects for the selected department and semester
   const filteredSubjects = subjects.filter(s =>
-    s.dept === selectedDept && s.sem.toString() === selectedSem.toString()
+    s.dept === selectedDept && (s.sem || '').toString() === selectedSem.toString()
   );
 
   // Set default subject if none is selected

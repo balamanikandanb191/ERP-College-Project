@@ -386,11 +386,12 @@ const ExamTimetable = () => {
                     <option value="">-- Choose Subject --</option>
                     {subjects
                       .filter(s => {
-                        const semMatch = String(s.sem) === String(form.sem);
+                        const semMatch = String(s.sem || '') === String(form.sem);
+                        const deptMatch = !s.dept || s.dept === form.dept;
                         const typeMatch = form.type === 'Theory'
                           ? (s.type === 'Theory' || s.type === 'Theory + Practical')
                           : (s.type === 'Practical' || s.type === 'Theory + Practical');
-                        return semMatch && typeMatch;
+                        return semMatch && deptMatch && typeMatch;
                       })
                       .map((s, idx) => (
                         <option key={s.id || `${s.code}-${idx}`} value={s.code}>{s.code} - {s.name}</option>

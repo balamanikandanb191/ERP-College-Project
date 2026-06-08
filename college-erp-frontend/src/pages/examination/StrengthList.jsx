@@ -65,6 +65,11 @@ const StrengthList = () => {
     });
   };
 
+  // Auto-apply filters immediately on load so the table populates without needing to click Search
+  useEffect(() => {
+    setAppliedFilters(prev => ({ ...prev, reportType }));
+  }, [reportType]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -78,10 +83,10 @@ const StrengthList = () => {
     const matchesType = (item.type || 'Theory').toLowerCase() === expectedType.toLowerCase();
 
     const matchesSearch = !appliedFilters.searchQuery || 
-      item.subjectName.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
-      item.subjectCode.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
-      item.dept.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
-      item.course.toLowerCase().includes(appliedFilters.searchQuery.toLowerCase());
+      (item.subjectName || '').toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
+      (item.subjectCode || '').toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
+      (item.dept || '').toLowerCase().includes(appliedFilters.searchQuery.toLowerCase()) ||
+      (item.course || '').toLowerCase().includes(appliedFilters.searchQuery.toLowerCase());
 
     return matchesType && matchesSearch;
   });
@@ -92,18 +97,29 @@ const StrengthList = () => {
     return match ? match[0] : semVal.toString().trim();
   };
 
+  const normalizeCourse = (courseVal) => {
+    if (!courseVal) return '';
+    return courseVal.toString().toLowerCase().trim()
+      .replace(/\./g, '')   // "B.E." -> "be"
+      .replace(/\s+/g, ''); // "B Tech" -> "btech"
+  };
+
   // 2. Generate flat rows with student counts per section
   const flatEntries = [];
   filteredTimetables.forEach(item => {
     // Find matching students for this timetable's course, department, and semester
+    // Course match is attempted but falls back gracefully if student course field is missing
     const matchingStudents = students.filter(student => {
       const sDept = student.department || '';
       const sSem = student.semester || '';
+      const sCourse = student.course || '';
       
       const deptMatch = sDept.toLowerCase().trim() === item.dept.toLowerCase().trim();
       const semMatch = normalizeSem(sSem) === normalizeSem(item.sem);
+      // Course match: if student has no course field, fall back to dept+sem only
+      const courseMatch = !sCourse || normalizeCourse(sCourse) === normalizeCourse(item.course);
       
-      return deptMatch && semMatch;
+      return deptMatch && semMatch && courseMatch;
     });
 
     // Group matching students by section

@@ -71,6 +71,222 @@ const FEED_LOGS = [
   { text: 'Placement drive scheduled for Google Inc.', time: '15 mins ago', type: 'placement' }
 ];
 
+const GALLERY_MOCKUPS = [
+  {
+    name: 'Student Portal',
+    icon: Users,
+    color: 'border-blue-500/30 bg-blue-950/40 text-blue-400 shadow-blue-500/5',
+    tagColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    desc: 'Profile: John Doe • GPA: 3.92 • Attendance: 98.2%',
+    pos: 'lg:top-[4%] lg:left-[6%] lg:w-[210px]',
+    parallaxX: -30,
+    parallaxY: -35,
+    rotate: 'lg:-rotate-6 lg:hover:-rotate-3',
+    delay: '0s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Student ID:</span> <span className="text-white font-semibold font-mono">#STD-9021</span>
+        </div>
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>CGPA Rank:</span> <span className="text-emerald-400 font-bold">A+ (3.92)</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Status:</span> <span className="text-blue-400 font-semibold">Enrolled</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Faculty Portal',
+    icon: Award,
+    color: 'border-emerald-500/30 bg-emerald-950/40 text-emerald-400 shadow-emerald-500/5',
+    tagColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    desc: 'Allocations, class logs, mark entry dashboard.',
+    pos: 'lg:top-[6%] lg:right-[8%] lg:w-[230px]',
+    parallaxX: 35,
+    parallaxY: -30,
+    rotate: 'lg:rotate-4 lg:hover:rotate-1',
+    delay: '1.5s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Active Classes:</span> <span className="text-white font-semibold">4 Classes</span>
+        </div>
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Sub. Allocated:</span> <span className="text-emerald-400 font-semibold">Maths, CS</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Mark Logs:</span> <span className="text-white font-semibold">9/9 Completed</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Examination System',
+    icon: FileSpreadsheet,
+    color: 'border-rose-500/30 bg-rose-950/40 text-rose-400 shadow-rose-500/5',
+    tagColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    desc: 'Automatic hall tickets, seat maps, strength list.',
+    pos: 'lg:bottom-[6%] lg:left-[6%] lg:w-[220px]',
+    parallaxX: -35,
+    parallaxY: 30,
+    rotate: 'lg:rotate-6 lg:hover:rotate-2',
+    delay: '0.8s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Hall Allocation:</span> <span className="text-white font-semibold">Block A, B</span>
+        </div>
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Seating Capacity:</span> <span className="text-white font-semibold">45 / Hall</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Result Engine:</span> <span className="text-rose-400 font-semibold font-mono">READY</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Attendance Tracker',
+    icon: Clock,
+    color: 'border-amber-500/30 bg-amber-950/40 text-amber-400 shadow-amber-500/5',
+    tagColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    desc: 'Realtime RFID logs, class absence reports.',
+    pos: 'lg:bottom-[5%] lg:right-[6%] lg:w-[220px]',
+    parallaxX: 25,
+    parallaxY: 35,
+    rotate: 'lg:-rotate-4 lg:hover:-rotate-1',
+    delay: '2.3s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Daily Log Sync:</span> <span className="text-emerald-400 font-semibold">100% Success</span>
+        </div>
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Absent Alerts:</span> <span className="text-white font-semibold">SMS Dispatched</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Average Attendance:</span> <span className="text-amber-400 font-semibold font-mono">96.8%</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Course Management',
+    icon: BookOpen,
+    color: 'border-indigo-500/30 bg-indigo-950/40 text-indigo-400 shadow-indigo-500/5',
+    tagColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    desc: 'Syllabus definitions, credits registry.',
+    pos: 'lg:top-[36%] lg:left-[2%] lg:w-[190px]',
+    parallaxX: -45,
+    parallaxY: -5,
+    rotate: 'lg:-rotate-12 lg:hover:-rotate-6',
+    delay: '1.1s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Core Syllabi:</span> <span className="text-white font-semibold">18 Courses</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Avg Credits:</span> <span className="text-indigo-400 font-semibold">24 per Sem</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Timetable Scheduler',
+    icon: Calendar,
+    color: 'border-purple-500/30 bg-purple-950/40 text-purple-400 shadow-purple-500/5',
+    tagColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    desc: 'Conflict-free classroom schedule generator.',
+    pos: 'lg:top-[34%] lg:right-[3%] lg:w-[200px]',
+    parallaxX: 45,
+    parallaxY: -8,
+    rotate: 'lg:rotate-12 lg:hover:rotate-6',
+    delay: '3s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Schedule State:</span> <span className="text-emerald-400 font-semibold">Conflict-Free</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Allocated Rooms:</span> <span className="text-white font-semibold">28 Classrooms</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Academic Analytics',
+    icon: TrendingUp,
+    color: 'border-teal-500/30 bg-teal-950/40 text-teal-400 shadow-teal-500/5',
+    tagColor: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    desc: 'Aggregated reports, growth stats, KPIs.',
+    pos: 'lg:bottom-[33%] lg:left-[50%] lg:-translate-x-1/2 lg:w-[210px]',
+    parallaxX: 0,
+    parallaxY: 40,
+    rotate: 'lg:rotate-2 lg:hover:rotate-0',
+    delay: '1.9s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Sync Status:</span> <span className="text-emerald-400 font-semibold">Active (14ms)</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Performance KPI:</span> <span className="text-teal-400 font-bold">98.4% Efficiency</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Admissions Desk',
+    icon: Users,
+    color: 'border-violet-500/30 bg-violet-950/40 text-violet-400 shadow-violet-500/5',
+    tagColor: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+    desc: 'Verify applications, issue forms, register status.',
+    pos: 'lg:top-[70%] lg:left-[22%] lg:w-[210px]',
+    parallaxX: -20,
+    parallaxY: 32,
+    rotate: 'lg:-rotate-3 lg:hover:-rotate-1',
+    delay: '2.7s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>New Applicants:</span> <span className="text-white font-semibold">1,402 Pending</span>
+        </div>
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Admitted Today:</span> <span className="text-emerald-400 font-semibold">+45 Students</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Form Issue Rate:</span> <span className="text-white font-semibold">94% Capacity</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    name: 'Finance & Fees',
+    icon: CreditCard,
+    color: 'border-pink-500/30 bg-pink-950/40 text-pink-400 shadow-pink-500/5',
+    tagColor: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+    desc: 'Central ledger, student fee structures.',
+    pos: 'lg:top-[68%] lg:right-[22%] lg:w-[210px]',
+    parallaxX: 20,
+    parallaxY: 28,
+    rotate: 'lg:rotate-3 lg:hover:rotate-1',
+    delay: '0.5s',
+    preview: (
+      <div className="space-y-1.5 mt-2 text-[10px] text-slate-400 font-medium">
+        <div className="flex justify-between border-b border-white/5 pb-1">
+          <span>Defaulters Alert:</span> <span className="text-rose-400 font-semibold">0 Detected</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Total Collection:</span> <span className="text-emerald-400 font-bold font-mono">92.4% Rec.</span>
+        </div>
+      </div>
+    )
+  }
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -372,7 +588,7 @@ const LandingPage = () => {
           </div>
 
           {/* Floating Dark Glass Panel: Campus Operations Feed */}
-          <div className="w-full max-w-[420px] bg-slate-900/90 backdrop-blur-md border border-slate-850 rounded-2xl p-4 mt-6 lg:absolute lg:bottom-[-20px] lg:z-50 shadow-xl text-left space-y-2 select-none">
+          <div className="w-full max-w-[420px] bg-slate-900/90 backdrop-blur-md border border-slate-850 rounded-2xl p-4 mt-6 lg:absolute lg:bottom-[-140px] lg:z-50 shadow-xl text-left space-y-2 select-none">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="text-[10px] font-black uppercase text-slate-350 tracking-wider flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -419,47 +635,126 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Directory Grid Section */}
-      <section id="features" className="py-24 px-6 max-w-7xl mx-auto relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+      {/* Directory Section: Interactive 3D Showcase (Replacing the grid circled in 3rd image) */}
+      <section id="features" className="py-24 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
+        
+        {/* Large screen: Scattered 3D Gallery (Inspired by Luke Baffait's design) */}
+        <div className="hidden lg:block relative bg-slate-950 text-white rounded-3xl border border-slate-800/80 shadow-2xl overflow-hidden min-h-[780px] w-full p-8 select-none">
+          
+          {/* Subtle grid pattern background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-25"></div>
+          
+          {/* Decorative glowing gradient orbs */}
+          <div className="absolute top-[20%] left-[10%] w-[350px] h-[350px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-[20%] right-[10%] w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+          {/* Central static text block */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center max-w-lg z-25 pointer-events-none">
+            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-950 border border-indigo-900/60 px-3.5 py-1.5 rounded-full">
+              System Directory
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mt-5 text-white leading-tight font-sans">
+              Each module is built <br />
+              to <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">integrate, automate</span> & <br />
+              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">empower</span> our campus.
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm mt-5 font-semibold max-w-sm mx-auto leading-relaxed">
+              Hover over the floating mockups to inspect live dashboard parameters, databases, and metrics.
+            </p>
+          </div>
+
+          {/* Scattered 3D Cards */}
+          {GALLERY_MOCKUPS.map((card, idx) => {
+            const CardIcon = card.icon;
+            return (
+              <motion.div
+                key={idx}
+                style={{
+                  transform: `translate3d(${mousePos.x * card.parallaxX}px, ${mousePos.y * card.parallaxY}px, 0) perspective(1000px)`,
+                  transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+                }}
+                className={`absolute ${card.pos} group cursor-pointer pointer-events-auto z-10`}
+              >
+                {/* Floating container card with glassmorphism and subtle border */}
+                <div 
+                  className={`border ${card.color} backdrop-blur-md rounded-2xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:border-white/20 hover:bg-slate-900/80 ${card.rotate} animate-float`}
+                  style={{ animationDelay: card.delay, animationDuration: '6s' }}
+                >
+                  
+                  {/* Mockup browser dot header */}
+                  <div className="flex items-center gap-1.5 pb-2 border-b border-white/5 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500/70"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/70"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500/70"></span>
+                    <span className="text-[7px] text-slate-500 font-semibold uppercase tracking-wider ml-auto">Live Sync</span>
+                  </div>
+
+                  {/* Main header bar: Icon + Title */}
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${card.tagColor}`}>
+                      <CardIcon size={12} />
+                    </div>
+                    <span className="text-xs font-black text-white tracking-tight">{card.name}</span>
+                  </div>
+
+                  {/* Custom preview widget */}
+                  {card.preview}
+
+                  {/* Tiny description */}
+                  <p className="text-[9px] text-slate-550 mt-3 font-semibold border-t border-white/5 pt-2">
+                    {card.desc}
+                  </p>
+
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Small/Mobile screens: Clean Responsive Grid Layout */}
+        <div className="block lg:hidden text-center max-w-3xl mx-auto mb-12">
           <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
             System Directory
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight">
             Integrated Enterprise Modules
           </h2>
-          <p className="text-slate-500 text-xs sm:text-sm mt-3 font-semibold leading-relaxed">
+          <p className="text-slate-550 text-xs sm:text-sm mt-3 font-semibold leading-relaxed">
             Explore a detailed list of modules optimized for speed, reliability, and security.
           </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 text-left">
+            {GALLERY_MOCKUPS.map((card, idx) => {
+              const CardIcon = card.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col h-full group"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl border border-indigo-100 bg-indigo-50/60 text-indigo-600 flex items-center justify-center shrink-0">
+                      <CardIcon size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 tracking-tight">{card.name}</h3>
+                      <span className="text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border border-slate-150 bg-slate-50 text-slate-400 group-hover:text-indigo-600 transition-colors mt-0.5 inline-block">
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-slate-550 text-xs leading-relaxed flex-grow font-semibold">
+                    {card.desc}. This module is connected to the master database via API controllers with role-based checks.
+                  </p>
+                  <div className="mt-5 flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-500 cursor-pointer transition-colors pt-4 border-t border-slate-100">
+                    Explore integration details
+                    <ChevronRight size={12} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Directory Modules Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ALL_MODULES.slice(0, 9).map((mod, idx) => (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -4 }}
-              className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs hover:shadow-sm transition-all flex flex-col h-full group"
-            >
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-5 shrink-0 ${mod.color.split(' ')[0]} ${mod.color.split(' ')[2]}`}>
-                <mod.icon size={16} />
-              </div>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-slate-800 tracking-tight">{mod.name}</h3>
-                <span className="text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border border-slate-150 bg-slate-50 text-slate-400 group-hover:text-indigo-600 transition-colors">
-                  Active
-                </span>
-              </div>
-              <p className="text-slate-550 text-xs mt-3 leading-relaxed flex-grow font-semibold">
-                This module supports CRUD operations, CSV exports, role access checks, and real-time database sync logic.
-              </p>
-              <div className="mt-5 flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-500 cursor-pointer transition-colors pt-4 border-t border-slate-100">
-                Explore integration details
-                <ChevronRight size={12} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
       </section>
 
       {/* Sandbox Access Section */}
