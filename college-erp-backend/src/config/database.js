@@ -1,6 +1,8 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+const dialect = process.env.DB_DIALECT || 'mysql';
+
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -8,7 +10,8 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: process.env.DB_DIALECT || 'mysql',
+    dialect: dialect,
+    storage: dialect === 'sqlite' ? './college_erp.sqlite' : undefined,
     logging: false, // Set to console.log to see SQL queries
   }
 );
