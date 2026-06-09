@@ -368,6 +368,27 @@ const AuditButton = ({ label, count, suffix = "", onClick, color = "blue", subte
 const AdminDashboard = () => {
   // Live states
   const [students, setStudents] = useState([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDateTime = (date) => {
+    return date.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
   const [staff, setStaff] = useState([]);
   const [exams, setExams] = useState([]);
   const [malpracticeList, setMalpracticeList] = useState([]);
@@ -1293,7 +1314,10 @@ const AdminDashboard = () => {
               <Activity className="text-blue-655" size={20} />
               <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">System Overview & Quick Audits</h2>
             </div>
-            <span className="text-[10px] font-bold text-slate-400">Section 1 of 3</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/50 border border-slate-200/50 text-[10px] font-black text-slate-500 shadow-sm">
+              <Clock size={11} className="text-slate-450" />
+              <span>{formatDateTime(currentTime)}</span>
+            </div>
           </div>
             {/* Main General Overview KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1652,7 +1676,10 @@ const AdminDashboard = () => {
               <TrendingUp className="text-indigo-655" size={20} />
               <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Institutional Analytics & Trends</h2>
             </div>
-            <span className="text-[10px] font-bold text-slate-400">Section 2 of 3</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/50 border border-slate-200/50 text-[10px] font-black text-slate-500 shadow-sm">
+              <Clock size={11} className="text-slate-450" />
+              <span>{formatDateTime(currentTime)}</span>
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -1854,7 +1881,10 @@ const AdminDashboard = () => {
               <FileSpreadsheet className="text-indigo-655" size={20} />
               <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">System Audits & Reports</h2>
             </div>
-            <span className="text-[10px] font-bold text-slate-400">Section 3 of 3</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/50 border border-slate-200/50 text-[10px] font-black text-slate-500 shadow-sm">
+              <Clock size={11} className="text-slate-450" />
+              <span>{formatDateTime(currentTime)}</span>
+            </div>
           </div>
 
           <div className="space-y-8">
