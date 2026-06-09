@@ -93,6 +93,32 @@ exports.deleteWarden = async (req, res) => {
 };
 
 // --- STUDENTS ---
+
+// Returns all master students who are NOT currently checked-in to any hostel room
+// Used to populate the "Select Student" dropdown in the Add Resident modal
+exports.getAvailableStudents = async (req, res) => {
+  try {
+    const { Op } = require('sequelize');
+    // Get IDs of students already in hostel (active)
+    const activeHostelStudents = await HostelStudent.findAll({
+      where: { hostelStatus: 'Checked In' },
+      attributes: ['studentId']
+    });
+    const assignedIds = activeHostelStudents.map(h => h.studentId);
+
+    // Fetch all master students excluding already-assigned ones
+    const where = assignedIds.length > 0 ? { id: { [Op.notIn]: assignedIds } } : {};
+    const students = await Student.findAll({
+      where,
+      attributes: ['id', 'fullName', 'registerNumber', 'department', 'course', 'semester', 'phone'],
+      order: [['fullName', 'ASC']]
+    });
+    res.json(students);
+  } catch (error) {
+    console.error('Error fetching available students for hostel:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 exports.getStudents = async (req, res) => {
   try {
     const students = await HostelStudent.findAll({

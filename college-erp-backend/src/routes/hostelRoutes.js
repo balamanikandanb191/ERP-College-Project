@@ -23,6 +23,7 @@ router.put('/wardens/:id', hostelController.updateWarden);
 router.delete('/wardens/:id', hostelController.deleteWarden);
 
 // Students
+router.get('/available-students', hostelController.getAvailableStudents);
 router.get('/students', hostelController.getStudents);
 router.post('/students', hostelController.createStudent);
 router.put('/students/:id', hostelController.updateStudent);

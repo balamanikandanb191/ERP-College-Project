@@ -71,6 +71,71 @@ const FEED_LOGS = [
   { text: 'Placement drive scheduled for Google Inc.', time: '15 mins ago', type: 'placement' }
 ];
 
+// Orbit variant assignment: A = top-right→bottom-left, B = reversed, C = center bob
+// Duration & delay give each card a unique rhythm
+const ORBIT_CONFIGS = [
+  { variant: 'a', duration: '7.2s',  delay: '0s',    glowColor: 'rgba(59,130,246,0.18)'   },  // Student Portal
+  { variant: 'b', duration: '8.5s',  delay: '-2.1s', glowColor: 'rgba(16,185,129,0.18)'   },  // Faculty Portal
+  { variant: 'a', duration: '9.1s',  delay: '-4.3s', glowColor: 'rgba(244,63,94,0.18)'    },  // Examination System
+  { variant: 'b', duration: '7.8s',  delay: '-1.5s', glowColor: 'rgba(245,158,11,0.18)'   },  // Attendance Tracker
+  { variant: 'c', duration: '10.0s', delay: '-5.0s', glowColor: 'rgba(99,102,241,0.18)'   },  // Course Management
+  { variant: 'a', duration: '8.2s',  delay: '-3.7s', glowColor: 'rgba(168,85,247,0.18)'   },  // Timetable Scheduler
+  { variant: 'c', duration: '9.4s',  delay: '-6.8s', glowColor: 'rgba(20,184,166,0.18)'   },  // Academic Analytics
+  { variant: 'b', duration: '7.5s',  delay: '-2.9s', glowColor: 'rgba(139,92,246,0.18)'   },  // Admissions Desk
+  { variant: 'a', duration: '8.8s',  delay: '-4.1s', glowColor: 'rgba(236,72,153,0.18)'   },  // Finance & Fees
+];
+
+// Reusable FloatingCard component
+// - Wraps each module card in an orbit animation + framer-motion parallax
+// - Pauses on hover, scales up, deepens glow
+const FloatingCard = ({ card, orbitConfig, mousePos, children }) => {
+  const { variant, duration, delay, glowColor } = orbitConfig;
+  const variantClass = `animate-orbit-${variant}`;
+
+  return (
+    <motion.div
+      style={{
+        transform: `translate3d(${mousePos.x * card.parallaxX}px, ${mousePos.y * card.parallaxY}px, 0) perspective(1000px)`,
+        transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)'
+      }}
+      className={`absolute ${card.pos} group cursor-pointer pointer-events-auto z-10`}
+    >
+      {/* Orbit shell — receives the looping CSS animation */}
+      <div
+        className={`${variantClass} transition-none`}
+        style={{
+          '--orbit-duration': duration,
+          '--orbit-delay': delay,
+        }}
+      >
+        {/* Glass card — hover pauses animation and adds glow */}
+        <div
+          className={`border ${card.color} backdrop-blur-md rounded-2xl p-4 shadow-xl
+            transition-all duration-300
+            hover:[animation-play-state:paused]
+            hover:scale-105 hover:-translate-y-1
+            hover:border-white/20 hover:bg-slate-900/80
+            ${card.rotate}`}
+          style={{
+            '--tw-shadow': `0 0 0 0 transparent`,
+            boxShadow: `0 8px 32px -4px rgba(0,0,0,0.5)`,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.parentElement.style.animationPlayState = 'paused';
+            e.currentTarget.style.boxShadow = `0 0 32px 6px ${glowColor}, 0 8px 32px -4px rgba(0,0,0,0.6)`;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.parentElement.style.animationPlayState = 'running';
+            e.currentTarget.style.boxShadow = `0 8px 32px -4px rgba(0,0,0,0.5)`;
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const GALLERY_MOCKUPS = [
   {
     name: 'Student Portal',
@@ -663,50 +728,36 @@ const LandingPage = () => {
             </p>
           </div>
 
-          {/* Scattered 3D Cards */}
+          {/* Scattered Floating Cards — each has unique orbital path, delay & duration */}
           {GALLERY_MOCKUPS.map((card, idx) => {
             const CardIcon = card.icon;
+            const orbitCfg = ORBIT_CONFIGS[idx] ?? ORBIT_CONFIGS[0];
             return (
-              <motion.div
-                key={idx}
-                style={{
-                  transform: `translate3d(${mousePos.x * card.parallaxX}px, ${mousePos.y * card.parallaxY}px, 0) perspective(1000px)`,
-                  transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
-                }}
-                className={`absolute ${card.pos} group cursor-pointer pointer-events-auto z-10`}
-              >
-                {/* Floating container card with glassmorphism and subtle border */}
-                <div 
-                  className={`border ${card.color} backdrop-blur-md rounded-2xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:border-white/20 hover:bg-slate-900/80 ${card.rotate} animate-float`}
-                  style={{ animationDelay: card.delay, animationDuration: '6s' }}
-                >
-                  
-                  {/* Mockup browser dot header */}
-                  <div className="flex items-center gap-1.5 pb-2 border-b border-white/5 mb-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500/70"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/70"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500/70"></span>
-                    <span className="text-[7px] text-slate-500 font-semibold uppercase tracking-wider ml-auto">Live Sync</span>
-                  </div>
-
-                  {/* Main header bar: Icon + Title */}
-                  <div className="flex items-center gap-2">
-                    <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${card.tagColor}`}>
-                      <CardIcon size={12} />
-                    </div>
-                    <span className="text-xs font-black text-white tracking-tight">{card.name}</span>
-                  </div>
-
-                  {/* Custom preview widget */}
-                  {card.preview}
-
-                  {/* Tiny description */}
-                  <p className="text-[9px] text-slate-550 mt-3 font-semibold border-t border-white/5 pt-2">
-                    {card.desc}
-                  </p>
-
+              <FloatingCard key={idx} card={card} orbitConfig={orbitCfg} mousePos={mousePos}>
+                {/* Mockup browser dot header */}
+                <div className="flex items-center gap-1.5 pb-2 border-b border-white/5 mb-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500/70"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/70"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/70"></span>
+                  <span className="text-[7px] text-slate-500 font-semibold uppercase tracking-wider ml-auto">Live Sync</span>
                 </div>
-              </motion.div>
+
+                {/* Main header bar: Icon + Title */}
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${card.tagColor}`}>
+                    <CardIcon size={12} />
+                  </div>
+                  <span className="text-xs font-black text-white tracking-tight">{card.name}</span>
+                </div>
+
+                {/* Custom preview widget */}
+                {card.preview}
+
+                {/* Tiny description */}
+                <p className="text-[9px] text-slate-550 mt-3 font-semibold border-t border-white/5 pt-2">
+                  {card.desc}
+                </p>
+              </FloatingCard>
             );
           })}
         </div>

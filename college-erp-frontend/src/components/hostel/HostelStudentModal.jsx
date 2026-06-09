@@ -32,17 +32,29 @@ const HostelStudentModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
 
   const fetchData = async () => {
     try {
-      const [sData, rData] = await Promise.all([api.get('/students'), api.get('/hostel/rooms')]);
-      const allStudents = Array.isArray(sData.data) ? sData.data : [];
-      const filtered = allStudents.filter(s => 
-        s.hostelRequired === true || 
-        s.hostelRequired === 1 || 
-        s.hostelRequired === 'Yes' ||
-        (initialData && String(s.id) === String(initialData.studentId))
-      );
-      setStudents(filtered);
+      // Use the dedicated endpoint: all master students NOT already in hostel
+      const [sRes, rData] = await Promise.all([
+        api.get('/hostel/available-students'),
+        api.get('/hostel/rooms')
+      ]);
+      let availableStudents = Array.isArray(sRes.data) ? sRes.data : [];
+
+      // When editing, the current student may already be in hostel — add them back if missing
+      if (initialData?.studentId) {
+        const alreadyIncluded = availableStudents.some(s => String(s.id) === String(initialData.studentId));
+        if (!alreadyIncluded) {
+          try {
+            const { data: existing } = await api.get(`/students/${initialData.studentId}`);
+            if (existing) availableStudents = [existing, ...availableStudents];
+          } catch (_) { /* ignore */ }
+        }
+      }
+
+      setStudents(availableStudents);
       setRooms(Array.isArray(rData.data) ? rData.data : []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error('Failed to load hostel form data:', e);
+    }
   };
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -85,7 +97,14 @@ const HostelStudentModal = ({ isOpen, onClose, onSuccess, initialData = null }) 
               <label className="block text-sm font-semibold text-gray-700 mb-1">Select Student *</label>
               <select name="studentId" value={formData.studentId} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
                 <option value="">-- Choose Student --</option>
-                {students.map(s => <option key={s.id} value={s.id}>{s.fullName} ({s.registerNumber})</option>)}
+                {students.length === 0 && (
+                  <option disabled value="">No students available (all assigned)</option>
+                )}
+                {students.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.fullName} ({s.registerNumber}){s.department ? ` · ${s.department}` : ''}{s.semester ? ` Sem ${s.semester}` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

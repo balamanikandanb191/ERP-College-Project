@@ -1230,6 +1230,18 @@ const Sidebar = () => {
                 Administrator
               </div>
             );
+          } else if (section.id === 'library') {
+            elements.push(
+              <div key="category-library" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Library
+              </div>
+            );
+          } else if (section.id === 'placements') {
+            elements.push(
+              <div key="category-placements" className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mt-6 mb-2">
+                Placements
+              </div>
+            );
           }
           elements.push(renderSection(section));
           return elements;
