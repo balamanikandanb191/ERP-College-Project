@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const dialect = process.env.DB_DIALECT || 'mysql';
+const dialect = process.env.DB_DIALECT || 'sqlite';
 
 let sequelize;
 
